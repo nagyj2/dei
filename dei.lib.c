@@ -5,6 +5,10 @@
 #include "dei.tab.h"
 #include "dei.h"
 
+/*
+#define YYDEBUG
+*/
+
 /* utility functions for lexer and parser */
 
 struct ast *newast(int nodetype, struct ast *l, struct ast *r){
@@ -46,7 +50,7 @@ int eval(struct ast *a){
   case DIV: v = eval(a->l) / eval(a->r); break;
   case '%': v = eval(a->l) % eval(a->r); break;
   case 'M': v = - eval(a->l); break;
-  default: printf('internal error: bad node %c\n', a->nodetype);
+  default: printf("internal error: bad node %c\n", a->nodetype);
   }
   return v;
 }
@@ -67,7 +71,7 @@ void treefree(struct ast *a){
   /* 0 subtrees */
   case 'K': free(a); break;
 
-  default: printf('internal error: free bad node %c\n', a->nodetype);
+  default: printf("internal error: free bad node %c\n", a->nodetype);
   }
 }
 
@@ -81,6 +85,10 @@ void yyerror(char *s, ...){
 }
 
 int main(){
+  #if YYDEBUG
+  yydebug = 1;
+  #endif
+
   printf("> ");
   return yyparse();
 }

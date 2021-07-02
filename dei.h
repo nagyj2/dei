@@ -4,6 +4,7 @@
 
 /* interface to the lexer */
 extern int yylineno; /* from lexer */
+extern int yydebug;
 
 void yyerror(char *s, ...); /* similar to printf */
 int yyparse(void);

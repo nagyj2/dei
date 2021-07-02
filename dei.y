@@ -5,7 +5,6 @@
 #include "dei.h"
 
 int yylex(void);
-/* void yyerror(char *s); */
 %}
 
 /* declare tokens */
@@ -31,7 +30,8 @@ int yylex(void);
 %token TIME
 %token EOL
 
-%start calc /* start production */
+/* start production */
+%start calc
 
 %union { /* types which can be returned by productions */
   struct ast *a;
@@ -41,8 +41,14 @@ int yylex(void);
  * to the rules (i.e.) if a ast is returned, yylval.a must be set
  */
 
-%type <d> NUM TIME /* set production result types */
-%type <a> exp factor term
+%left '+' '-'
+%left '*' DIV '%'
+%nonassoc UMINUS
+
+/* set production result types */
+/* %type <d> NUM  */
+%type <a> exp calc
+%type <d> NUM
 
 %%
 
@@ -57,28 +63,14 @@ calc: /* match input beginning and do nothing */
   }
   ;
 
-exp:  factor            /* default: $$ = $1 */
-  |   exp '+' factor  { $$ = newast('+', $1, $3); }
-  |   exp '-' factor  { $$ = newast('-', $1, $3); }
-  ;
-
-factor: term            /* default: $$ = $1 */
-  |   factor '*' term   { $$ = newast('*', $1, $3); }
-  |   factor DIV term   { $$ = newast('/', $1, $3); }
-  |   factor '%' term   { $$ = newast('%', $1, $3); }
-  ;
-
-term: NUM { $$ = newnum($1); }
-  |   '(' exp ')' { $$ = $2; }
-  |   '-' term { $$ = newast('M', $2, NULL); }
-  ;
+exp :  exp '+' exp { $$ = newast('+', $1, $3); }
+    |  exp '-' exp { $$ = newast('-', $1, $3); }
+    |  exp '*' exp { $$ = newast('*', $1, $3); }
+    |  exp DIV exp { $$ = newast(DIV, $1, $3); }
+    |  exp '%' exp { $$ = newast('%', $1, $3); }
+    |  '(' exp ')' { $$ = $2; }
+    |  '-' exp %prec UMINUS { $$ = newast('M', $2, NULL); }
+    |  NUM         { $$ = newnum($1); }
+    ;
 
 %%
-
-/* int main(int argc, char **argv){
-  yyparse();
-} */
-
-/* void yyerror(char *s){
-  fprintf(stderr, "error: %s\n", s);
-} */
