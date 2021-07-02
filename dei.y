@@ -72,6 +72,7 @@ list: /* nothing */ { $$ = NULL; }
       if ($3 == NULL) $$ = $1;
       else $$ = newast('L', $1, $3); /* create list of statements */
   }
+  | stmt            { $$ = $1 }
   ;
 
 exp:  exp CMP exp           { $$ = newcmp($2, $1, $3); }
@@ -104,6 +105,10 @@ calclist: /* nothing */
   }
   | calclist LET IDENT '(' symlist ')' '=' list EOL {
     dodef($3, $5, $8);
+    printf("Defined %s\n> ", $3->name);
+  }
+  | calclist LET IDENT '=' list EOL {
+    dosym($3, $5);
     printf("Defined %s\n> ", $3->name);
   }
   | calclist error EOL {

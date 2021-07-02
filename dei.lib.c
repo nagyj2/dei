@@ -350,8 +350,19 @@ static int callbuiltin(struct fncall *f){
 void dodef(struct symbol *name, struct symlist *syms, struct ast *func){
   if (name->syms) symlistfree(name->syms);
   if (name->func) treefree(name->func);
+  if (name->value) name->value=0;
+
   name->syms = syms;
   name->func = func;
+}
+
+/* define a symbol (variable) */
+void dosym(struct symbol *name, struct ast *val){
+  if (name->syms) symlistfree(name->syms);
+  if (name->func) treefree(name->func);
+  if (name->value) name->value=0;
+
+  name->value = eval(val);
 }
 
 /* call a user defined function and return the evaluation */

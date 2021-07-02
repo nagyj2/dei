@@ -116,6 +116,7 @@ struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *
 
 /* define a function - saves the parsed ast */
 void dodef(struct symbol *name, struct symlist *syms, struct ast *stmts);
+void dosym(struct symbol *name, struct ast *val);
 
 /* evaluate ast */
 int eval(struct ast *a);
