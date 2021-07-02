@@ -7,11 +7,12 @@ DEIFUNC = dei.lib.c
 
 CFLAGS = -Wall -g -O2 -ansi -ll
 
+debug: clean all
 
-all: dei_flex dei_bison dei
+all: dei_bison dei_flex dei
 
 dei_bison: dei.y
-	bison $(BISONFLAGS) -d $^
+	bison -d $(BISONFLAGS) $^
 
 dei_flex: dei.l
 	flex -o $(FLEXOUT) $<
@@ -20,7 +21,7 @@ dei: dei.tab.c $(FLEXOUT) $(DEIFUNC)
 	gcc $(CFLAGS) -o $@ $?
 
 clean:
-	rm -rf dei dei.dSYM dei.tab.* dei.lex.c
+	rm -rf dei dei.dSYM dei.tab.* $(FLEXOUT)
 
 # dei: dei.l dei.y dei.h dei.lib.c
 # 	bison -d dei.y -t
