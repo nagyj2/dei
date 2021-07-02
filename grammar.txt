@@ -1,0 +1,96 @@
+Grammar
+
+stmt			::= ineq
+						| stmt '=' ineq
+						| stmt '!=' ineq
+						|
+
+ineq 			::= simp
+						| ineq '<' simp
+						| ineq '>' simp
+						| ineq '<=' simp
+						| ineq '<=' simp
+
+simp			::= comp
+						| simp '+' comp
+						| simp '-' comp
+
+comp			::= expn
+						| comp '*' expn
+						| comp '//' expn
+						| comp '%' expn
+
+expn			::= setop
+						| setop '^' expn
+
+setop			::= elemop
+						| setop '&&' elemop
+						| setop '||' elemop
+
+elemop		::= set
+						| elemop '&' set
+						| elemop '|' set
+
+set				::= math
+						| set mod
+
+math    	::= die
+          	| int
+
+die     	::= [int] 'd' int
+						| [int] 'd' '[' nint die_rep ']'
+						| [int] 'd' '[' nint '..' nint ']'
+						| '[' nint die_rep ']'
+die_rep		::= ',' nint die_rep
+						|
+
+nint			::= '-' int
+						| int
+
+int    	 	::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+          	| int {int}
+
+mod     	::= 'drop' (select | math) times
+						| 'append' (select | math) times
+						| 'choose' (select | math) times
+						| 'reroll' (select | math) times
+						| 'count' (select | math)
+
+select  	::= 'highest'
+          	| 'lowest'
+						| 'random'
+						| 'unique'
+						| 'all'
+
+times			::= 'once'
+						| 'twice'
+						| 'thrice'
+						| ε # forever / infinitely many times
+
+operators 	: + # add roll result
+						| - # subtract roll result
+						| * # multiply roll result
+						| // # integer divide roll result
+						| % # modulo roll result
+						| ^ # exponentiate result
+						| && # set-wise intersection of dice set (factor duplicates)
+						| || # set-wise union of dice set (keep duplicates)
+						| & # element-wise intersection of dice set (eliminate duplicates)
+						| | # element-wise union of dice set (eliminate duplicates)
+						| =  # equality check roll result ([0] or [1] result)
+						| != # inequality check roll result ([0] or [1] result)
+						| >  # greater than check roll result ([0] or [1] result)
+						| <  # lesser than check roll result ([0] or [1] result)
+						| >= # greater than or equal to check roll result ([0] or [1] result)
+						| <= # lesser than or equal to roll result ([0] or [1] result)
+
+precidence:
+	lo	=, !=
+			>, <, >=, <=
+			+, -
+			*, /, //
+			^
+			&&, ||
+	hi	&, |
+
+comments:		block style with '\'
