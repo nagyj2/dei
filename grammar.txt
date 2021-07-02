@@ -33,6 +33,7 @@ elemop		::= set
 
 set				::= math
 						| set mod
+						| ident
 
 math    	::= die
           	| int
@@ -50,10 +51,10 @@ nint			::= '-' int
 int    	 	::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
           	| int {int}
 
-mod     	::= 'drop' (select | math) times
+mod     	::= 'drop' (select | math) times_n
 						| 'append' (select | math) times
-						| 'choose' (select | math) times
-						| 'reroll' (select | math) times
+						| 'choose' (select | math) times_n
+						| 'reroll' (select | math) times_n
 						| 'count' (select | math)
 
 select  	::= 'highest'
@@ -62,10 +63,12 @@ select  	::= 'highest'
 						| 'unique'
 						| 'all'
 
+times_n		::= times
+						| | ε # forever / infinitely many times
+
 times			::= 'once'
 						| 'twice'
 						| 'thrice'
-						| ε # forever / infinitely many times
 
 operators 	: + # add roll result
 						| - # subtract roll result
@@ -94,3 +97,8 @@ precidence:
 	hi	&, |
 
 comments:		block style with '\'
+
+variables can be assigned by placing them in a special file
+file is read on load and can be used
+save file		: ident ':' stmt
+	assign ident to stmt. Whenever ident is encontered, stmt will be executed

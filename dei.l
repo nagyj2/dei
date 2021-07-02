@@ -1,4 +1,8 @@
-%option noyywrap
+%option noyywrap nodefault yylineno
+%{
+#include "dei.tab.h"
+#include "dei.h"
+%}
 
 /*
   Condition "INITIAL" is the normal state
@@ -7,13 +11,66 @@
 */
 %x COMMENT
 
-%{
-#include "dei.tab.h"
-#include "dei.h"
+%%
+  /* single char ops */
+"+"         | /*{ return PLUS; }*/
+"-"         | /*{ return MINUS; }*/
+"*"         | /*{ return MULT; }*/
+"%"         | /*{ return MOD; }*/
+"^"         | /*{ return EXPN; }*/
+"&"         | /*{ return ELEMINTER; }*/
+"|"         | /*{ return ELEMUNION; }*/
+","         | /*{ return COMMA; }*/
+"("         | /*{ return LPAREN; }*/
+")"         | /*{ return RPAREN; }*/
+"["         | /*{ return LBRACE; }*/
+"="         |
+";"         |
+"]"         { return yytext[0]; } /*{ return RBRACE; }*/
 
-%}
+  /* multichar ops */
+"//"        { return DIV; }
+
+  /* comparison operators */
+">"         { yylval.fn = 1; return CMP; } /*{ return GT; }*/
+"<"         { yylval.fn = 2; return CMP; } /*{ return LT; }*/
+"!="        { yylval.fn = 3; return CMP; } /*{ return NE; }*/
+"=="        { yylval.fn = 4; return CMP; } /*{ return EQ; }*/
+">="        { yylval.fn = 5; return CMP; } /*{ return GE; }*/
+"<="        { yylval.fn = 6; return CMP; } /*{ return LE; }*/
+
+  /* keywords */
+"if"        { return IF; }
+"then"      { return THEN; }
+"else"      { return ELSE; }
+"while"     { return WHILE; }
+"do"        { return DO; }
+"let"       { return LET; }
+
+  /* built-in functions */
+"sqrt"      { yylval.fn = B_sqrt; return FUNC; }
+"exp"       { yylval.fn = B_exp; return FUNC; }
+"log"       { yylval.fn = B_log; return FUNC; }
+"print"     { yylval.fn = B_print; return FUNC; }
+
+  /* names */
+[a-zA-Z][a-zA-Z0-9]*  { yylval.s = lookup(yytext); return IDENT; }
+
+  /* number */
+[0-9]+      { yylval.d = atoi(yytext); return NUM; }
+
+  /* go into andf out of states */
+"\\"                  { BEGIN(COMMENT); }
+<COMMENT>"\\"         { BEGIN(INITIAL); }
+<COMMENT>([^\\]|\n)+|. { /* consume */ }
+
+[ \t]       { /* ignore whitespace */ }
+"\n"        { return EOL; }
+
+.           { yyerror("unknown token: %c\n", *yytext); }
 
 %%
+/*
 "drop"      { return DROP; }
 "append"    { return APPEND; }
 "choose"    { return CHOOSE; }
@@ -27,37 +84,8 @@
 "once"      { yylval.d = 1; return TIME; }
 "twice"     { yylval.d = 2; return TIME; }
 "thrice"    { yylval.d = 3; return TIME; }
-"+"         | /*{ return PLUS; }*/
-"-"         | /*{ return MINUS; }*/
-"*"         | /*{ return MULT; }*/
-"%"         | /*{ return MOD; }*/
-"^"         | /*{ return EXPN; }*/
-"&"         | /*{ return ELEMINTER; }*/
-"|"         | /*{ return ELEMUNION; }*/
-"="         | /*{ return EQ; }*/
-">"         | /*{ return GT; }*/
-"<"         | /*{ return LT; }*/
-","         | /*{ return COMMA; }*/
-"("         | /*{ return LPAREN; }*/
-")"         | /*{ return RPAREN; }*/
-"["         | /*{ return LBRACE; }*/
-"]"         { return yytext[0]; } /*{ return RBRACE; }*/
 ".."        { return RANGE; }
-"!="        { return NE; }
-">="        { return GE; }
-"<="        { return LE; }
-"//"        { return DIV; }
 "&&"        { return SETINTER; }
 "||"        { return SETUNION; }
 "d"         { return DIEFACE; }
-"\n"        { return EOL; }
-[0-9]+      { yylval.d = atoi(yytext); return NUM; }
-[ \t]       { /* ignore whitespace */ }
-
-                      /* go into andf out of states */
-"\\"                  { BEGIN(COMMENT); }
-<COMMENT>"\\"         { BEGIN(INITIAL); }
-<COMMENT>([^\\]|\n)+|. { /* consume */ }
-
-.           { printf("unknown: %c\n", *yytext); }
-%%
+*/
