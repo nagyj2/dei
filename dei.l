@@ -12,38 +12,39 @@
 %x COMMENT
 
 %%
-  /* single char matches */
-"+"         |
-"-"         |
-"*"         |
-"%"         |
-"^"         |
-"&"         |
-"|"         |
-","         |
-"("         |
-")"         |
-"["         |
-"]"         |
-"{"         |
-"}"         |
-"d"         |
-":"         { return yytext[0]; }
 
-  /* multichar matches */
-"||"        { return UNION; }
-"&&"        { return INTER; }
-"//"        { return DIV; }
+  /* multichar matches - perform first to prevent 2 identical, sequential tokens */
+"||"      { return UNION; }
+"&&"      { return INTER; }
+"//"      { return DIV; }
 ".."      { return RANGE; }
+
+  /* single char matches */
+"+"       |
+"-"       |
+"*"       |
+"%"       |
+"^"       |
+"&"       |
+"|"       |
+","       |
+"("       |
+")"       |
+"["       |
+"]"       |
+"{"       |
+"}"       |
+"d"       |
+":"       { return yytext[0]; }
 
   /* special value matches */
     /* comparison operators */
-">"         { yylval.fn = 1; return CMP; }
-"<"         { yylval.fn = 2; return CMP; }
-"!="        { yylval.fn = 3; return CMP; }
-"=="        { yylval.fn = 4; return CMP; }
-">="        { yylval.fn = 5; return CMP; }
-"<="        { yylval.fn = 6; return CMP; }
+">"       { yylval.fn = 1; return CMP; }
+"<"       { yylval.fn = 2; return CMP; }
+"!="      { yylval.fn = 3; return CMP; }
+"=="      { yylval.fn = 4; return CMP; }
+">="      { yylval.fn = 5; return CMP; }
+"<="      { yylval.fn = 6; return CMP; }
 
   /* keywords */
     /* functions */
@@ -59,24 +60,26 @@
 "unique"  { yylval.fn = S_unique; return SELECT; }
 "all"     { yylval.fn = S_all; return SELECT; }
     /* quantifiers */
-"once"    { yylval.d = 1; return TIMES; }
-"twice"   { yylval.d = 2; return TIMES; }
-"thrice"  { yylval.d = 3; return TIMES; }
+"once"        { yylval.d = 1; return QUANT; }
+"twice"       { yylval.d = 2; return QUANT; }
+"thrice"      { yylval.d = 3; return QUANT; }
+[0-9]+"times" { yylval.d = atoi(yytext); return QUANT; }
 
-  /* names */
-[a-zA-Z_][a-zA-Z_]*  { /*TODO ylval.s = lookup(yytext); */ return IDENT; }
+  /* symbol names */
+[a-zA-Z_][a-zA-Z_]*  { /*yylval.s = lookup(yytext);*/ return IDENT; }
 
   /* number */
+[0-9]+/"d"  { yylval.d = atoi(yytext); return DNUM; } /* detect die quantifiers different */
 [0-9]+      { yylval.d = atoi(yytext); return NUM; }
 
   /* go into andf out of states */
-"\\"                  { BEGIN(COMMENT); }
-<COMMENT>"\\"         { BEGIN(INITIAL); }
-<COMMENT>([^\\]|\n)+|. { /* consume */ }
+"\\"                    { BEGIN(COMMENT); }
+<COMMENT>"\\"           { BEGIN(INITIAL); }
+<COMMENT>([^\\]|\n)+|.  { /* consume */ }
 
-[ \t]       { /* ignore whitespace */ }
-"\n"        { return EOL; }
+[ \t]     { /* ignore whitespace */ }
+"\n"      { return EOL; }
 
-.           { yyerror("unknown token: %c\n", *yytext); }
+.         { yyerror("unknown token: %c\n", *yytext); }
 
 %%

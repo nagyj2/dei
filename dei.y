@@ -8,28 +8,32 @@ int yylex(void);
 %}
 
 /* TODO fix union types */
+/* since result is a union, lexer must set yylval.<> accordind
+ * to the rules (i.e.) if a ast is returned, yylval.a must be set
+ */
 %union { /* types which can be returned by productions */
   struct ast *a;
   struct rollresult *r;
-  int d;
+  struct rollset *rs;
   struct symbol *s;   /* which symbol */
-  int fn;             /* which function */
+  int fn;             /* which function / option */
+  int d;              /* raw integer */
 }
-/* since result is a union, lexer must set yylval.<> accordind
-* to the rules (i.e.) if a ast is returned, yylval.a must be set
-*/
 
 /* declare tokens */
 /* TODO declare tokens and types */
-/* %token <d> NUM TIMES
-%token <s> IDENT
-%token <fn> FUNC CMP */
+%token /*<d>*/ QUANT NUM DNUM
+%token /*<s>*/ IDENT
+%token /*<fn>*/ FUNC SELECT CMP
 
 %token UNION INTER DIV RANGE
-%token CMP FUNC SELECT TIMES
-%token IDENT NUM
-
 %token EOL
+
+/*%type <a> stmt set math mod
+%type <r> die
+%type <rs> list
+%type <d> times_n/*
+
 
 /* TODO fix precidence and types */
 %nonassoc CMP
@@ -46,85 +50,63 @@ int yylex(void);
 
 /* start production */
 /* TODO fix start symbol */
-%start calcroll
+%start start
 
 %%
 
-  /* performs math on summed dice rolls */
-stmt: stmt CMP stmt         { /*$$ = newcmp($2, $1, $3);*/ }
-  |   stmt '+' stmt         { /*$$ = newast('+', $1, $3);*/ }
-  |   stmt '-' stmt         { /*$$ = newast('-', $1, $3);*/ }
-  |   stmt '*' stmt         { /*$$ = newast('*', $1, $3);*/ }
-  |   stmt DIV stmt         { /*$$ = newast(DIV, $1, $3);*/ }
-  |   stmt '%' stmt         { /*$$ = newast('%', $1, $3);*/ }
-  |   stmt '^' stmt         { /*$$ = newast('^', $1, $3);*/ }
-  |   '-' stmt %prec UMINUS { /*$$ = newast('M', $2, NULL);*/ }
-  |   set                   {  }
+  /* performs math on numbers */
+math: math CMP math											{  }
+  |   math '+' math											{  }
+  |   math '-' math											{  }
+  |   math '*' math											{  }
+  |   math DIV math											{  }
+  |   math '%' math											{  }
+  |   math '^' math											{  }
+  |   '-' math 				%prec UMINUS			{  }
+  |   NUM                               {  }
+  |   dice															{  }
   ;
 
-  /* performs math on not summed rolls */
-set:  set '&' set           { /*$$ = newast('&', $1, $3);*/ }
-  |   set '|' set           { /*$$ = newast('|', $1, $3);*/ }
-  |   set INTER set         { /*$$ = newast(INTER, $1, $3);*/ }
-  |   set UNION set         { /*$$ = newast(UNION, $1, $3);*/ }
-  |   '(' stmt ')'          { /*$$ = $2;*/ }
-  |   math                  {  }
+  /* performs math on multiple die's rolls */
+dice: dice '&' dice											{  }
+  |   dice '|' dice											{  }
+  |   dice INTER dice										{  }
+  |   dice UNION dice										{  }
+  |   '(' math ')'											{  }
+  |   func															{  }
   ;
 
-  /* a single die roll result */
-math: die mod             {  }
+  /* performs math on a single die rolls */
+func: die																{  }
+  |		func FUNC SELECT									{  }
+  |   func FUNC SELECT QUANT						{  }
+  |   func FUNC NUM									    {  }
+  |   func FUNC NUM QUANT							  {  }
+	;
+
+  /* performs a die roll */
+die:  DNUM 'd' NUM											{  }
+  |   DNUM 'd' '{' list '}'							{  }
+  |   DNUM 'd' '{' math RANGE math '}'  {  }
+  |   'd' NUM														{  }
+  |   'd' '{' list '}'									{  }
+  |   'd' '{' math RANGE math '}'				{  }
+  |   '[' list ']'											{  }
+  |   '['  ']'											    {  }
+  |   IDENT															{  }
   ;
 
-  /* modifiers which modify the die rolls themselves */
-mod:  FUNC SELECT times_n mod   {  }
-  |   FUNC math times_n mod     {  }
-  |                             {  }
+  /* creates a list of values */
+list: math															{  }
+  |		math ',' list											{  }
   ;
 
-  /* how many times the die roll modifer should occur */
-times_n:  TIMES   {  }
+  /* performs top-level actions */
+start:start math EOL										{ printf("parsed!\n> "); }
+  |   start IDENT ':' math EOL					{ printf("saved!\n> "); }
+  |   start error EOL										{ printf("error!\n> "); }
+  |   start EOL													{ printf("> "); }
   |
-  ;
-
-  /* value literals - both die, number and ident */
-  /* return die roll (ints are a die roll with a value equaling the int) */
-die:  NUM 'd' NUM                 {  }
-  |   NUM 'd' '{' stmt list '}'       {  }
-  |   NUM 'd' '{' stmt RANGE stmt '}' {  }
-  |   'd' NUM                     {  }
-  |   'd' '{' stmt list '}'       {  }
-  |   'd' '{' stmt RANGE stmt '}' {  }
-  |   '[' stmt list ']'         {  }
-  |   NUM                       { /*$$ = newnum($1);*/ }
-  |   IDENT                     { /*$$ = newref($1);*/ }
-  ;
-
-  /* list of integers - used to determine die faces or hardcoded results */
-list: ',' stmt list  { /*
-      if ($3 == NULL) $$ = $1;
-      else $$ = newast('L', $1, $3); */ /* create list of statements */
-  }
-  |                 {  }
-  ;
-
-  /* top level production. defines a valid sentance */
-calcroll: calcroll stmt EOL   {
-            printf("parsed!\n> ");
-            /*printf("= %d\n> ", eval($2));*/
-            /*treefree($2);*/
-  }
-  |       calcroll IDENT ':' stmt EOL {
-            printf("defined!\n> ");
-            /*dodef($2, $4);
-            printf("Defined %s\n> ", $2->name);*/
-  }
-  |       calcroll error EOL  {
-            /* error is a special token produced in event of error */
-            yyerrok;
-            printf("error!\n> ");
-  }
-  |       calcroll EOL        {  }
-  |   { /* nothing */ }
   ;
 
 %%
