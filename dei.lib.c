@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <math.h>
+#include <time.h>
 
 #include "dei.tab.h"
 #include "dei.h"
 
+#ifdef DDEBUG
 /* ----------- SYMBOL TABLE FUNCS ----------- */
 /* hash a symbol to produce an index to place in symbol table at */
 static unsigned symhash(char *sym){
@@ -437,6 +438,7 @@ static int calluser(struct ufncall *f){
   free(oldval);
   return v;
 }
+#endif
 
 void yyerror(char *s, ...){
   va_list ap;
@@ -448,9 +450,12 @@ void yyerror(char *s, ...){
 }
 
 int main(){
-  /* #if YYDEBUG
+  #ifdef DEBUG
   yydebug = 1;
-  #endif*/
+  #endif
+
+  /* seed rng with current time */
+  srand(time(NULL));
 
   printf("> ");
   return yyparse();

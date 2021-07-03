@@ -7,23 +7,21 @@ DEIFUNC = dei.lib.c
 
 CFLAGS = -Wall -g -O2 -ansi -ll
 
-debug: clean all
-
-all: dei_bison dei_flex dei
+all: clean dei_bison dei_flex dei deid
 
 dei_bison: dei.y
-	bison -d $(BISONFLAGS) $^
+	bison $(BISONFLAGS) -d $^
 
 dei_flex: dei.l
 	flex -o $(FLEXOUT) $<
 
+# release
 dei: dei.tab.c $(FLEXOUT) $(DEIFUNC)
-	gcc $(CFLAGS) -o $@ $?
+	gcc $(CFLAGS) -o $@ $^
+
+# debug
+deid: dei.tab.c $(FLEXOUT) $(DEIFUNC)
+	@gcc $(CFLAGS) -D DEBUG -g -o $@ $^
 
 clean:
-	rm -rf dei dei.dSYM dei.tab.* $(FLEXOUT)
-
-# dei: dei.l dei.y dei.h dei.lib.c
-# 	bison -d dei.y -t
-# 	flex -o dei.lex.c dei.l
-# 	gcc $(CFLAGS) -o $@ dei.tab.c dei.lex.c dei.lib.c
+	rm -rf dei deid dei.dSYM deid.dSYM dei.tab.* $(FLEXOUT)
