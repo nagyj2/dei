@@ -62,7 +62,7 @@
 "thrice"  { yylval.d = 3; return TIMES; }
 
   /* names */
-[a-zA-Z][a-zA-Z]*  { /*TODO ylval.s = lookup(yytext); */ return IDENT; }
+[a-zA-Z_][a-zA-Z_]*  { /*TODO ylval.s = lookup(yytext); */ return IDENT; }
 
   /* number */
 [0-9]+      { yylval.d = atoi(yytext); return NUM; }

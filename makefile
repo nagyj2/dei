@@ -1,5 +1,5 @@
 
-BISONFLAGS = -t
+BISONFLAGS = -t -v
 
 FLEXOUT = dei.lex.c
 

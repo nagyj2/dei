@@ -48,21 +48,25 @@ int yylex(void);
 /* TODO fix start symbol */
 %start calcroll
 
-
 %%
 
+  /* a single die roll result */
 stmt: exp mod               {  }
   ;
 
+  /* move to occur before exp -> with math instead of exp */
+  /* modifiers which modify the die rolls themselves */
 mod:  FUNC SELECT times_n mod   {  }
   |   FUNC math times_n mod     {  }
   |                             {  }
   ;
 
+  /* how many times the die roll modifer should occur */
 times_n:  TIMES   {  }
   |
   ;
 
+  /* performs math on summed dice rolls */
 exp:  exp CMP exp           { /*$$ = newcmp($2, $1, $3);*/ }
   |   exp '+' exp           { /*$$ = newast('+', $1, $3);*/ }
   |   exp '-' exp           { /*$$ = newast('-', $1, $3);*/ }
@@ -74,6 +78,7 @@ exp:  exp CMP exp           { /*$$ = newcmp($2, $1, $3);*/ }
   |   set                   {  }
   ;
 
+  /* performs math on not summed rolls */
 set:  set '&' set           { /*$$ = newast('&', $1, $3);*/ }
   |   set '|' set           { /*$$ = newast('|', $1, $3);*/ }
   |   set INTER set         { /*$$ = newast(INTER, $1, $3);*/ }
@@ -82,6 +87,7 @@ set:  set '&' set           { /*$$ = newast('&', $1, $3);*/ }
   |   math                  {  }
   ;
 
+  /* value literals - both die, number and ident */
 math: NUM 'd' NUM               {  }
   |   'd' NUM                   {  }
   |   'd' '{' exp list '}'      {  }
@@ -91,7 +97,7 @@ math: NUM 'd' NUM               {  }
   |   IDENT                     { /*$$ = newref($1);*/ }
   ;
 
-
+  /* list of integers - used to determine die faces or hardcoded results */
 list: ',' exp list  { /*
       if ($3 == NULL) $$ = $1;
       else $$ = newast('L', $1, $3); */ /* create list of statements */
@@ -99,7 +105,8 @@ list: ',' exp list  { /*
   |                 {  }
   ;
 
-calcroll: calcroll stmt EOL {
+  /* top level production. defines a valid sentance */
+calcroll: calcroll stmt EOL   {
             printf("parsed!\n> ");
             /*printf("= %d\n> ", eval($2));*/
             /*treefree($2);*/
@@ -109,11 +116,12 @@ calcroll: calcroll stmt EOL {
             /*dodef($2, $4);
             printf("Defined %s\n> ", $2->name);*/
   }
-  |       calcroll error EOL {
+  |       calcroll error EOL  {
             /* error is a special token produced in event of error */
             yyerrok;
             printf("error!\n> ");
   }
+  |       calcroll EOL        {  }
   |   { /* nothing */ }
   ;
 
