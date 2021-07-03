@@ -67,7 +67,7 @@ set:  set '&' set           { /*$$ = newast('&', $1, $3);*/ }
   |   set '|' set           { /*$$ = newast('|', $1, $3);*/ }
   |   set INTER set         { /*$$ = newast(INTER, $1, $3);*/ }
   |   set UNION set         { /*$$ = newast(UNION, $1, $3);*/ }
-  |   '(' set ')'           { /*$$ = $2;*/ }
+  |   '(' stmt ')'          { /*$$ = $2;*/ }
   |   math                  {  }
   ;
 
