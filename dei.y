@@ -41,7 +41,7 @@ int yylex(void);
 %nonassoc UMINUS
 
 /* set production result types */
-/* %type <a> exp stmt list explist */
+/* %type <a> die stmt list */
 /* %type <d> calclist */
 
 /* start production */
@@ -50,31 +50,15 @@ int yylex(void);
 
 %%
 
-  /* a single die roll result */
-stmt: exp mod               {  }
-  ;
-
-  /* move to occur before exp -> with math instead of exp */
-  /* modifiers which modify the die rolls themselves */
-mod:  FUNC SELECT times_n mod   {  }
-  |   FUNC math times_n mod     {  }
-  |                             {  }
-  ;
-
-  /* how many times the die roll modifer should occur */
-times_n:  TIMES   {  }
-  |
-  ;
-
   /* performs math on summed dice rolls */
-exp:  exp CMP exp           { /*$$ = newcmp($2, $1, $3);*/ }
-  |   exp '+' exp           { /*$$ = newast('+', $1, $3);*/ }
-  |   exp '-' exp           { /*$$ = newast('-', $1, $3);*/ }
-  |   exp '*' exp           { /*$$ = newast('*', $1, $3);*/ }
-  |   exp DIV exp           { /*$$ = newast(DIV, $1, $3);*/ }
-  |   exp '%' exp           { /*$$ = newast('%', $1, $3);*/ }
-  |   exp '^' exp           { /*$$ = newast('^', $1, $3);*/ }
-  |   '-' exp %prec UMINUS  { /*$$ = newast('M', $2, NULL);*/ }
+stmt: stmt CMP stmt         { /*$$ = newcmp($2, $1, $3);*/ }
+  |   stmt '+' stmt         { /*$$ = newast('+', $1, $3);*/ }
+  |   stmt '-' stmt         { /*$$ = newast('-', $1, $3);*/ }
+  |   stmt '*' stmt         { /*$$ = newast('*', $1, $3);*/ }
+  |   stmt DIV stmt         { /*$$ = newast(DIV, $1, $3);*/ }
+  |   stmt '%' stmt         { /*$$ = newast('%', $1, $3);*/ }
+  |   stmt '^' stmt         { /*$$ = newast('^', $1, $3);*/ }
+  |   '-' stmt %prec UMINUS { /*$$ = newast('M', $2, NULL);*/ }
   |   set                   {  }
   ;
 
@@ -87,18 +71,36 @@ set:  set '&' set           { /*$$ = newast('&', $1, $3);*/ }
   |   math                  {  }
   ;
 
+  /* a single die roll result */
+math: die mod             {  }
+  ;
+
+  /* modifiers which modify the die rolls themselves */
+mod:  FUNC SELECT times_n mod   {  }
+  |   FUNC math times_n mod     {  }
+  |                             {  }
+  ;
+
+  /* how many times the die roll modifer should occur */
+times_n:  TIMES   {  }
+  |
+  ;
+
   /* value literals - both die, number and ident */
-math: NUM 'd' NUM               {  }
-  |   'd' NUM                   {  }
-  |   'd' '{' exp list '}'      {  }
-  |   'd' '{' exp RANGE exp '}' {  }
-  |   '[' list ']'              {  }
+  /* return die roll (ints are a die roll with a value equaling the int) */
+die:  NUM 'd' NUM                 {  }
+  |   NUM 'd' '{' stmt list '}'       {  }
+  |   NUM 'd' '{' stmt RANGE stmt '}' {  }
+  |   'd' NUM                     {  }
+  |   'd' '{' stmt list '}'       {  }
+  |   'd' '{' stmt RANGE stmt '}' {  }
+  |   '[' stmt list ']'         {  }
   |   NUM                       { /*$$ = newnum($1);*/ }
   |   IDENT                     { /*$$ = newref($1);*/ }
   ;
 
   /* list of integers - used to determine die faces or hardcoded results */
-list: ',' exp list  { /*
+list: ',' stmt list  { /*
       if ($3 == NULL) $$ = $1;
       else $$ = newast('L', $1, $3); */ /* create list of statements */
   }
