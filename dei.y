@@ -51,17 +51,12 @@ int yylex(void);
 
 %%
 
-stmt: exp                   {  }
-  |   exp mod               {  }
+stmt: exp mod               {  }
   ;
 
-mod:  FUNC select times_n mod   {  }
+mod:  FUNC SELECT times_n mod   {  }
   |   FUNC math times_n mod     {  }
   |                             {  }
-  ;
-
-select: SELECT    {  }
-  |     math      {  }
   ;
 
 times_n:  TIMES   {  }
