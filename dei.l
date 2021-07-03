@@ -12,49 +12,57 @@
 %x COMMENT
 
 %%
-  /* single char ops */
-"+"         | /*{ return PLUS; }*/
-"-"         | /*{ return MINUS; }*/
-"*"         | /*{ return MULT; }*/
-"%"         | /*{ return MOD; }*/
-"^"         | /*{ return EXPN; }*/
-"&"         | /*{ return ELEMINTER; }*/
-"|"         | /*{ return ELEMUNION; }*/
-","         | /*{ return COMMA; }*/
-"("         | /*{ return LPAREN; }*/
-")"         | /*{ return RPAREN; }*/
-"["         | /*{ return LBRACE; }*/
-"="         |
-";"         |
-"]"         { return yytext[0]; } /*{ return RBRACE; }*/
+  /* single char matches */
+"+"         |
+"-"         |
+"*"         |
+"%"         |
+"^"         |
+"&"         |
+"|"         |
+","         |
+"("         |
+")"         |
+"["         |
+"]"         |
+"d"         |
+":"         { return yytext[0]; }
 
-  /* multichar ops */
+  /* multichar matches */
+"||"        { return UNION; }
+"&&"        { return INTER; }
 "//"        { return DIV; }
+".."      { return RANGE; }
 
-  /* comparison operators */
-">"         { yylval.fn = 1; return CMP; } /*{ return GT; }*/
-"<"         { yylval.fn = 2; return CMP; } /*{ return LT; }*/
-"!="        { yylval.fn = 3; return CMP; } /*{ return NE; }*/
-"=="        { yylval.fn = 4; return CMP; } /*{ return EQ; }*/
-">="        { yylval.fn = 5; return CMP; } /*{ return GE; }*/
-"<="        { yylval.fn = 6; return CMP; } /*{ return LE; }*/
+  /* special value matches */
+    /* comparison operators */
+">"         { yylval.fn = 1; return CMP; }
+"<"         { yylval.fn = 2; return CMP; }
+"!="        { yylval.fn = 3; return CMP; }
+"=="        { yylval.fn = 4; return CMP; }
+">="        { yylval.fn = 5; return CMP; }
+"<="        { yylval.fn = 6; return CMP; }
 
   /* keywords */
-"if"        { return IF; }
-"then"      { return THEN; }
-"else"      { return ELSE; }
-"while"     { return WHILE; }
-"do"        { return DO; }
-"let"       { return LET; }
-
-  /* built-in functions */
-"sqrt"      { yylval.fn = B_sqrt; return FUNC; }
-"exp"       { yylval.fn = B_exp; return FUNC; }
-"log"       { yylval.fn = B_log; return FUNC; }
-"print"     { yylval.fn = B_print; return FUNC; }
+    /* functions */
+"drop"    { yylval.fn = B_drop; return FUNC; }
+"append"  { yylval.fn = B_append; return FUNC; }
+"choose"  { yylval.fn = B_choose; return FUNC; }
+"reroll"  { yylval.fn = B_reroll; return FUNC; }
+"count"   { yylval.fn = B_count; return FUNC; }
+    /* selectors */
+"highest" { yylval.fn = S_high; return SELECT; }
+"lowest"  { yylval.fn = S_low; return SELECT; }
+"random"  { yylval.fn = S_rand; return SELECT; }
+"unique"  { yylval.fn = S_unique; return SELECT; }
+"all"     { yylval.fn = S_all; return SELECT; }
+    /* quantifiers */
+"once"    { yylval.d = 1; return TIMES; }
+"twice"   { yylval.d = 2; return TIMES; }
+"thrice"  { yylval.d = 3; return TIMES; }
 
   /* names */
-[a-zA-Z][a-zA-Z0-9]*  { yylval.s = lookup(yytext); return IDENT; }
+[a-zA-Z][a-zA-Z]*  { /*TODO ylval.s = lookup(yytext); */ return IDENT; }
 
   /* number */
 [0-9]+      { yylval.d = atoi(yytext); return NUM; }
@@ -70,22 +78,3 @@
 .           { yyerror("unknown token: %c\n", *yytext); }
 
 %%
-/*
-"drop"      { return DROP; }
-"append"    { return APPEND; }
-"choose"    { return CHOOSE; }
-"reroll"    { return REROLL; }
-"count"     { return COUNT; }
-"highest"   { return HIGH; }
-"lowest"    { return LOW; }
-"random"    { return RAND; }
-"unique"    { return SET; }
-"all"       { return ALL; }
-"once"      { yylval.d = 1; return TIME; }
-"twice"     { yylval.d = 2; return TIME; }
-"thrice"    { yylval.d = 3; return TIME; }
-".."        { return RANGE; }
-"&&"        { return SETINTER; }
-"||"        { return SETUNION; }
-"d"         { return DIEFACE; }
-*/

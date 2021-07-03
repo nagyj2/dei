@@ -7,11 +7,12 @@
 int yylex(void);
 %}
 
+/* TODO fix union types */
 %union { /* types which can be returned by productions */
   struct ast *a;
+  struct rollresult *r;
   int d;
   struct symbol *s;   /* which symbol */
-  struct symlist *sl;
   int fn;             /* which function */
 }
 /* since result is a union, lexer must set yylval.<> accordind
@@ -19,104 +20,106 @@ int yylex(void);
 */
 
 /* declare tokens */
-%token <d> NUM
+/* TODO declare tokens and types */
+/* %token <d> NUM TIMES
 %token <s> IDENT
-%token <fn> FUNC
-%token EOL
-%token IF THEN ELSE WHILE DO LET
+%token <fn> FUNC CMP */
 
-%nonassoc <fn> CMP
-%right '='
+%token UNION INTER DIV RANGE
+%token CMP FUNC SELECT TIMES
+%token IDENT NUM
+
+%token EOL
+
+/* TODO fix precidence and types */
+%nonassoc CMP
 %left '+' '-'
 %left '*' DIV '%'
+%right '^'
+%left UNION INTER
+%left '&' '|'
 %nonassoc UMINUS
 
 /* set production result types */
-%type <a> exp stmt list explist
-%type <sl> symlist
+/* %type <a> exp stmt list explist */
 /* %type <d> calclist */
 
 /* start production */
-%start calclist
+/* TODO fix start symbol */
+%start calcroll
 
-%token PLUS MINUS MULT DIV MOD EXPN
-%token SETINTER SETUNION ELEMINTER ELEMUNION
-%token EQ NE LT GT LE GE
-%token LPAREN RPAREN
-%token LBRACE RBRACE
-%token COMMA
-%token RANGE
-%token DIEFACE
-%token DROP
-%token APPEND
-%token CHOOSE
-%token REROLL
-%token COUNT
-%token HIGH
-%token LOW
-%token RAND
-%token SET
-%token ALL
-%token TIME
 
 %%
 
-stmt: IF exp THEN list            { $$ = newflow('I', $2, $4, NULL); }
-  |   IF exp THEN list ELSE list  { $$ = newflow('I', $2, $4, $6); }
-  |   WHILE exp DO list           { $$ = newflow('W', $2, $4, NULL); }
-  |   exp                         { $$ = $1; }
+stmt: exp                   {  }
+  |   exp mod               {  }
   ;
 
-list: /* nothing */ { $$ = NULL; }
-  | stmt ';' list   {
+mod:  FUNC select times_n mod   {  }
+  |   FUNC math times_n mod     {  }
+  |                             {  }
+  ;
+
+select: SELECT    {  }
+  |     math      {  }
+  ;
+
+times_n:  TIMES   {  }
+  |
+  ;
+
+exp:  exp CMP exp           { /*$$ = newcmp($2, $1, $3);*/ }
+  |   exp '+' exp           { /*$$ = newast('+', $1, $3);*/ }
+  |   exp '-' exp           { /*$$ = newast('-', $1, $3);*/ }
+  |   exp '*' exp           { /*$$ = newast('*', $1, $3);*/ }
+  |   exp DIV exp           { /*$$ = newast(DIV, $1, $3);*/ }
+  |   exp '%' exp           { /*$$ = newast('%', $1, $3);*/ }
+  |   exp '^' exp           { /*$$ = newast('^', $1, $3);*/ }
+  |   '-' exp %prec UMINUS  { /*$$ = newast('M', $2, NULL);*/ }
+  |   set                   {  }
+  ;
+
+set:  set '&' set           { /*$$ = newast('&', $1, $3);*/ }
+  |   set '|' set           { /*$$ = newast('|', $1, $3);*/ }
+  |   set INTER set         { /*$$ = newast(INTER, $1, $3);*/ }
+  |   set UNION set         { /*$$ = newast(UNION, $1, $3);*/ }
+  |   '(' set ')'           { /*$$ = $2;*/ }
+  |   math                  {  }
+  ;
+
+math: NUM 'd' NUM               {  }
+  |   'd' NUM                   {  }
+  |   'd' '{' exp list '}'      {  }
+  |   'd' '{' exp RANGE exp '}' {  }
+  |   '[' list ']'              {  }
+  |   NUM                       { /*$$ = newnum($1);*/ }
+  |   IDENT                     { /*$$ = newref($1);*/ }
+  ;
+
+
+list: ',' exp list  { /*
       if ($3 == NULL) $$ = $1;
-      else $$ = newast('L', $1, $3); /* create list of statements */
+      else $$ = newast('L', $1, $3); */ /* create list of statements */
   }
-  | stmt            { $$ = $1 }
+  |                 {  }
   ;
 
-exp:  exp CMP exp           { $$ = newcmp($2, $1, $3); }
-  |   exp '+' exp           { $$ = newast('+', $1, $3); }
-  |   exp '-' exp           { $$ = newast('-', $1, $3); }
-  |   exp '*' exp           { $$ = newast('*', $1, $3); }
-  |   exp DIV exp           { $$ = newast(DIV, $1, $3); }
-  |   exp '%' exp           { $$ = newast('%', $1, $3); }
-  |   '(' exp ')'           { $$ = $2; }
-  |   '-' exp %prec UMINUS  { $$ = newast('M', $2, NULL); }
-  |   NUM                   { $$ = newnum($1); }
-  |   IDENT                 { $$ = newref($1); }
-  |   IDENT '=' exp         { $$ = newasgn($1, $3); }
-  |   FUNC '(' explist ')'  { $$ = newfunc($1, $3); }
-  |   IDENT '(' explist ')' { $$ = newcall($1, $3); }
-  ;
-
-explist:  exp         { $$ = $1; }
-  | exp ',' explist   { $$ = newast('L', $1, $3); }
-  ;
-
-symlist:  IDENT        { $$ = newsymlist($1, NULL); }
-  | IDENT ',' symlist  { $$ = newsymlist($1, $3); }
-  ;
-
-calclist: /* nothing */
-  | calclist stmt EOL {
-    printf("= %d\n> ", eval($2));
-    treefree($2);
+calcroll: calcroll stmt EOL {
+            printf("parsed!\n> ");
+            /*printf("= %d\n> ", eval($2));*/
+            /*treefree($2);*/
   }
-  | calclist LET IDENT '(' symlist ')' '=' list EOL {
-    dodef($3, $5, $8);
-    printf("Defined %s\n> ", $3->name);
+  |       calcroll IDENT ':' stmt EOL {
+            printf("defined!\n> ");
+            /*dodef($2, $4);
+            printf("Defined %s\n> ", $2->name);*/
   }
-  | calclist LET IDENT '=' list EOL {
-    dosym($3, $5);
-    printf("Defined %s\n> ", $3->name);
+  |       calcroll error EOL {
+            /* error is a special token produced in event of error */
+            yyerrok;
+            printf("error!\n> ");
   }
-  | calclist error EOL {
-    /* error is a special token produced in event of error */
-    yyerrok;
-    printf("> ");
-  }
+  |   { /* nothing */ }
   ;
-
 
 %%
