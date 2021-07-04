@@ -24,13 +24,13 @@ enum bifs {   /* built-in functions */
   B_count
 };
 
-enum sifs {   /* selectors */
-  S_high = 1,
-  S_low,
-  S_rand,
-  S_unique,
-  S_all,
-  S_int
+enum sifs {             /* selectors */
+  S_high = -1,          /* highest in dieroll */
+  S_low = -2,           /* lowest in dieroll */
+  S_rand = -3,          /* random roll in dieroll */
+  S_unique = -4         /* all unique rolls in dieroll */
+  /* S_all = -5             all rolls in dieroll */
+};
 };
 
 struct rollset {        /* a chain of roll results */

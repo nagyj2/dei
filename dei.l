@@ -58,7 +58,7 @@
 "lowest"  { yylval.fn = S_low; return SELECT; }
 "random"  { yylval.fn = S_rand; return SELECT; }
 "unique"  { yylval.fn = S_unique; return SELECT; }
-"all"     { yylval.fn = S_all; return SELECT; }
+
     /* quantifiers */
 "once"    { yylval.d = 1; return QUANT; }
 "twice"   { yylval.d = 2; return QUANT; }
@@ -85,3 +85,5 @@
 .         { yyerror("unknown token: %c\n", *yytext); }
 
 %%
+
+  /* all     { yylval.fn = S_all; return SELECT; } */
