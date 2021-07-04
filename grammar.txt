@@ -16,10 +16,10 @@ math: math CMP math											{ $$ = $1 CMP $3 }
 
 	/* performs math on multiple die's rolls */
 	/* DATA: individual rolls */
-dice: dice '&' dice											{ $$ = $1 ∪ {∀ e ∊ $1 ∩ $3 | $1 ∪ e} }
-	|   dice '|' dice											{ $$ = $1 ∪ {∀ e ∊ $1 ∪ $3 | $1 ∪ e} }
-	|   dice INTER dice										{ $$ = ∅ ∪ {∀ e ∊ $1 ∩ $3 | e} }
-	|   dice UNION dice										{ $$ = ∅ ∪ {∀ e ∊ $1 ∪ $3 | e} }
+dice: dice '&' dice											{ $$ = $1 ∪ {∀ e ∊ $3 ⋅ e ∊ $1 ∩ $3 | e} }
+	|   dice '|' dice											{ $$ = $1 ∪ {∀ e ∊ $3 ⋅ e ∊ $1 ∪ $3 | e} }
+	|   dice INTER dice										{ $$ = ∅ ∪ {∀ e ∊ $3 ⋅ e ∊ $1 ∩ $3 ∧ e ∉ added | e} }
+	|   dice UNION dice										{ $$ = ∅ ∪ {∀ e ∊ $3 ⋅ e ∊ $1 ∪ $3 ∧ e ∉ added | e} }
 	|   func															{ $$ = {$1} }
 
 	/* performs math on a single die rolls */
@@ -45,7 +45,7 @@ die:  DNUM 'd' NUM											{ $$ = [] ∪ [⋃ x ∊ [1,$3] | x]^$1 }
 	|   IDENT															{ $$ = $1 }
 
 	/* creates a list of values */
-	/* DATA: die faces + count */
+	/* DATA: values + count */
 list: math															{ $$ = $1 }
 	|		math ',' list											{ $$ = $1 ∪ $3 }
 
