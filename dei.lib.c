@@ -2,13 +2,54 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <math.h>
 #include <time.h>
 
 #include "dei.tab.h"
 #include "dei.h"
 
-#ifdef DDEBUG
+/* ------------- UTILITY FUNC ------------- */
+
+/* generate a random number between min and max, inclusive */
+int randint(int min, int max){
+  return (rand() % (max - min + 1)) + min;
+}
+
+/* count values in a chain */
+int countvalue(struct value *val){
+  struct value *t;
+  int c = 0;
+
+  for (t = val; t; t=t->next) c++;
+  return c;
+}
+
+/* sum values of a chain */
+int sumvalue(struct value *val){
+  struct value *t;
+  int s = 0;
+
+  for (t = val; t; t=t->next) s+=t->v;
+  return s;
+}
+
+/* append a new value node to the beginning of a chain */
+struct value *addvalue(int i, struct value *val){
+  struct value *a = malloc(sizeof(struct value));
+
+  if (!a){
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->v = i;
+  a->next = val;
+  return a;
+}
+
+
 /* ----------- SYMBOL TABLE FUNCS ----------- */
+
 /* hash a symbol to produce an index to place in symbol table at */
 static unsigned symhash(char *sym){
 
@@ -34,20 +75,21 @@ struct symbol *lookup(char * sym){
     /* if no entry, make an entry and return it */
     if (!sp->name){
       sp->name = strdup(sym);
-      sp->value = 0;
       sp->func = NULL;
-      sp->syms = NULL;
       return sp;
     }
 
     /* if no return, try the next entry */
     /* increment the pointer and if out of bounds (goto next), loop to start of symtab */
     if (++sp >= symtab+NHASH) sp = symtab;
-    }
+  }
 
   yyerror("symbol table overflow\n");
   abort(); /* tried all entries, table is full */
 }
+
+
+/* ----------- AST CREATION FUNCS ----------- */
 
 /* create a new ast node */
 struct ast *newast(int nodetype, struct ast *l, struct ast *r){
@@ -63,21 +105,6 @@ struct ast *newast(int nodetype, struct ast *l, struct ast *r){
   a->l = l;
   a->r = r;
   return a;
-}
-
-/* create an integer literal node */
-struct ast *newnum(int d){
-
-  struct numval *a = malloc(sizeof(struct numval));
-
-  if (!a){
-    yyerror("out of space");
-    exit(0);
-  }
-
-  a->nodetype = 'K';
-  a->number = d;
-  return (struct ast *)a;
 }
 
 /* create a comparison type node */
@@ -97,7 +124,9 @@ struct ast *newcmp(int cmptype, struct ast *l, struct ast *r){
 }
 
 /* create a built in function call node */
-struct ast *newfunc(int functype, struct ast *l){
+struct ast *newfunc(int functype, int selector, struct ast *base, int count){
+  /* selector < 0 indicates a special selector was used -> sifs */
+  /* functype -> bifs */
 
   struct fncall *a = malloc(sizeof(struct ast));
 
@@ -107,29 +136,15 @@ struct ast *newfunc(int functype, struct ast *l){
   }
 
   a->nodetype = 'F';
-  a->l = l;
-  a->functype = functype;
-  return (struct ast *)a;
-}
-
-/* create a user function call node */
-struct ast *newcall(struct symbol *s, struct ast *l){
-
-  struct ufncall *a = malloc(sizeof(struct ufncall));
-
-  if(!a) {
-    yyerror("out of space");
-    exit(0);
-  }
-
-  a->nodetype = 'C';
-  a->l = l;
-  a->s = s;
+  a->functype = functype;   /* type of function to perform */
+  a->seltype = selector;    /* function argument (selector) */
+  a->count = count;         /* how many times to perform function */
+  a->l = base;              /* ast to perform function on */
   return (struct ast *)a;
 }
 
 /* create a symbol (variable) call node */
-struct ast * newref(struct symbol *s){
+struct ast *newref(struct symbol *s){
 
   struct symref *a = malloc(sizeof(struct symref));
 
@@ -144,7 +159,7 @@ struct ast * newref(struct symbol *s){
 }
 
 /* create symbol (variable) assignment node */
-struct ast *newasgn(struct symbol *s, struct ast *v){
+struct ast *newasgn(struct symbol *s, struct ast *meaning){
 
   struct symasgn *a = malloc(sizeof(struct symasgn));
 
@@ -153,27 +168,106 @@ struct ast *newasgn(struct symbol *s, struct ast *v){
     exit(0);
   }
 
-  a->nodetype = '=';
-  a->s = s;
-  a->v = v;
+  a->nodetype = 'A';
+  a->s = s;                 /* symbol from symbol table */
+  a->l = meaning;           /* the unevaluated ast which the symbol refers to */
   return (struct ast *)a;
 }
 
-/* create control flow statement node */
-struct ast *newflow(int nodetype, struct ast *cond, struct ast *tl, struct ast *el){
+/* create symbol (variable) assignment node */
+struct ast *newroll(int count, struct die *face){
 
-  struct flow *a = malloc(sizeof(struct flow));
+  struct dieroll *a = malloc(sizeof(struct dieroll));
 
-  if(!a) {
+  if (!a){
     yyerror("out of space");
     exit(0);
   }
 
-  a->nodetype = nodetype;
-  a->cond = cond;
-  a->tl = tl;
-  a->el = el;
+  a->nodetype = 'D';      /* eval -> treat used as die faces for a roll */
+  a->used = face;         /* die faces to use for roll generation */
+  a->count = count;       /* how many rolls to perform */
   return (struct ast *)a;
+}
+
+/* set a roll face node to a roll result */
+struct ast *setroll(struct die *rolls){
+
+  struct dieroll *a = malloc(sizeof(struct dieroll));
+
+  if (!a){
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = 'S';      /* eval -> treat used as rolls */
+  a->used = rolls;        /* none because setroll doesnt use a random r */
+  a->count = rolls->size; /* number of rolls */
+  return (struct ast *)a;
+
+}
+
+/* create a rollface from a face max */
+struct die *newdie(int min, int max){
+
+  struct die *d = malloc(sizeof(struct die));
+  struct value *a = NULL;
+
+  if (!d){
+    yyerror("out of space");
+    exit(0);
+  }
+
+  if (max <= min){
+    yyerror("invalid die");
+    exit(0);
+  }
+
+  int i;
+  for(i = max; i >= min; i--) {                     /* start at max so output a is the lowest */
+    struct value *b = malloc(sizeof(struct value)); /* will become the tail */
+
+    if (!b){
+      yyerror("out of space");
+      exit(0);
+    }
+
+    /* fill out new value node */
+    b->v = i;
+    b->next = a;
+    a = b;
+  }
+
+  d->faces = a;
+  d->size = max - min + 1; /* +1 since max is inclusive */
+  return d;
+}
+
+/* set the die faces to be a link of  roll face */
+struct die *setdie(struct value *rolls){
+
+  struct die *d = malloc(sizeof(struct die));
+
+  if (!d){
+    yyerror("out of space");
+    exit(0);
+  }
+
+  d->faces = rolls;
+  d->size = countvalue(rolls);   /* count of faces */
+  return d;
+}
+
+
+/* recursively free dice */
+void diefree(struct die *a){
+  struct value *t = a->faces, *p = a->faces;  /* current node and previous node */
+  /* set previous to start node since t is set to 2nd place immediately */
+  for (t = t->next; t; t = t->next){
+    free(p);
+    p = t;
+  }
+  free(a);
 }
 
 /* recursively free ast nodes */
@@ -181,32 +275,29 @@ void treefree(struct ast *a){
 
   switch (a->nodetype){
     /* two subtrees */
-  case '+':
-  case '-':
-  case '*':
-  case DIV:
-  case '%':
-  case '1': case '2': case '3': case '4': case '5': case '6':
+  case '+': case '-':
+  case '*': case DIV: case '%':
+  case '^':
+  case '1': case '2': case '3': case '4': case '5': case '6': /* CMP */
   case 'L':
     treefree(a->r);
 
     /* one subtree */
-  case 'M': case 'C': case 'F':
+  case 'F': case 'M': case 'A':
     treefree(a->l);
 
     /* no subtrees */
-  case 'K': case 'N':
+  case 'N':
     break;
 
-  case '=':
+    /* special */
+      /* cast to symasgn to access v and free it */
+  /*case 'A':
     free( ((struct symasgn *)a)->v );
-    break;
+    break;*/
 
-    /* up to three subtrees */
-  case 'I': case 'W':
-    free( ((struct flow *)a)->cond );
-    if ( ((struct flow *)a)->tl ) treefree( ((struct flow *)a)->tl );
-    if ( ((struct flow *)a)->el ) treefree( ((struct flow *)a)->el );
+  case 'D': case 'S':
+    diefree( ((struct dieroll *)a)->used );
     break;
 
   default: printf("internal error: free bad node %c\n", a->nodetype);
@@ -214,35 +305,6 @@ void treefree(struct ast *a){
 
   free(a); /* free node itself */
 }
-
-/* creates a new node for a symbol list */
-struct symlist *newsymlist(struct symbol *sym, struct symlist *next){
-
-  struct symlist *sl = malloc(sizeof(struct symlist));
-
-  if (!sl){
-    yyerror("out of space");
-    exit(0);
-  }
-
-  sl->sym = sym;
-  sl->next = next;
-  return sl;
-}
-
-/* recursively free a list of symbols */
-void symlistfree(struct symlist *sl){
-
-  struct symlist *nsl;
-
-  while(sl){
-    nsl = sl->next;
-    free(sl);
-    sl = nsl;
-  }
-}
-
-/* ------------------------------------------ */
 
 
 /* ------------- AST EVALUATION ------------- */
@@ -285,35 +347,6 @@ int eval(struct ast *a){
   case '4': v = (eval(a->l) == eval(a->r))? 1 : 0; break;
   case '5': v = (eval(a->l) >= eval(a->r))? 1 : 0; break;
   case '6': v = (eval(a->l) <= eval(a->r))? 1 : 0; break;
-
-    /* control flow */
-    /* null expressions -> if they are allowed, check for them */
-  case 'I':
-    if ( eval( ((struct flow *)a)->cond ) != 0){ /* check if condition is true */
-      if ( ((struct flow *)a)->tl ){ /* check for true branch presence */
-        v = eval( ((struct flow *)a)->tl ); /* evaluate true body */
-      }else{
-        v = 0; /* default value */
-      }
-
-    }else{
-      if ( ((struct flow *)a)->el ){ /* check for false branch presence */
-        v = eval( ((struct flow *)a)->el ); /* evaluate false body */
-      }else{
-        v = 0;
-      }
-
-    }
-    break;
-
-  case 'W':
-    v = 0; /* default value */
-
-    if ( ((struct flow *)a)->tl ){
-      while ( eval(((struct flow *)a)->cond) != 0 ) /* evaluate condition */
-        v = eval(((struct flow *)a)->tl);           /* evaluate body */
-    }
-    break;  /* value of while is value of last statement */
 
     /* list of statements */
   case 'L': eval(a->l); v = eval(a->r); break;

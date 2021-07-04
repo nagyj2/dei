@@ -13,8 +13,6 @@ int yylex(void);
  */
 %union { /* types which can be returned by productions */
   struct ast *a;
-  struct rollresult *r;
-  struct rollset *rs;
   struct symbol *s;   /* which symbol */
   int fn;             /* which function / option */
   int d;              /* raw integer */

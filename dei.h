@@ -32,6 +32,7 @@ enum sifs {             /* selectors */
   S_rand = -3,          /* random roll in dieroll */
   S_unique = -4         /* all unique rolls in dieroll */
   /* S_all = -5             all rolls in dieroll */
+  /* int is achieved by substituting the sifs input with a positive number */
 };
 
 struct value {          /* a linked list of values */
@@ -59,6 +60,7 @@ struct symbol {         /* a user defined symbol */
 * L expression or statement list (ast)
 * F built in function call       (fncall)
 * D die roll result              (dieroll)
+* S set die rolls                (dieroll)
 * N symbol reference             (symref)
 * A symbol assignment            (symasgn)
 */
@@ -73,14 +75,15 @@ struct fncall {       /* built-in function */
   int nodetype;       /* type 'F' */
   enum bifs functype; /* function type to perform */
   enum sifs seltype;  /* selection type to perform (negative) OR a die result number (positive) */
+  int count;          /* how many times to perform operation */
   struct ast *l;      /* ast to execute function on */
 };
 
 struct dieroll {      /* die roll */
-  int nodetype;       /* type 'D' */
-  int size;           /* amount of rolls */
+  int nodetype;       /* type 'D' or 'S' */
+  int count;          /* amount of rolls */
   struct die *used;   /* the die used to get the result */
-  struct value *rolls;/* roll outcomes */
+  /*struct value *rolls;*//* roll outcomes -> dont need to be stored in the AST */
 };
 
 struct symref {       /* symbol reference */
@@ -91,12 +94,12 @@ struct symref {       /* symbol reference */
 struct symasgn {      /* symbol assignment */
   int nodetype;       /* type 'A' */
   struct symbol *s;   /* ident */
-  struct ast *v;      /* value */
+  struct ast *l;      /* value */
 };
 
 /* -------------- SYMBOL TABLE -------------- */
 
-struct symbol symtab[NHASH];    /* symbol table */
+struct symbol symtab[NHASH];    /* symbol table itself */
 struct symbol *lookup(char *s); /* looks up a string in the symbol table and returns the entry */
 
 #ifdef FIX
@@ -107,18 +110,15 @@ struct symbol *lookup(char *s); /* looks up a string in the symbol table and ret
 struct ast *newast(int nodetype, struct ast *l, struct ast *r); /* op node */
 struct ast *newcmp(int cmptype, struct ast *l, struct ast *r);  /* cmp op node */
                                                                 /* function call */
-struct ast *newfunc(enum bifs functype, enum sifs selector, int count);
+struct ast *newfunc(enum bifs functype, enum sifs selector, struct ast *base, int count);
 struct ast *newref(struct symbol *s);                           /* symbol call */
-struct ast *newasgn(struct symbol *s, struct ast *l);           /* symbol assignment */
+struct ast *newasgn(struct symbol *s, struct ast *meaning);     /* symbol assignment */
 
 struct ast *newroll(int count, struct *die dice);               /* perform a die roll */
 struct ast *setroll(struct die *rolls);                         /* set the rolls to the face */
 
 struct die *newdie(int min, int max);
-struct die *setdie(struct die* rolls);
-
-int randint(int min, int max);
-/* return (rand() % (max - min + 1)) + min; */
+struct die *setdie(struct value *rolls);
 
 /* define a function - saves the parsed ast */
 /* void dodef(struct symbol *name, struct symlist *syms, struct ast *stmts); */
@@ -129,8 +129,7 @@ int eval(struct ast *a);
 
 /* delete and free ast */
 void treefree(struct ast *a);
-void rollfree(struct die *a);
-void valfree(struct value *a);
+void diefree(struct die *a);
 
 /* ------------- AST EVALUATION ------------- */
 
