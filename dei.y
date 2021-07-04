@@ -22,11 +22,12 @@ int yylex(void);
 
 /* declare tokens */
 /* TODO declare tokens and types */
-%token /*<d>*/ QUANT NUM DNUM
+%token /*<d>*/ NUM DNUM
 %token /*<s>*/ IDENT
 %token /*<fn>*/ FUNC SELECT CMP
 
 %token UNION INTER DIV RANGE
+%token QUANT XQUANT
 %token EOL
 
 /*%type <a> stmt set math mod
@@ -80,8 +81,10 @@ dice: dice '&' dice											{  }
 func: die																{  }
   |		func FUNC SELECT									{  }
   |   func FUNC SELECT QUANT						{  }
+  |   func FUNC SELECT NUM XQUANT	  		{  }
   |   func FUNC NUM									    {  }
   |   func FUNC NUM QUANT							  {  }
+  |   func FUNC NUM NUM XQUANT				  {  }
 	;
 
   /* performs a die roll */

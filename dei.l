@@ -60,10 +60,12 @@
 "unique"  { yylval.fn = S_unique; return SELECT; }
 "all"     { yylval.fn = S_all; return SELECT; }
     /* quantifiers */
-"once"        { yylval.d = 1; return QUANT; }
-"twice"       { yylval.d = 2; return QUANT; }
-"thrice"      { yylval.d = 3; return QUANT; }
-[0-9]+"times" { yylval.d = atoi(yytext); return QUANT; }
+"once"    { yylval.d = 1; return QUANT; }
+"twice"   { yylval.d = 2; return QUANT; }
+"thrice"  { yylval.d = 3; return QUANT; }
+
+"times"   { return XQUANT; }
+"time"    { return XQUANT; }
 
   /* symbol names */
 [a-zA-Z_][a-zA-Z_]*  { /*yylval.s = lookup(yytext);*/ return IDENT; }
