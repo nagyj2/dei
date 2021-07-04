@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
+#include <stdio.h> /* needed for FILE */
+#include <stdlib.h> /* needed for rand() */
+#include <stdarg.h> /* needed for yyerror */
+#include <string.h> /* needed for strdup() */
+#include <math.h> /* needed for pow() */
+#include <time.h> /* needed for time() */
 
 #include "dei.tab.h"
 #include "dei.h"
@@ -20,7 +20,7 @@ int countvalue(struct value *val){
   struct value *t;
   int c = 0;
 
-  for (t = val; t; t=t->next) c++;
+  for (t = val; t != NULL; t=t->next) c++;
   return c;
 }
 
@@ -29,7 +29,10 @@ int sumvalue(struct value *val){
   struct value *t;
   int s = 0;
 
-  for (t = val; t; t=t->next) s+=t->v;
+  for (t = val; t != NULL; t=t->next){
+    s+=(t->v);
+  }
+
   return s;
 }
 
@@ -43,7 +46,7 @@ struct value *addvalue(int i, struct value *val){
   }
 
   a->v = i;
-  a->next = val;
+  if (val) a->next = val;
   return a;
 }
 
@@ -124,7 +127,7 @@ struct ast *newcmp(int cmptype, struct ast *l, struct ast *r){
 }
 
 /* create a built in function call node */
-struct ast *newfunc(int functype, int selector, struct ast *base, int count){
+struct ast *newfunc(enum bifs functype, enum sifs selector, struct ast *base, int count){
   /* selector < 0 indicates a special selector was used -> sifs */
   /* functype -> bifs */
 
@@ -207,19 +210,46 @@ struct ast *setroll(struct die *rolls){
 
 }
 
-/* create a rollface from a face max */
-struct die *newdie(int min, int max){
+/* create a leaf node from an integer */
+struct ast *newint(int value){
+  struct integer *a = malloc(sizeof(struct integer));
 
-  struct die *d = malloc(sizeof(struct die));
-  struct value *a = NULL;
-
-  if (!d){
+  if (!a){
     yyerror("out of space");
     exit(0);
   }
 
+  a->nodetype = 'I';
+  a->value = value;
+  return (struct ast *)a;
+}
+
+/* create a leaf node */
+struct ast *newsum(struct ast *roll){
+  struct ast *a = malloc(sizeof(struct ast));
+
+  if (!a){
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = 'Q';
+  a->l = roll;
+  return a;
+}
+
+/* create a rollface from a face max */
+struct die *newdie(int min, int max){
+
   if (max <= min){
     yyerror("invalid die");
+    exit(0);
+  }
+
+  struct die *d = malloc(sizeof(struct die));
+  struct value *a = NULL;
+  if (!d){
+    yyerror("out of space");
     exit(0);
   }
 
@@ -240,6 +270,8 @@ struct die *newdie(int min, int max){
 
   d->faces = a;
   d->size = max - min + 1; /* +1 since max is inclusive */
+  d->max = max;
+  d->min = min;
   return d;
 }
 
@@ -255,6 +287,8 @@ struct die *setdie(struct value *rolls){
 
   d->faces = rolls;
   d->size = countvalue(rolls);   /* count of faces */
+  /* d->max = NULL; invalid since there was no die roll */
+  /* d->min = NULL; invalid since there was no die roll */
   return d;
 }
 
@@ -283,11 +317,11 @@ void treefree(struct ast *a){
     treefree(a->r);
 
     /* one subtree */
-  case 'F': case 'M': case 'A':
+  case 'F': case 'M': case 'A': case 'Q':
     treefree(a->l);
 
     /* no subtrees */
-  case 'N':
+  case 'N': case 'I':
     break;
 
     /* special */
@@ -308,95 +342,152 @@ void treefree(struct ast *a){
 
 
 /* ------------- AST EVALUATION ------------- */
-static int callbuiltin(struct fncall *);
-static int calluser(struct ufncall *);
 
-
-int eval(struct ast *a){
+struct result *eval(struct ast *a){
   /* evaluates the result of ast node a */
 
-  int v = 0; /* result value - set default */
+  struct result* v = malloc(sizeof(struct result)); /* result value - set default */
 
+
+  if (!v){
+    yyerror("out of space");
+    return 0;
+  }
   if (!a){
     yyerror("internal error, null eval");
     return 0;
   }
 
+  /* Node Types
+   * + - * DIV %                    (ast)
+   * < > <= >= == !=                (ast)
+   *
+   * M unary minus                  (ast)
+   * D die roll result              (dieroll)
+   * S set die rolls                (dieroll)
+   * N symbol reference             (symref)
+   * L expression or statement list (ast)
+   * F built in function call       (fncall)
+   * A symbol assignment            (symasgn)
+   */
+
   switch (a->nodetype){
-    /* constant value */
-  case 'K': v = ((struct numval *)a)->number; break;
+
+    /* a leaf integer */
+  case 'I':
+    v->type = R_int;
+    v->ivalue = ((struct integer *)a)->value;
+    break;
+
+    /* a set of die rolls */
+  case 'D':
+    /* struct dieroll *r = (struct dieroll *)a; */  /* cast roll to proper struct */
+    v->rvalue = malloc(sizeof(struct die));   /* create rolled output var */
+
+    struct value *roll = NULL;
+    int i;
+    for (i = 0; i < ((struct dieroll *)a)->count; i++){       /* create roll chain */
+      roll = addvalue(randint(((struct dieroll *)a)->used->min, ((struct dieroll *)a)->used->min), roll);
+    }
+
+    v->type = R_die;
+    v->rvalue->faces = roll;        /* remember, in eval, faces is the roll result */
+    v->rvalue->min = ((struct dieroll *)a)->used->min;
+    v->rvalue->max = ((struct dieroll *)a)->used->max;
+    v->rvalue->size = ((struct dieroll *)a)->count;    /* size of faces */
+    break;
+
+  case 'S':
+    /* struct dieroll *r = (struct dieroll *)a; */   /* cast roll to proper struct */
+    v->rvalue = malloc(sizeof(struct die));   /* create rolled output var */
+
+    v->type = R_die;
+    v->rvalue->faces = ((struct dieroll *)a)->used->faces;
+    /* v->rvalue->min = NULL; r->used->min; */
+    /* v->rvalue->max = NULL; r->used->max; */
+    v->rvalue->size = ((struct dieroll *)a)->count;
+    break;
+
+    /* sum rolls */
+  case 'Q':
+    v->type = R_int;
+    v->ivalue = sumvalue(((struct dieroll *)(a->l))->used->faces);
+    break;
 
     /* symbol reference */
-  case 'N': v = ((struct symref *)a)->s->value; break;
+  case 'N':
+    v = eval(((struct symref *)a)->s->func);
+    break;
 
-    /* assignment */
-  case '=': v = ((struct symasgn *)a)->s->value = eval(((struct symasgn *)a)->v); break;
+    /* assignment TODO: works? */
+  case 'A':
+    ((struct symasgn *)a)->s->func = ((struct symasgn *)a)->l;
+
+    v->type = R_int;
+    v->ivalue = 0;
+    break;
 
     /* expressions */
-  case '+': v = eval(a->l) + eval(a->r); break;
-  case '-': v = eval(a->l) - eval(a->r); break;
-  case '*': v = eval(a->l) * eval(a->r); break;
-  case DIV: v = eval(a->l) / eval(a->r); break;
-  case '%': v = eval(a->l) % eval(a->r); break;
-  case 'M': v = - eval(a->l); break;
+  case '+':
+    v->type = R_int;
+    v->ivalue = eval(a->l)->ivalue + eval(a->r)->ivalue;
+    break;
+  case '-':
+    v->type = R_int;
+    v->ivalue = eval(a->l)->ivalue - eval(a->r)->ivalue;
+    break;
+  case '*':
+    v->type = R_int;
+    v->ivalue = eval(a->l)->ivalue * eval(a->r)->ivalue;
+    break;
+  case DIV:
+    v->type = R_int;
+    v->ivalue = eval(a->l)->ivalue / eval(a->r)->ivalue;
+    break;
+  case '%':
+    v->type = R_int;
+    v->ivalue = eval(a->l)->ivalue % eval(a->r)->ivalue;
+    break;
+  case '^':
+    v->type = R_int;
+    v->ivalue = (int) pow(eval(a->l)->ivalue, eval(a->r)->ivalue);
+    break;
+  case 'M':
+    v->type = R_int;
+    v->ivalue = - eval(a->l)->ivalue;
+    break;
+
+  case '&': v->type = R_int; v->ivalue = -2; break;
+  case '|': v->type = R_int; v->ivalue = -3; break;
+  case INTER: v->type = R_int; v->ivalue = -4; break;
+  case UNION: v->type = R_int; v->ivalue = -5; break;
 
     /* comparisons */
-  case '1': v = (eval(a->l) > eval(a->r))? 1 : 0; break;
-  case '2': v = (eval(a->l) < eval(a->r))? 1 : 0; break;
-  case '3': v = (eval(a->l) != eval(a->r))? 1 : 0; break;
-  case '4': v = (eval(a->l) == eval(a->r))? 1 : 0; break;
-  case '5': v = (eval(a->l) >= eval(a->r))? 1 : 0; break;
-  case '6': v = (eval(a->l) <= eval(a->r))? 1 : 0; break;
+  case '1': v->type = R_int; v->ivalue = (eval(a->l)->ivalue > eval(a->r)->ivalue)? 1 : 0; break;
+  case '2': v->type = R_int; v->ivalue = (eval(a->l)->ivalue < eval(a->r)->ivalue)? 1 : 0; break;
+  case '3': v->type = R_int; v->ivalue = (eval(a->l)->ivalue != eval(a->r)->ivalue)? 1 : 0; break;
+  case '4': v->type = R_int; v->ivalue = (eval(a->l)->ivalue == eval(a->r)->ivalue)? 1 : 0; break;
+  case '5': v->type = R_int; v->ivalue = (eval(a->l)->ivalue >= eval(a->r)->ivalue)? 1 : 0; break;
+  case '6': v->type = R_int; v->ivalue = (eval(a->l)->ivalue <= eval(a->r)->ivalue)? 1 : 0; break;
 
     /* list of statements */
-  case 'L': eval(a->l); v = eval(a->r); break;
+  /* case 'L': eval(a->l); v = eval(a->r); break; */
 
-  case 'F': v = callbuiltin((struct fncall *)a); break;
-
-  case 'C': v = calluser((struct ufncall *)a); break;
+    /* function call */
+    /* TODO: disect ops according to count->selector */
+  case 'F': v->type = R_int; v->ivalue = -6; break; /*callbuiltin((struct fncall *)a);*/
 
   default: printf("internal error: bad node %c\n", a->nodetype);
   }
   return v;
 }
 
-static int callbuiltin(struct fncall *f){
-  enum bifs functype = f->functype;
-  int v = eval(f->l);
-
-  switch (functype){
-  case B_sqrt:
-    return (int) sqrt(v);
-  case B_exp:
-    return (int) exp(v);
-  case B_log:
-    return (int) log(v);
-  case B_print:
-    printf("= %d\n", v);
-    return v;
-  default:
-    yyerror("Unknown built-in function %d", functype);
-    return 0;
-  }
-}
-
-/* define a function */
-void dodef(struct symbol *name, struct symlist *syms, struct ast *func){
-  if (name->syms) symlistfree(name->syms);
-  if (name->func) treefree(name->func);
-  if (name->value) name->value=0;
-
-  name->syms = syms;
-  name->func = func;
-}
+#ifdef FIX
 
 /* define a symbol (variable) */
 void dosym(struct symbol *name, struct ast *val){
-  if (name->syms) symlistfree(name->syms);
   if (name->func) treefree(name->func);
-  if (name->value) name->value=0;
-
-  name->value = eval(val);
+  name->func = val;
 }
 
 /* call a user defined function and return the evaluation */
@@ -471,6 +562,29 @@ static int calluser(struct ufncall *f){
   free(oldval);
   return v;
 }
+
+/* call a built in function */
+static int callbuiltin(struct fncall *f){
+
+  enum bifs functype = f->functype;
+  int v = eval(f->l);
+
+  switch (functype){
+  case B_sqrt:
+    return (int) sqrt(v);
+  case B_exp:
+    return (int) exp(v);
+  case B_log:
+    return (int) log(v);
+  case B_print:
+    printf("= %d\n", v);
+    return v;
+  default:
+    yyerror("Unknown built-in function %d", functype);
+    return 0;
+  }
+}
+
 #endif
 
 void yyerror(char *s, ...){
@@ -482,7 +596,7 @@ void yyerror(char *s, ...){
   fprintf(stderr, "\n");
 }
 
-int main(){
+int main(int argc, char **argv){
   #ifdef DEBUG
   yydebug = 1;
   #endif
@@ -490,6 +604,38 @@ int main(){
   /* seed rng with current time */
   srand(time(NULL));
 
-  printf("> ");
+  if (argc > 1){
+    if (!(yyin = fopen(argv[1], "r"))){
+      perror(argv[1]);
+      return 1;
+    }
+  }else{
+    printf("> ");
+  }
+
   return yyparse();
 }
+
+/*
+
+
+Codesigning requires a certificate. The following procedure explains how to create one and apply it to gdb:
+
+    Start the Keychain Access application (in /Applications/Utilities/Keychain Access.app)
+    Select the Keychain Access -> Certificate Assistant -> Create a Certificate... menu
+    Then:
+    Choose a name for the new certificate (this procedure will use "gdb-cert" as an example)
+    Set "Identity Type" to "Self Signed Root"
+    Set "Certificate Type" to "Code Signing"
+    Activate the "Let me override defaults" option
+    Click several times on "Continue" until the "Specify a Location For The Certificate" screen appears, then set "Keychain" to "System"
+    Click on "Continue" until the certificate is created
+    Finally, in the view, double-click on the new certificate, and set "When using this certificate" to "Always Trust"
+    Exit the Keychain Access application and restart the computer (this is unfortunately required)
+    Once a certificate has been created, the debugger can be codesigned as follow. In a Terminal, run the following command:
+
+$ codesign -fs gdb-cert /path/to/gdb
+where "gdb-cert" should be replaced by the actual certificate name chosen above.
+
+When run as sudo, gdb will no longer report the taskgated error.
+*/
