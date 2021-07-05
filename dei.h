@@ -41,6 +41,33 @@ enum rtype {            /* result type */
   R_die
 };
 
+/* ==== AST NODE ==== */
+
+/* Support Data
+ * function type                (bifs)
+ * selector type                (sifs)
+ * eval result type             (rtype)
+ *
+ * chainable values             (value)
+ * symbol table reference       (sym)
+ * eval result hybrid container (sym)
+ */
+
+/* Node Types
+* + - * DIV %                   (ast : math)
+* < > <= >= == !=               (ast : math)
+* & | && ||                     (ast : dice)
+* M: unary minus                (ast : math)
+*
+* R: symbol reference           (astref : any)          -> sym
+* A: symbol assignment          (astsym : start)        -> sym, ast
+* N: die definition             (astdie : die)          -> value
+* R: die roll result            (astroll : func, dice)  -> valuex2
+* I: integer leaf node          (astint : math)
+* F: built in function call     (astfunc : func)        -> ast
+* D: perform rolls              (ast : die -> func)     -> astdie
+* S: sum rolls                  (ast : dice -> math)    -> astroll
+*/
 struct value {          /* a linked list of values */
   int v;                /* value */
   struct value *next;   /* next element in list */
@@ -64,21 +91,6 @@ struct result {
   struct die *rvalue;   /* the roll value if type=R_roll */
 };
 
-/* ==== AST NODE ==== */
-
-/* Node Types
-* + - * DIV %                    (ast)
-* < > <= >= == !=                (ast)
-*
-* M unary minus                  (ast)
-* Q sum rolls                    (ast)
-* F built in function call       (fncall)
-* D die roll result              (dieroll)
-* S set die rolls                (dieroll)
-* I integer                      (integer)
-* N symbol reference             (symref)
-* A symbol assignment            (symasgn)
-*/
 
 struct ast {          /* the base ast node */
   int nodetype;       /* L, math symbols */
