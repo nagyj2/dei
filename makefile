@@ -5,7 +5,7 @@ FLEXOUT = dei.lex.c
 
 DEIFUNC = dei.lib.c
 
-CFLAGS = -Wall -g -O2 -ansi -ll
+CFLAGS = -Wall -g -ansi -ll
 
 all: clean dei_bison dei_flex dei deid
 
@@ -17,7 +17,7 @@ dei_flex: dei.l
 
 # release
 dei: dei.tab.c $(FLEXOUT) $(DEIFUNC)
-	gcc $(CFLAGS) -o $@ $^
+	gcc $(CFLAGS) -O2 -o $@ $^
 
 # debug
 deid: dei.tab.c $(FLEXOUT) $(DEIFUNC)
