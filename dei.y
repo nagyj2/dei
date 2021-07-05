@@ -51,6 +51,7 @@ int yylex(void);
 %%
 
   /* performs math on numbers */
+  /* REPRESENT: integers */
 math: math CMP math											{ $$ = newcmp($2, $1, $3); }
   |   math '+' math											{ $$ = newast('+', $1, $3); }
   |   math '-' math											{ $$ = newast('-', $1, $3); }
@@ -64,6 +65,7 @@ math: math CMP math											{ $$ = newcmp($2, $1, $3); }
   ;
 
   /* performs math on multiple die's rolls */
+    /* REPRESENT: set of rolls */
 dice: dice '&' dice											{ $$ = $1; }
   |   dice '|' dice											{ $$ = $1; }
   |   dice INTER dice										{ $$ = $1; }
@@ -73,23 +75,25 @@ dice: dice '&' dice											{ $$ = $1; }
   ;
 
   /* performs math on a single die rolls */
-func: die																{ $$ = $1; }
+  /* REPRESENT: set of rolls */
+func: die																{ $$ = $1; /*roll($1);*/ }
   |		func FUNC SELECT									{ $$ = $1; }
   |   func FUNC SELECT QUANT						{ $$ = $1; }
   |   func FUNC SELECT NUM XQUANT	  		{ $$ = $1; }
   |   func FUNC NUM									    { $$ = $1; }
   |   func FUNC NUM QUANT							  { $$ = $1; }
   |   func FUNC NUM NUM XQUANT				  { $$ = $1; }
-	;
+  |   '[' list ']'											{ $$ = setroll(setdie($2)); }
+  ;
 
   /* performs a die roll */
+  /* REPRESENT: dice -> faces, no. of rolls */
 die:  DNUM 'd' NUM											{ $$ = newroll($1, newdie(1, $3)); }
   |   DNUM 'd' '{' list '}'							{ $$ = newroll($1, setdie($4)); }
   |   DNUM 'd' '{' NUM RANGE NUM '}'    { $$ = newroll($1, newdie($4, $6)); }
   |   'd' NUM														{ $$ = newroll(1, newdie(1, $2)); }
   |   'd' '{' list '}'									{ $$ = newroll(1, setdie($3)); }
   |   'd' '{' NUM RANGE NUM '}'				  { $$ = newroll(1, newdie($3, $5)); }
-  |   '[' list ']'											{ $$ = setroll(setdie($2)); }
   |   IDENT															{ $$ = newref($1); }
   ;
 
