@@ -67,6 +67,9 @@
 "times"   { return XQUANT; }
 "time"    { return XQUANT; }
 
+"quit"    |
+"q"       { return EXIT;}
+
   /* symbol names */
 [a-zA-Z_][a-zA-Z_]*  { /*yylval.s = lookup(yytext);*/ return IDENT; }
 

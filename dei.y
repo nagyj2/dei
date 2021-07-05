@@ -27,7 +27,7 @@ int yylex(void);
 %token <fn> FUNC SELECT CMP
 %token UNION INTER DIV RANGE
 %token QUANT XQUANT
-%token EOL
+%token EXIT EOL
 
 %type <a> math dice func die
 %type <v> list
@@ -107,6 +107,7 @@ start:start math EOL										{ printf("= %d\n> ", eval($2)->ivalue); /*treefree
   |   start IDENT ':' math EOL					{ printf("saved!\n> "); }
   |   start error EOL										{ printf("error!\n> "); }
   |   start EOL													{ printf("> "); }
+  |   start EXIT EOL						        { exit(0); }
   |
   ;
 
