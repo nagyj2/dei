@@ -6,10 +6,9 @@
 #define YYDEBUG
 */
 
-#define NHASH 9997 /* size of symbol table */
 
 /* interface to the lexer */
-extern int yylineno;        /* from lexer */
+extern int yylineno;        /* current lexer lin */
 extern int yydebug;         /* debug flag */
 extern FILE *yyin;          /* input stream */
 void yyerror(char *s, ...); /* similar to printf */
@@ -18,6 +17,17 @@ int yyparse(void);
 /* --------------- STRUCTURES --------------- */
 
 /* ====== DATA ====== */
+
+/* Support Data
+ * function type                (bifs)
+ * selector type                (sifs)
+ * eval result type             (rifs)
+ *
+ * chainable values             (value)
+ * symbol table reference       (sym)
+ * eval result hybrid container (sym)
+ * eval die results             ((TODO))
+ */
 
 enum bifs {             /* built-in functions */
   B_drop = 1,
@@ -36,145 +46,139 @@ enum sifs {             /* selectors */
   /* int is achieved by substituting the sifs input with a positive number */
 };
 
-enum rtype {            /* result type */
+enum rifs {             /* result type */
   R_int = 1,
   R_die
 };
 
-/* ==== AST NODE ==== */
-
-/* Support Data
- * function type                (bifs)
- * selector type                (sifs)
- * eval result type             (rtype)
- *
- * chainable values             (value)
- * symbol table reference       (sym)
- * eval result hybrid container (sym)
- */
-
-/* Node Types
-* + - * DIV %                   (ast : math)
-* < > <= >= == !=               (ast : math)
-* & | && ||                     (ast : dice)
-* M: unary minus                (ast : math)
-*
-* R: symbol reference           (astref : any)          -> sym
-* A: symbol assignment          (astsym : start)        -> sym, ast
-* N: die definition             (astdie : die)          -> value
-* R: die roll result            (astroll : func, dice)  -> valuex2
-* I: integer leaf node          (astint : math)
-* F: built in function call     (astfunc : func)        -> ast
-* D: perform rolls              (ast : die -> func)     -> astdie
-* S: sum rolls                  (ast : dice -> math)    -> astroll
-*/
 struct value {          /* a linked list of values */
   int v;                /* value */
   struct value *next;   /* next element in list */
 };
 
-struct die {            /* describe an individual die or (in eval) a rolled die */
-  int size;             /* length of faces */
-  int max;              /* maximum integer possible on the die : NULL if die is set */
-  int min;              /* minimum integer possible : NULL if die is set */
-  struct value *faces;  /* possible faces on die or (in eval) rolled numbers */
-};
-
 struct symbol {         /* a user defined symbol */
   char *name;           /* identifier */
-  struct ast *func;     /* meaning of symbol -> a roll ast */
+  struct ast *func;     /* meaning of symbol -> an ast */
 };
 
-struct result {
+union result {          /* result value of */
   int type;             /* type of result -> rtype */
   int ivalue;           /* the integer value if type=R_int */
-  struct die *rvalue;   /* the roll value if type=R_roll */
+  struct value *rvalue; /* the roll value if type=R_roll */
 };
 
 
-struct ast {          /* the base ast node */
-  int nodetype;       /* L, math symbols */
-  struct ast *l;
-  struct ast *r;
+/* ==== AST NODE ==== */
+
+/* Node Operations
+ * CMP + - * DIV % ^
+ * & | && ||
+ * M
+ *
+ * Node Types
+ * OP ast     : operator for arbitrary binops and unops
+ * R  ast     : operatior to roll natural die -> act like Q
+ * r  ast     : operatior to roll special die -> act like Q
+ * S  ast     : operatior to sum rolled dice -> act like I
+ * D  natdie  : definition of a natural die
+ * d  setdie  : definition of a special face die
+ * Q  setres  : a set roll outcome set
+ * F  funcall : call to a special function
+ * I  natint  : individual integer
+ * E  symcall : a call to the symbol table
+ * A  symasgn : set a symbol to an ast
+ *
+ * Support Nodes (not AST nodes themselves, but are used in defining some)
+ * V  value   : chainable values
+ */
+
+struct ast {          /* R, r, S: the base ast node */
+  int nodetype;       /* OPs R r S */
+  struct ast *l;      /* left/first operand (or onlu operand) */
+  struct ast *r;      /* right/second operand -> nullable */
 };
 
-struct fncall {       /* built-in function */
-  int nodetype;       /* type 'F' */
-  enum bifs functype; /* function type to perform */
-  enum sifs seltype;  /* selection type to perform (negative) OR a die result number (positive) */
-  int count;          /* how many times to perform operation */
-  struct ast *l;      /* ast to execute function on */
+struct natdie {       /* D: a die defined by max and min */
+  int nodetype;       /* D */
+  int count;
+  int min;
+  int max;
 };
 
-struct dieroll {      /* die roll leaf node */
-  int nodetype;       /* type 'D' or 'S' */
-  int count;          /* amount of rolls */
-  struct die *used;   /* the die used to get the result */
-  /*struct value *rolls;*//* roll outcomes -> dont need to be stored in the AST */
+struct setdie {       /* d: a die defined by face values */
+  int nodetype;       /* d */
+  int count;
+  struct value *faces;
 };
 
-struct integer{       /* integer leaf node */
-  int nodetype;       /* type 'I' */
-  int value;          /* integer value */
+struct natint {       /* I: natural integer */
+  int nodetype;       /* I */
+  int integer;        /* integer value */
 };
 
-struct symref {       /* symbol reference */
-  int nodetype;       /* type 'N' */
-  struct symbol *s;   /* reference to symbol in symtab */
+struct setres {       /* Q: a set roll outcome */
+  int nodetype;       /* Q */
+  struct value *faces;/* faces on the die */
 };
 
-struct symasgn {      /* symbol assignment */
-  int nodetype;       /* type 'A' */
-  struct symbol *s;   /* ident */
-  struct ast *l;      /* value */
+struct funcall {      /* F: function call */
+  int nodetype;       /* F */
+  int times;          /* times to perform function */
+  int functype;       /* function id */
+  int selector;       /* selector id */
+  struct ast *l;      /* astroll used */
 };
+
+struct symcall {      /* E: symbol call (in expression) */
+  int nodetype;       /* E */
+  struct symbol *s;   /* referenced symbol */
+};
+
+struct symasgn {      /* A: assign an ast to a symbol  */
+  int nodetype;       /* A */
+  struct symbol *s;   /* referenced symbol */
+  struct ast *l;      /* the ast to assign to symbol */
+};
+
 
 /* -------------- SYMBOL TABLE -------------- */
 
+#define NHASH 9997 /* size of symbol table */
 struct symbol symtab[NHASH];    /* symbol table itself */
 struct symbol *lookup(char *s); /* looks up a string in the symbol table and returns the entry */
+
 
 /* ---------------- FUNCTION ---------------- */
 
 /* build an ast */
 struct ast *newast(int nodetype, struct ast *l, struct ast *r); /* op node */
 struct ast *newcmp(int cmptype, struct ast *l, struct ast *r);  /* cmp op node */
+
+struct ast *newnatdie(int count, int min, int max);             /* create a new die definition */
+struct ast *newsetdie(int count, struct value *faces);
+
+struct ast *newsetres(struct value *faces);                     /* create a new roll definition */
                                                                 /* function call */
-struct ast *newfunc(enum bifs functype, enum sifs selector, struct ast *base, int count);
+struct ast *newfunc(int functype, int selectype, int times, struct ast *operand);
+struct ast *newnatint(int integer);                             /* create an integer */
+
 struct ast *newref(struct symbol *s);                           /* symbol call */
 struct ast *newasgn(struct symbol *s, struct ast *meaning);     /* symbol assignment */
-struct ast *newint(int value);                                  /* leaf integer */
-struct ast *newroll(int count, struct die *dice);               /* perform a die roll */
-struct ast *setroll(struct die *rolls);                         /* set the rolls to the face */
-struct ast *newsum(struct ast *roll);                           /* sum rolls into a single int */
 
-struct die *newdie(int min, int max);                           /* create a die from min and max */
-struct die *setdie(struct value *rolls);                        /* create a die from a list of values */
+struct value *newvalue(int i, struct value *val);               /* create a value or chain them together */
 
-struct value *addvalue(int i, struct value *val);               /* create a value or chain them together */
-
-/* define a function - saves the parsed ast */
-/* void dodef(struct symbol *name, struct symlist *syms, struct ast *stmts); */
+/* set the value of a symbol - save the ast */
 void setsym(struct symbol *name, struct ast *val);
 
 /* evaluate ast */
-struct result *eval(struct ast *a);
+union result *eval(struct ast *a);
+
+/* print the ast to the screen */
+void printtree(struct ast *a);
+
 
 /* delete and free ast */
 void treefree(struct ast *a);
-void diefree(struct die *a);
-
-/* ------------- AST EVALUATION ------------- */
-
-#ifdef FIX
-
-/* sum a set of rolls */
-int sum(struct dieroll *a);
-
-/* evaluate a roll to a single set of dicerolls */
-int eval(struct ast *a);
 
 /* perform a function on a function call */
-/* static */ int callbuiltin(struct fncall *);
-
-#endif
+/* static  int callbuiltin(struct astfunc *); */

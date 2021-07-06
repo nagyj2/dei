@@ -71,7 +71,7 @@
 "q"       { return EXIT;}
 
   /* symbol names */
-[a-zA-Z_][a-zA-Z_]*  { /*yylval.s = lookup(yytext);*/ return IDENT; }
+[a-zA-Z_][a-zA-Z_]*  { yylval.s = lookup(yytext); return IDENT; }
 
   /* number */
 [0-9]+/"d"  { yylval.d = atoi(yytext); return DNUM; } /* detect die quantifiers different */

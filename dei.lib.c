@@ -37,7 +37,7 @@ int sumvalue(struct value *val){
 }
 
 /* append a new value node to the beginning of a chain */
-struct value *addvalue(int i, struct value *val){
+struct value *newvalue(int i, struct value *val){
   struct value *a = malloc(sizeof(struct value));
 
   if (!a){
@@ -94,9 +94,8 @@ struct symbol *lookup(char * sym){
 
 /* ----------- AST CREATION FUNCS ----------- */
 
-/* create a new ast node */
+/* R r S : create a new ast node */
 struct ast *newast(int nodetype, struct ast *l, struct ast *r){
-
   struct ast *a = malloc(sizeof(struct ast));
 
   if (!a){
@@ -112,7 +111,6 @@ struct ast *newast(int nodetype, struct ast *l, struct ast *r){
 
 /* create a comparison type node */
 struct ast *newcmp(int cmptype, struct ast *l, struct ast *r){
-
   struct ast *a = malloc(sizeof(struct ast));
 
   if (!a){
@@ -126,12 +124,56 @@ struct ast *newcmp(int cmptype, struct ast *l, struct ast *r){
   return a;
 }
 
-/* create a built in function call node */
-struct ast *newfunc(enum bifs functype, enum sifs selector, struct ast *base, int count){
-  /* selector < 0 indicates a special selector was used -> sifs */
-  /* functype -> bifs */
+/* D : create a natural die */
+struct ast *newnatdie(int count, int min, int max){
+  struct natdie *a = malloc(sizeof(struct natdie));
 
-  struct fncall *a = malloc(sizeof(struct ast));
+  if (!a){
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = 'D';
+  a->count = count;
+  a->min = min;
+  a->max = max;
+
+  return (struct ast *)a;
+}
+
+/* d : create a special face die */
+struct ast *newsetdie(int count, struct value *faces){
+  struct setdie *a = malloc(sizeof(struct setdie));
+
+  if (!a){
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = 'd';
+  a->count = count;
+  a->faces = faces;
+
+  return (struct ast *)a;
+}
+
+/* Q : create a node to roll the contained die */
+struct ast *newsetres(struct value *faces){
+  struct setres *a = malloc(sizeof(struct setres)); /* return value */
+
+  if (!a){
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = 'Q';
+  a->faces = faces;
+  return (struct ast *)a;
+}
+
+/* F : create a built in function call node */
+struct ast *newfunc(int functype, int selectype, int times, struct ast *operand){
+  struct funcall *a = malloc(sizeof(struct funcall));
 
   if (!a){
     yyerror("out of space");
@@ -139,31 +181,43 @@ struct ast *newfunc(enum bifs functype, enum sifs selector, struct ast *base, in
   }
 
   a->nodetype = 'F';
-  a->functype = functype;   /* type of function to perform */
-  a->seltype = selector;    /* function argument (selector) */
-  a->count = count;         /* how many times to perform function */
-  a->l = base;              /* ast to perform function on */
+  a->times = times;
+  a->functype = functype;
+  a->selector = selectype;
+  a->l = operand;
   return (struct ast *)a;
 }
 
-/* create a symbol (variable) call node */
-struct ast *newref(struct symbol *s){
+/* I : create a natural integer */
+struct ast *newnatint(int integer){
+  struct natint *a = malloc(sizeof(struct natint)); /* return value */
 
-  struct symref *a = malloc(sizeof(struct symref));
+  if (!a){
+    yyerror("out of space");
+    exit(0);
+  }
+
+  a->nodetype = 'I';
+  a->integer = integer;
+  return (struct ast *)a;
+}
+
+/* E : create a symbol (variable) call node */
+struct ast *newref(struct symbol *s){
+  struct symcall *a = malloc(sizeof(struct symcall));
 
   if(!a) {
     yyerror("out of space");
     exit(0);
   }
 
-  a->nodetype = 'N';
+  a->nodetype = 'E';
   a->s = s;
   return (struct ast *)a;
 }
 
-/* create symbol (variable) assignment node */
+/* A : create symbol (variable) assignment node */
 struct ast *newasgn(struct symbol *s, struct ast *meaning){
-
   struct symasgn *a = malloc(sizeof(struct symasgn));
 
   if (!a){
@@ -177,132 +231,133 @@ struct ast *newasgn(struct symbol *s, struct ast *meaning){
   return (struct ast *)a;
 }
 
-/* create symbol (variable) assignment node */
-struct ast *newroll(int count, struct die *face){
 
-  struct dieroll *a = malloc(sizeof(struct dieroll));
+/* ------------- AST EVALUATION ------------- */
 
-  if (!a){
-    yyerror("out of space");
-    exit(0);
-  }
+void printtree(struct ast *a){
+  switch (a->nodetype){
 
-  a->nodetype = 'D';      /* eval -> treat used as die faces for a roll */
-  a->used = face;         /* die faces to use for roll generation */
-  a->count = count;       /* how many rolls to perform */
-  return (struct ast *)a;
-}
+  case '+': case '-': case '*': case '%': case '^': case '&': case '|':
+    printf("(");/*printf("%c(", a->nodetype);*/
+    printtree(a->l);
+    printf("%c",a->nodetype);/*printf(",");*/
+    printtree(a->r);
+    printf(")");
+    break;
 
-/* set a roll face node to a roll result */
-struct ast *setroll(struct die *rolls){
+  case 'M': case 'R': case 'r': case 'S':
+    printf("%c(", a->nodetype);
+    printtree(a->l);
+    printf(")");
+    break;
 
-  struct dieroll *a = malloc(sizeof(struct dieroll));
+  case DIV: case INTER: case UNION:
+    printf("(");/*printf("//(");*/
+    printtree(a->l);
+    printf("%s",(a->nodetype==DIV?"//":a->nodetype==INTER?"&&":"||"));/*printf(",");*/
+    printtree(a->r);
+    printf(")");
+    break;
 
-  if (!a){
-    yyerror("out of space");
-    exit(0);
-  }
+  case '1': /* > */
+    printf("(");
+    printtree(a->l);
+    printf(">");
+    printtree(a->r);
+    printf(")");
+    break;
 
-  a->nodetype = 'S';      /* eval -> treat used as rolls */
-  a->used = rolls;        /* none because setroll doesnt use a random r */
-  a->count = rolls->size; /* number of rolls */
-  return (struct ast *)a;
+  case '2': /* < */
+    printf("(");
+    printtree(a->l);
+    printf("<");
+    printtree(a->r);
+    printf(")");
+    break;
 
-}
+  case '3': /* != */
+    printf("(");
+    printtree(a->l);
+    printf("!=");
+    printtree(a->r);
+    printf(")");
+    break;
 
-/* create a leaf node from an integer */
-struct ast *newint(int value){
-  struct integer *a = malloc(sizeof(struct integer));
+  case '4': /* == */
+    printf("(");
+    printtree(a->l);
+    printf("==");
+    printtree(a->r);
+    printf(")");
+    break;
 
-  if (!a){
-    yyerror("out of space");
-    exit(0);
-  }
+  case '5': /* >= */
+    printf("(");
+    printtree(a->l);
+    printf(">=");
+    printtree(a->r);
+    printf(")");
+    break;
 
-  a->nodetype = 'I';
-  a->value = value;
-  return (struct ast *)a;
-}
+  case '6': /* <= */
+    printf("(");
+    printtree(a->l);
+    printf("<=");
+    printtree(a->r);
+    printf(")");
+    break;
 
-/* create a leaf node */
-struct ast *newsum(struct ast *roll){
-  struct ast *a = malloc(sizeof(struct ast));
+  case 'D':
+    printf("{%d,%d:%d}",((struct natdie *)a)->min, ((struct natdie *)a)->max, ((struct natdie *)a)->count);
+    break;
 
-  if (!a){
-    yyerror("out of space");
-    exit(0);
-  }
-
-  a->nodetype = 'Q';
-  a->l = roll;
-  return a;
-}
-
-/* create a rollface from a face max */
-struct die *newdie(int min, int max){
-
-  if (max <= min){
-    yyerror("invalid die");
-    exit(0);
-  }
-
-  struct die *d = malloc(sizeof(struct die));
-  struct value *a = NULL;
-  if (!d){
-    yyerror("out of space");
-    exit(0);
-  }
-
-  int i;
-  for(i = max; i >= min; i--) {                     /* start at max so output a is the lowest */
-    struct value *b = malloc(sizeof(struct value)); /* will become the tail */
-
-    if (!b){
-      yyerror("out of space");
-      exit(0);
+  case 'd':{
+    struct value *t = ((struct setres *)a)->faces;
+    printf("{%d", t->v);
+    for (t = t->next; t; t = t->next) printf(",%d", t->v);
+    printf("}");
+    free(t);
+    break;
     }
 
-    /* fill out new value node */
-    b->v = i;
-    b->next = a;
-    a = b;
-  }
+  case 'Q':{
+    struct value *t = ((struct setres *)a)->faces;
+    printf("[%d", t->v);
+    for (t = t->next; t; t = t->next) printf(",%d", (t->v));
+    printf("]");
+    free(t);
+    break;
+    }
 
-  d->faces = a;
-  d->size = max - min + 1; /* +1 since max is inclusive */
-  d->max = max;
-  d->min = min;
-  return d;
+  case 'F':
+    printf("F(%d,%d,(",
+      ((struct funcall *)a)->functype,
+      ((struct funcall *)a)->selector
+    );
+    printtree(((struct funcall *)a)->l);
+    printf("):%d)", ((struct funcall *)a)->times);
+    break;
+
+  case 'I':
+    printf("%d",((struct natint *)a)->integer);
+    break;
+
+  case 'E':
+    printf("%s", ((struct symcall *)a)->s->name );
+    break;
+
+  case 'A':
+    printf("%s", ((struct symasgn *)a)->s->name );
+    printf("::=");
+    printtree( ((struct symasgn *)a)->l );
+    break;
+
+  }
 }
 
-/* set the die faces to be a link of  roll face */
-struct die *setdie(struct value *rolls){
-
-  struct die *d = malloc(sizeof(struct die));
-
-  if (!d){
-    yyerror("out of space");
-    exit(0);
-  }
-
-  d->faces = rolls;
-  d->size = countvalue(rolls);   /* count of faces */
-  /* d->max = NULL; invalid since there was no die roll */
-  /* d->min = NULL; invalid since there was no die roll */
-  return d;
-}
 
 
-/* recursively free dice */
-void diefree(struct die *a){
-  struct value *t = a->faces, *p = a->faces;  /* current node and previous node */
-  /* set previous to start node since t is set to 2nd place immediately */
-  for (t = t->next; t; t = t->next){
-    free(p);
-    p = t;
-  }
-  free(a);
-}
+#ifdef FIX
 
 /* recursively free ast nodes */
 void treefree(struct ast *a){
@@ -339,7 +394,6 @@ void treefree(struct ast *a){
 
   free(a); /* free node itself */
 }
-
 
 /* ------------- AST EVALUATION ------------- */
 
@@ -482,8 +536,6 @@ struct result *eval(struct ast *a){
   return v;
 }
 
-#ifdef FIX
-
 /* define a symbol (variable) */
 void dosym(struct symbol *name, struct ast *val){
   if (name->func) treefree(name->func);
@@ -585,7 +637,19 @@ static int callbuiltin(struct fncall *f){
   }
 }
 
+/* recursively free dice */
+void diefree(struct die *a){
+  struct value *t = a->faces, *p = a->faces;  /* current node and previous node */
+  /* set previous to start node since t is set to 2nd place immediately */
+  for (t = t->next; t; t = t->next){
+    free(p);
+    p = t;
+  }
+  free(a);
+}
+
 #endif
+
 
 void yyerror(char *s, ...){
   va_list ap;
@@ -615,27 +679,3 @@ int main(int argc, char **argv){
 
   return yyparse();
 }
-
-/*
-
-
-Codesigning requires a certificate. The following procedure explains how to create one and apply it to gdb:
-
-    Start the Keychain Access application (in /Applications/Utilities/Keychain Access.app)
-    Select the Keychain Access -> Certificate Assistant -> Create a Certificate... menu
-    Then:
-    Choose a name for the new certificate (this procedure will use "gdb-cert" as an example)
-    Set "Identity Type" to "Self Signed Root"
-    Set "Certificate Type" to "Code Signing"
-    Activate the "Let me override defaults" option
-    Click several times on "Continue" until the "Specify a Location For The Certificate" screen appears, then set "Keychain" to "System"
-    Click on "Continue" until the certificate is created
-    Finally, in the view, double-click on the new certificate, and set "When using this certificate" to "Always Trust"
-    Exit the Keychain Access application and restart the computer (this is unfortunately required)
-    Once a certificate has been created, the debugger can be codesigned as follow. In a Terminal, run the following command:
-
-$ codesign -fs gdb-cert /path/to/gdb
-where "gdb-cert" should be replaced by the actual certificate name chosen above.
-
-When run as sudo, gdb will no longer report the taskgated error.
-*/
