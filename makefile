@@ -5,7 +5,7 @@ FLEXOUT = dei.lex.c
 
 DEIFUNC = dei.lib.c
 
-CFLAGS = -Wall -g -ansi -ll
+CFLAGS = -Wall -g -std=c11 -ll
 
 all: clean dei_bison dei_flex dei deid
 
