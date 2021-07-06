@@ -100,15 +100,15 @@ struct ast {          /* R, r, S: the base ast node */
 
 struct natdie {       /* D: a die defined by max and min */
   int nodetype;       /* D */
-  int count;
-  int min;
-  int max;
+  int count;          /* number of rolls */
+  int min;            /* minimum die face */
+  int max;            /* maximum die face */
 };
 
 struct setdie {       /* d: a die defined by face values */
   int nodetype;       /* d */
-  int count;
-  struct value *faces;
+  int count;          /* number of rolls */
+  struct value *faces;/* faces of the die */
 };
 
 struct natint {       /* I: natural integer */
@@ -118,7 +118,7 @@ struct natint {       /* I: natural integer */
 
 struct setres {       /* Q: a set roll outcome */
   int nodetype;       /* Q */
-  struct value *faces;/* faces on the die */
+  struct value *faces;/* roll results */
 };
 
 struct funcall {      /* F: function call */
@@ -154,8 +154,8 @@ struct symbol *lookup(char *s); /* looks up a string in the symbol table and ret
 struct ast *newast(int nodetype, struct ast *l, struct ast *r); /* op node */
 struct ast *newcmp(int cmptype, struct ast *l, struct ast *r);  /* cmp op node */
 
-struct ast *newnatdie(int count, int min, int max);             /* create a new die definition */
-struct ast *newsetdie(int count, struct value *faces);
+struct ast *newnatdie(int count, int min, int max);             /* create a new natural die */
+struct ast *newsetdie(int count, struct value *faces);          /* create a new special die */
 
 struct ast *newsetres(struct value *faces);                     /* create a new roll definition */
                                                                 /* function call */
