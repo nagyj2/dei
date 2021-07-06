@@ -102,8 +102,8 @@ list: NUM                               { $$ = newvalue($1, NULL); }
   ;
 
   /* performs top-level actions */
-start:start math EOL										{ printtree($2); printf("\n> "); /* eval($2)->ivalue); treefree($2);*/ }
-  |   start IDENT ':' math EOL					{ printtree(newasgn($2, $4)); printf("\n> "); }
+start:start math EOL										{ printf("out <- "); printtree($2); treefree($2); printf("\n> "); /* eval($2)->ivalue); treefree($2);*/ }
+  |   start IDENT ':' math EOL					{ struct ast *a = newasgn($2, $4); printtree(a); treefree(a); /* TODO: setsym */ printf("\n> "); }
   |   start error EOL										{ printf("error!\n> "); }
   |   start EOL													{ printf("> "); }
   |   start EXIT EOL						        { exit(0); }

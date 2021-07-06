@@ -180,5 +180,8 @@ void printtree(struct ast *a);
 /* delete and free ast */
 void treefree(struct ast *a);
 
+/* free all elements of a value chain */
+void valuefree(struct value *a);
+
 /* perform a function on a function call */
 /* static  int callbuiltin(struct astfunc *); */
