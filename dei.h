@@ -47,8 +47,9 @@ enum sifs {             /* selectors */
 };
 
 enum rifs {             /* result type */
-  R_int = 1,
-  R_die
+  R_int = 1,            /* an integer result */
+  R_roll,               /* a set of rolls and the die used */
+  R_die                 /* a die with faces and times to roll */
 };
 
 struct value {          /* a linked list of values */
@@ -61,10 +62,21 @@ struct symbol {         /* a user defined symbol */
   struct ast *func;     /* meaning of symbol -> an ast */
 };
 
-union result {          /* result value of */
-  int type;             /* type of result -> rtype */
-  int ivalue;           /* the integer value if type=R_int */
-  struct value *rvalue; /* the roll value if type=R_roll */
+struct die {            /* result for a die defintion */
+  int count;            /* number of rolls */
+  struct value* faces;  /* die faces */
+};
+
+struct roll {           /* result for a die roll */
+  struct value *out;    /* roll result */
+  struct value *faces;  /* used die */
+};
+
+struct result {         /* result value of */
+  int type;             /* type of result -> rifs */
+  int i;                /* holder for integer */
+  struct roll *r;       /* holder for roll result, die used */
+  struct die *d;        /* holder for die faces, rolls required */
 };
 
 
@@ -171,7 +183,7 @@ struct value *newvalue(int i, struct value *val);               /* create a valu
 void setsym(struct symbol *name, struct ast *val);
 
 /* evaluate ast */
-union result *eval(struct ast *a);
+struct result *eval(struct ast *a);
 
 /* print the ast to the screen */
 void printtree(struct ast *a);
@@ -182,6 +194,9 @@ void treefree(struct ast *a);
 
 /* free all elements of a value chain */
 void valuefree(struct value *a);
+
+/* free result variable */
+void resultfree(struct result *a);
 
 /* perform a function on a function call */
 /* static  int callbuiltin(struct astfunc *); */
