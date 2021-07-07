@@ -8,6 +8,11 @@ deid.dSYM/**/*
 dei.lex.*
 dei.tab.*
 dei.output
+dei.log
 R
+
+save*/**/*
+storage*/**/*
+test*/**/*
 
 .DS_STORE
