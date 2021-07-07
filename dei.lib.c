@@ -11,7 +11,7 @@
 
 /* ------------- UTILITY FUNC ------------- */
 
-
+FILE *logger;
 extern struct symbol symtab[];    /* symbol table itself */
 
 void yyerror(char *s, ...){
@@ -764,12 +764,18 @@ int main(int argc, char **argv){
   yydebug = 1;
   #endif
 
+  logger = fopen("dei.log", "a+"); // a+ (create + append) option will allow appending which is useful in a log file
+  if (logger == NULL) { perror("Failed: "); return 1; }
+
+  time_t rawtime;
+  struct tm *timeinfo;
+  time(&rawtime);
+  timeinfo = localtime(&rawtime);
+
+  fprintf(logger, "=== %s  ===\n", asctime(timeinfo));
+
   /* seed rng with current time */
   srand(time(NULL));
-
-  /* allocate memory for symbol table */
-  // struct symbol *symtab = malloc(NHASH * sizeof(struct symbol));
-
 
   if (argc > 1){
     if (!(yyin = fopen(argv[1], "r"))){
