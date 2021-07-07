@@ -39,11 +39,10 @@ int countvalue(struct value *val){
 }*/
 
 /* generate a random number within a set of faces */
-int randroll(int len, struct value *faces){
+int randroll(struct value *faces){
   struct value *t = faces;
-  int index = rand() % len;
-  //printf("pos %d\n",index);
-  for (index; index > 0; index--)
+  int index, len = countvalue(faces);
+  for (index = rand() % len; index > 0; index--)
     t = t->next;
   return t->v;
 }
@@ -93,12 +92,8 @@ struct value *createnatdieface(int min, int max){
   if (min>max) yyerror("invalid die, %d,%d", min, max);
   struct value *a = newvalue(min,NULL);
   int i;
-  //printf("new die ");
-  for (i = max; i >= min; i--){
+  for (i = min + 1; i <= max; i++)
     a = newvalue(i,a);
-    //printf(" %d", i);
-  }
-  //printf("\n");
   return a;
 }
 
@@ -776,6 +771,10 @@ int main(int argc, char **argv){
 
   /* seed rng with current time */
   srand(time(NULL));
+
+  /* allocate memory for symbol table */
+  // struct symbol *symtab = malloc(NHASH * sizeof(struct symbol));
+
 
   if (argc > 1){
     if (!(yyin = fopen(argv[1], "r"))){
