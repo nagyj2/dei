@@ -86,11 +86,11 @@ bool containvalue(struct value *key, struct value *list){
 /* create the faces of a natural die for result */
 struct value *createnatdieface(int min, int max){
   if (min>max) yyerror("invalid die, %d,%d", min, max);
-  struct value *a;
-  int i;
-  for (i = min; i <= max; i++){
-    a = newvalue(i,a);
-  }
+  struct value *a = NULL;
+  int i = min;
+  do {
+    a = newvalue(i++, (a) ? a : NULL); /* ensure first null pointer */
+  } while (i <= max);
   return a;
 }
 
@@ -689,6 +689,7 @@ struct result *eval(struct ast *a){
       v->d = malloc(sizeof(struct die));
       v->d->count = ((struct natdie *)a)->count;
       v->d->faces = createnatdieface( ((struct natdie *)a)->min, ((struct natdie *)a)->max );
+      printf("new die: "); printvalue(v->d->faces); printf("\n");
       break;
 
     case 'd':
@@ -696,6 +697,7 @@ struct result *eval(struct ast *a){
       v->d = malloc(sizeof(struct die));
       v->d->count = ((struct setdie *)a)->count;
       v->d->faces = ((struct setdie *)a)->faces;
+      printf("new die: "); printvalue(v->d->faces); printf("\n");
       break;
 
     case 'R': case 'r': {
@@ -708,10 +710,15 @@ struct result *eval(struct ast *a){
       }
 
       v->r = malloc(sizeof(struct roll));
-      int i, length = countvalue(r->d->faces);
-      for (i = 0; i < r->d->count; i++)
-        v->r->out = newvalue(randroll(length, r->d->faces), v->r->out);
       v->r->faces = r->d->faces;
+      int i = 1, length = countvalue(v->r->faces);
+      /*printf("len:%d\n", length);*/
+      do {
+        int roll = randroll(length, v->r->faces);
+        v->r->out = newvalue(roll, (v->r->out) ? v->r->out : NULL );
+        /* printf("roll %d\n", roll); printvalue(v->r->out); */
+      } while (i++ < r->d->count);
+
       //resultfree(r);
       free(r);
       break;
