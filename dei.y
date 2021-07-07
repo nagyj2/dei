@@ -104,7 +104,7 @@ list: NUM                               { $$ = newvalue($1, NULL); }
   /* performs top-level actions */
 start:start math EOL										{
         struct result *r = eval($2);
-        printf("out <- "); printtree($2);
+        /* printf("out <- "); */ printtree($2);
         printf(" = %d",r->i);
         resultfree(r);
         treefree($2);
