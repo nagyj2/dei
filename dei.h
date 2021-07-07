@@ -158,7 +158,7 @@ struct symasgn {      /* A: assign an ast to a symbol  */
 #define NHASH 9997 /* size of symbol table */
 struct symbol symtab[NHASH];    /* symbol table itself */
 struct symbol *lookup(char *s); /* looks up a string in the symbol table and returns the entry */
-
+void printsymtab(); /* print entries in the table */
 
 /* ---------------- FUNCTION ---------------- */
 
