@@ -4,15 +4,23 @@
 #include <string.h> /* needed for strdup() */
 #include <math.h> /* needed for pow() */
 #include <time.h> /* needed for time() */
+#include <stdbool.h> /* needed for bool, true, false */
 
 #include "dei.tab.h"
 #include "dei.h"
 
 /* ------------- UTILITY FUNC ------------- */
 
-/* generate a random number between min and max, inclusive */
-int randint(int min, int max){
-  return (rand() % (max - min + 1)) + min;
+
+extern struct symbol symtab[];    /* symbol table itself */
+
+void yyerror(char *s, ...){
+  va_list ap;
+  va_start(ap, s);
+
+  fprintf(stderr, "%d: error : ", yylineno);
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
 }
 
 /* count values in a chain */
@@ -24,13 +32,27 @@ int countvalue(struct value *val){
   return c;
 }
 
+/* generate a random number between min and max, inclusive */
+/*int randinti(int min, int max){
+  return (rand() % (max - min + 1)) + min;
+}*/
+
+/* generate a random number within a set of faces */
+int randint(struct value *faces){
+  struct value *t = faces;
+  int index, len = countvalue(faces);
+  for (index = rand() % len; index > 0; index--)
+    t = t->next;
+  return t->v;
+}
+
 /* sum values of a chain */
 int sumvalue(struct value *val){
   struct value *t;
   int s = 0;
 
-  for (t = val; t != NULL; t=t->next){
-    s+=(t->v);
+  for (t = val; t; t = t->next){
+    s += (t->v);
   }
 
   return s;
@@ -50,10 +72,127 @@ struct value *newvalue(int i, struct value *val){
   return a;
 }
 
-/* define a symbol (variable) */
-void dosym(struct symbol *name, struct ast *val){
-  if (name->func) treefree(name->func);
-  name->func = val;
+/* check if key is in list's CHAIN */
+bool containvalue(struct value *key, struct value *list){
+  struct value *t;
+
+  for (t = list; t != NULL; t = t->next){
+    if (t->v == key->v) return true;
+  }
+
+  return false;
+}
+
+
+/* --------- UTILITY EVAL FUNCTIONS --------- */
+
+/* create the faces of a natural die for result */
+struct value *createnatdieface(int min, int max){
+  if (min>max) yyerror("invalid die, %d,%d", min, max);
+  struct value *a = newvalue(min,NULL);
+  int i;
+  for (i = min + 1; i <= max; i++)
+    a = newvalue(i,a);
+  return a;
+}
+
+/* create the faces of a set die for result */
+struct value *createsetdieface(struct value *a){
+  if (!a) { yyerror("invalid set die"); return newvalue(0,NULL); }
+  return a;
+}
+
+/* find intersection and append intersecting to a */
+struct roll *evalElemInter(struct roll *a, struct roll *b){
+  struct roll *r;   /* output  */
+  struct value *t;
+
+  r = a; /* set r to a initially */
+
+  for (t = a->out; t != NULL; t = t->next)
+    if (containvalue(t, b->out))
+      r->out = newvalue(t->v, a->out);
+
+  /* TODO : Need to use resultfree */
+  // free(a);  /* WARNING : Side effect is freeing args */
+  // free(b);  /* DEBUG : does freeing a leave r? */
+  return r;
+}
+
+/* find union and append intersecting to a */
+struct roll *evalElemUnion(struct roll *a, struct roll *b){
+  struct roll *r;   /* output  */
+  struct value *t;
+
+  r = a; /* set r to a initially */
+
+  for (t = a->out; t != NULL; t = t->next)
+    r->out = newvalue(t->v, a->out);
+
+  /* TODO : Need to use resultfree */
+  // free(a);  /* WARNING : Side effect is freeing args */
+  // free(b);  /* DEBUG : does freeing a leave r? */
+  return r;
+}
+
+/* find intersection of two operands */
+struct roll *evalSetInter(struct roll *a, struct roll *b){
+  struct roll *r = malloc(sizeof(struct roll));   /* output  */
+  struct value *t;
+
+  for (t = a->out; t != NULL; t = t->next)
+    if (containvalue(t, b->out))
+      r->out = newvalue(t->v, a->out);
+
+  /* TODO : Need to use resultfree */
+  // free(a);  /* WARNING : Side effect is freeing args */
+  // free(b);
+  return r;
+}
+
+/* find union of two operands */
+struct roll *evalSetUnion(struct roll *a, struct roll *b){
+  struct roll *r;   /* output  */
+  struct value *t;
+
+  r = a; /* set r to a initially */
+
+  for (t = a->out; t != NULL; t = t->next)
+    if (containvalue(t, b->out) && !containvalue(t,r->out))
+      r->out = newvalue(t->v, a->out);
+
+  /* TODO : Need to use resultfree */
+  // free(a);  /* WARNING : Side effect is freeing args */
+  // free(b);  /* DEBUG : does freeing a leave r? */
+  return r;
+}
+
+/* roll a natural die */
+struct roll *evalNatRoll(struct die *d){
+  struct roll *r = malloc(sizeof(struct roll));
+  int i;
+  for (i = 0; i < d->count; i++){
+    r->out = newvalue(randint(d->faces),r->out);
+  }
+  r->faces = d->faces;
+  return r;
+}
+
+/* roll a special die */
+struct roll *evalSetRoll(struct die *d){
+  struct roll *r = malloc(sizeof(struct roll));
+  int i;
+  for (i = 0; i < d->count; i++){
+    r->out = newvalue(randint(d->faces),r->out);
+  }
+  r->faces = d->faces;
+  return r;
+}
+
+/* sum results of a roll */
+int evalSum(struct roll *r){
+  int i = sumvalue(r->out);
+  return i;
 }
 
 
@@ -78,13 +217,17 @@ struct symbol *lookup(char * sym){
   while (--scount >= 0){
     /* if entry exists, check if it is the same and return if it is */
     if (sp->name && !strcmp(sp->name, sym)) {
+
+      printf("found %s at %p\n", sp->name, sp);
       return sp;
     }
 
     /* if no entry, make an entry and return it */
     if (!sp->name){
       sp->name = strdup(sym);
-      sp->func = NULL;
+      sp->func = malloc(sizeof(struct ast));
+      sp->func = newnatint(0);                /* initialize to protect against errors */
+      printf("new %s at %p(%p)\n", sp->name, sp, sp->func);
       return sp;
     }
 
@@ -95,6 +238,31 @@ struct symbol *lookup(char * sym){
 
   yyerror("symbol table overflow\n");
   abort(); /* tried all entries, table is full */
+}
+
+/* define a symbol (variable) */
+void setsym(struct symbol *name, struct ast *val){
+  printf("place at %p\n", name);
+  if (name->func){ /* NOTE allocated in lookup, so this will always run*/
+    treefree(name->func);
+    name->func = malloc(sizeof(struct ast));
+  }
+
+  name->func = val;
+}
+
+
+void printsymtab(){
+  int i;
+  printf("Start table>");
+  for (i=0; i<NHASH; i++){
+    struct symbol *sp = &symtab[i];
+    if (sp->name)
+      printf("\t> %s : ", sp->name);
+      printtree(sp->func);
+      printf("\n");
+  }
+  printf("======\n");
 }
 
 
@@ -350,7 +518,9 @@ void printtree(struct ast *a){
     break;
 
   case 'E':
-    printf("%s", ((struct symcall *)a)->s->name );
+    printf("$%s:", ((struct symcall *)a)->s->name );
+    printtree( ((struct symcall *)a)->s->func );
+    printf("$");
     break;
 
   case 'A':
@@ -362,8 +532,41 @@ void printtree(struct ast *a){
   }
 }
 
-/* recursively free ast nodes */
+/* sequentially free chain of values */
+void valuefree(struct value *a){
+  struct value *na;
+  while(a != NULL){
+    na = a->next;
+    free(a);
+    a = na;
+  }
+}
+
+void resultfree(struct result *a){
+  switch (a->type){
+  case R_int:
+    break;
+
+  case R_roll:
+    if (a->r->faces)
+      valuefree(a->r->faces);
+    if (a->r->out)
+      valuefree(a->r->out);
+    break;
+
+  case R_die:
+    if (a->d->faces)
+      valuefree(a->d->faces);
+    break;
+
+  default:
+    printf("unrecognized result: %c",a->type);
+  }
+  free(a);
+}
+
 void treefree(struct ast *a){
+
   switch (a->nodetype){
 
   /* 2 ast subtrees */
@@ -380,12 +583,16 @@ void treefree(struct ast *a){
   case 'D': case 'I': case 'E':
     break;
 
+    /* special */
   /* 1 value subtree */
-  case 'd': case 'Q':
+  case 'd':
+    valuefree( ((struct setdie *)a)->faces );
+    break;
+
+  case 'Q':
     valuefree( ((struct setres *)a)->faces );
     break;
 
-  /* special */
   /* function call -> requires cast */
   case 'F':
     treefree(((struct funcall *)a)->l);
@@ -396,273 +603,106 @@ void treefree(struct ast *a){
     treefree( ((struct symasgn *)a)->l );
     break;
 
-  default:
-    printf("unknown nodetype: %c:", a->nodetype);
-    return;
+  default:;
+    //printf("unknown nodetype: %d:", a->nodetype);
 
   }
   free(a); /* free node itself */
 }
 
-/* sequentially free chain of values */
-void valuefree(struct value *a){
-  struct value *na;
-  while(a){
-    na = a->next;
-    free(a);
-    a = na;
+struct result *eval(struct ast *a){
+  if (!a){
+    yyerror("internal error, null eval");
+    return 0;
   }
-}
 
+  struct result* v = malloc(sizeof(struct result)); /* result value - set default */
+  if (!v){
+    yyerror("out of space");
+    return 0;
+  }
 
-#ifdef FIX
+  switch (a->nodetype){
 
-  /* ------------- AST EVALUATION ------------- */
-
-  struct result *eval(struct ast *a){
-    /* evaluates the result of ast node a */
-
-    struct result* v = malloc(sizeof(struct result)); /* result value - set default */
-
-
-    if (!v){
-      yyerror("out of space");
-      return 0;
-    }
-    if (!a){
-      yyerror("internal error, null eval");
-      return 0;
-    }
-
-    /* Node Types
-     * + - * DIV %                    (ast)
-     * < > <= >= == !=                (ast)
-     *
-     * M unary minus                  (ast)
-     * D die roll result              (dieroll)
-     * S set die rolls                (dieroll)
-     * N symbol reference             (symref)
-     * L expression or statement list (ast)
-     * F built in function call       (fncall)
-     * A symbol assignment            (symasgn)
-     */
-
-    switch (a->nodetype){
-
+      /* Leaf Nodes */
       /* a leaf integer */
     case 'I':
       v->type = R_int;
-      v->ivalue = ((struct integer *)a)->value;
+      v->i = ((struct natint *)a)->integer;
       break;
 
-      /* a set of die rolls */
-    case 'D':
-      /* struct dieroll *r = (struct dieroll *)a; */  /* cast roll to proper struct */
-      v->rvalue = malloc(sizeof(struct die));   /* create rolled output var */
+    case '+': case '-': case '*': case DIV: case '%': case '^': {
+      v->type = R_int;
+      struct result *l = eval(a->l);
+      struct result *r = eval(a->r);
 
-      struct value *roll = NULL;
-      int i;
-      for (i = 0; i < ((struct dieroll *)a)->count; i++){       /* create roll chain */
-        roll = addvalue(randint(((struct dieroll *)a)->used->min, ((struct dieroll *)a)->used->min), roll);
+      if (l->type != R_int || r->type != R_int){
+        yyerror("integer nodes expected! got %c, %c",l->type,r->type);
+        exit(0);
       }
 
-      v->type = R_die;
-      v->rvalue->faces = roll;        /* remember, in eval, faces is the roll result */
-      v->rvalue->min = ((struct dieroll *)a)->used->min;
-      v->rvalue->max = ((struct dieroll *)a)->used->max;
-      v->rvalue->size = ((struct dieroll *)a)->count;    /* size of faces */
+      switch (a->nodetype){
+        case '+': v->i = l->i + r->i; break;
+        case '-': v->i = l->i - r->i; break;
+        case '*': v->i = l->i * r->i; break;
+        case DIV: v->i = (int) (l->i / r->i); break;
+        case '%': v->i = l->i % r->i; break;
+        case '^': v->i = (int) pow(l->i, r->i); break;
+      }
+
+      resultfree(l);
+      resultfree(r);
       break;
+    }
 
-    case 'S':
-      /* struct dieroll *r = (struct dieroll *)a; */   /* cast roll to proper struct */
-      v->rvalue = malloc(sizeof(struct die));   /* create rolled output var */
+    case '1': case '2': case '3': case '4': case '5': case '6': {
+      v->type = R_int;
+      struct result *l = eval(a->l);
+      struct result *r = eval(a->r);
 
-      v->type = R_die;
-      v->rvalue->faces = ((struct dieroll *)a)->used->faces;
-      /* v->rvalue->min = NULL; r->used->min; */
-      /* v->rvalue->max = NULL; r->used->max; */
-      v->rvalue->size = ((struct dieroll *)a)->count;
+      if (l->type != R_int || r->type != R_int){
+        yyerror("integer nodes expected! got %c, %c",l->type,r->type);
+        exit(0);
+      }
+
+      switch (a->nodetype){
+        case '1': v->i = (l->i > r->i) ? 1 : 0; break;
+        case '2': v->i = (l->i < r->i) ? 1 : 0; break;
+        case '3': v->i = (l->i != r->i)? 1 : 0; break;
+        case '4': v->i = (l->i == r->i)? 1 : 0; break;
+        case '5': v->i = (l->i >= r->i)? 1 : 0; break;
+        case '6': v->i = (l->i <= r->i)? 1 : 0; break;
+      }
+
+      resultfree(l);
+      resultfree(r);
       break;
+    }
 
-      /* sum rolls */
+    /*
     case 'Q':
+      v->type = R_roll;
+      */
+
+    case 'E':
       v->type = R_int;
-      v->ivalue = sumvalue(((struct dieroll *)(a->l))->used->faces);
+      v->i = eval( (((struct symcall *)a)->s)->func )->i;
       break;
 
-      /* symbol reference */
-    case 'N':
-      v = eval(((struct symref *)a)->s->func);
-      break;
-
-      /* assignment TODO: works? */
     case 'A':
-      ((struct symasgn *)a)->s->func = ((struct symasgn *)a)->l;
-
+      setsym( ((struct symasgn *)a)->s, ((struct symasgn *)a)->l );
+      /*printf("stored %s as ", ((struct symasgn *)a)->s->name);
+      printtree(((struct symasgn *)a)->s->func);
+      printf("\n");*/
       v->type = R_int;
-      v->ivalue = 0;
+      v->i = 0; //eval( ((struct symasgn *)a)->s->func );
       break;
 
-      /* expressions */
-    case '+':
-      v->type = R_int;
-      v->ivalue = eval(a->l)->ivalue + eval(a->r)->ivalue;
-      break;
-    case '-':
-      v->type = R_int;
-      v->ivalue = eval(a->l)->ivalue - eval(a->r)->ivalue;
-      break;
-    case '*':
-      v->type = R_int;
-      v->ivalue = eval(a->l)->ivalue * eval(a->r)->ivalue;
-      break;
-    case DIV:
-      v->type = R_int;
-      v->ivalue = eval(a->l)->ivalue / eval(a->r)->ivalue;
-      break;
-    case '%':
-      v->type = R_int;
-      v->ivalue = eval(a->l)->ivalue % eval(a->r)->ivalue;
-      break;
-    case '^':
-      v->type = R_int;
-      v->ivalue = (int) pow(eval(a->l)->ivalue, eval(a->r)->ivalue);
-      break;
-    case 'M':
-      v->type = R_int;
-      v->ivalue = - eval(a->l)->ivalue;
-      break;
-
-    case '&': v->type = R_int; v->ivalue = -2; break;
-    case '|': v->type = R_int; v->ivalue = -3; break;
-    case INTER: v->type = R_int; v->ivalue = -4; break;
-    case UNION: v->type = R_int; v->ivalue = -5; break;
-
-      /* comparisons */
-    case '1': v->type = R_int; v->ivalue = (eval(a->l)->ivalue > eval(a->r)->ivalue)? 1 : 0; break;
-    case '2': v->type = R_int; v->ivalue = (eval(a->l)->ivalue < eval(a->r)->ivalue)? 1 : 0; break;
-    case '3': v->type = R_int; v->ivalue = (eval(a->l)->ivalue != eval(a->r)->ivalue)? 1 : 0; break;
-    case '4': v->type = R_int; v->ivalue = (eval(a->l)->ivalue == eval(a->r)->ivalue)? 1 : 0; break;
-    case '5': v->type = R_int; v->ivalue = (eval(a->l)->ivalue >= eval(a->r)->ivalue)? 1 : 0; break;
-    case '6': v->type = R_int; v->ivalue = (eval(a->l)->ivalue <= eval(a->r)->ivalue)? 1 : 0; break;
-
-      /* list of statements */
-    /* case 'L': eval(a->l); v = eval(a->r); break; */
-
-      /* function call */
-      /* TODO: disect ops according to count->selector */
-    case 'F': v->type = R_int; v->ivalue = -6; break; /*callbuiltin((struct fncall *)a);*/
-
-    default: printf("internal error: bad node %c\n", a->nodetype);
-    }
-    return v;
-  }
-
-  /* call a user defined function and return the evaluation */
-  static int calluser(struct ufncall *f){
-    struct symbol *fn = f->s;  /* function name */
-    struct symlist *sl;         /* dummy args */
-    struct ast *args = f->l;    /* actual arguments */
-    int *oldval, *newval;       /* saved arg values */
-    int v;
-    int nargs;
-    int i;
-
-    if (!fn->func){
-      yyerror("call to undefined function", fn->name);
-      return 0;
-    }
-
-    /* count args */
-    sl = fn->syms;
-    for (nargs = 0; sl; sl = sl->next)
-      nargs++;
-
-    /* prepare to save them */
-    oldval = (int *) malloc(nargs * sizeof(int));
-    newval = (int *) malloc(nargs * sizeof(int));
-    if (!oldval || !newval){
-      yyerror("out of space in %s", fn->name);
-      return 0;
-    }
-
-    /* evaluate the arguments */
-    for (i = 0; i < nargs; i++){
-      if (!args){
-        yyerror("too few args in call to %s", fn->name);
-        free(oldval); free(newval); /* free b/c error was encountered */
-        return 0;
-      }
-
-      if (args->nodetype == 'L'){ /* if this is a list node */
-        newval[i] = eval(args->l);
-        args = args->r;
-      }else{                      /* if its the end of the list */
-        newval[i] = eval(args);
-        args = NULL;
-      }
-    }
-
-    /* save old values of dummies, assign new ones */
-    sl = fn->syms;
-    for (i = 0; i < nargs; i++){
-      struct symbol *s = sl->sym;
-
-      oldval[i] = s->value;
-      s->value = newval[i];
-      sl = sl->next;
-    }
-
-    free(newval);
-
-    /* evaluate function */
-    v = eval(fn->func);
-
-    /* put the real values of the dummies back */
-    sl = fn->syms;
-    for (i = 0; i < nargs; i++){
-      struct symbol *s = sl->sym;
-
-      s->value = oldval[i];
-      sl = sl->next;
-    }
-
-    free(oldval);
-    return v;
-  }
-
-  /* call a built in function */
-  static int callbuiltin(struct fncall *f){
-
-    enum bifs functype = f->functype;
-    int v = eval(f->l);
-
-    switch (functype){
-    case B_sqrt:
-      return (int) sqrt(v);
-    case B_exp:
-      return (int) exp(v);
-    case B_log:
-      return (int) log(v);
-    case B_print:
-      printf("= %d\n", v);
-      return v;
     default:
-      yyerror("Unknown built-in function %d", functype);
-      return 0;
-    }
+      printf("unrecognized ast: >%c<\n", a->nodetype);
   }
 
-#endif
-
-
-void yyerror(char *s, ...){
-  va_list ap;
-  va_start(ap, s);
-
-  fprintf(stderr, "%d: error : ", yylineno);
-  vfprintf(stderr, s, ap);
-  fprintf(stderr, "\n");
+  return v;
 }
 
 int main(int argc, char **argv){
@@ -672,6 +712,10 @@ int main(int argc, char **argv){
 
   /* seed rng with current time */
   srand(time(NULL));
+
+  /* allocate memory for symbol table */
+  // struct symbol *symtab = malloc(NHASH * sizeof(struct symbol));
+
 
   if (argc > 1){
     if (!(yyin = fopen(argv[1], "r"))){
