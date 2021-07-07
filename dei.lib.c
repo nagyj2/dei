@@ -39,14 +39,13 @@ int countvalue(struct value *val){
 }*/
 
 /* generate a random number within a set of faces */
-<<<<<<< HEAD
-int randroll(struct value *faces){
-=======
-int randint(struct value *faces){
->>>>>>> 6326c00a75be00c2532e29b5bd9c9a874438fa1c
+int randroll(int len, struct value *faces){
   struct value *t = faces;
   int index, len = countvalue(faces);
   for (index = rand() % len; index > 0; index--)
+  int index = rand() % len;
+  //printf("pos %d\n",index);
+  for (index; index > 0; index--)
     t = t->next;
   return t->v;
 }
