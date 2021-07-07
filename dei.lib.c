@@ -28,20 +28,17 @@ int countvalue(struct value *val){
   struct value *t;
   int c = 0;
 
-  for (t = val; t != NULL; t=t->next) c++;
+  for (t = val; t->next != NULL; t=t->next) c++;
+  printf("count %d\n",c);
   return c;
 }
 
-/* generate a random number between min and max, inclusive */
-/*int randinti(int min, int max){
-  return (rand() % (max - min + 1)) + min;
-}*/
-
-/* generate a random number within a set of faces */
-int randint(struct value *faces){
+/* pick a random face from the offered faces and the length of the list */
+int randroll(int len, struct value *faces){
   struct value *t = faces;
-  int index, len = countvalue(faces);
-  for (index = rand() % len; index > 0; index--)
+  int index  = rand() % len;
+  printf("pos %d\n",index);
+  for (; index > 0; index--)
     t = t->next;
   return t->v;
 }
@@ -91,8 +88,12 @@ struct value *createnatdieface(int min, int max){
   if (min>max) yyerror("invalid die, %d,%d", min, max);
   struct value *a = newvalue(min,NULL);
   int i;
-  for (i = min + 1; i <= max; i++)
+  printf("new die : ");
+  for (i = min; i <= max; i++){
     a = newvalue(i,a);
+    printf(" %d",i);
+  }
+  printf("\n");
   return a;
 }
 
@@ -164,28 +165,6 @@ struct roll *evalSetUnion(struct roll *a, struct roll *b){
   /* TODO : Need to use resultfree */
   // free(a);  /* WARNING : Side effect is freeing args */
   // free(b);  /* DEBUG : does freeing a leave r? */
-  return r;
-}
-
-/* roll a natural die */
-struct roll *evalNatRoll(struct die *d){
-  struct roll *r = malloc(sizeof(struct roll));
-  int i;
-  for (i = 0; i < d->count; i++){
-    r->out = newvalue(randint(d->faces),r->out);
-  }
-  r->faces = d->faces;
-  return r;
-}
-
-/* roll a special die */
-struct roll *evalSetRoll(struct die *d){
-  struct roll *r = malloc(sizeof(struct roll));
-  int i;
-  for (i = 0; i < d->count; i++){
-    r->out = newvalue(randint(d->faces),r->out);
-  }
-  r->faces = d->faces;
   return r;
 }
 
@@ -699,6 +678,32 @@ struct result *eval(struct ast *a){
       v->i = sumvalue(r->r->out);
       /* v->r->faces = NULL */
       break;
+
+    case 'D':
+      v->type = R_die;
+      v->d = malloc(sizeof(struct die));
+      v->d->count = ((struct natdie *)a)->count;
+      v->d->faces = createnatdieface( ((struct natdie *)a)->min, ((struct natdie *)a)->max );
+      break;
+
+    case 'R': {
+      v->type = R_roll;
+      struct result *r = eval(a->l);
+
+      if (r->type != R_die){
+        yyerror("die node expected! got %c",r->type);
+        exit(0);
+      }
+
+      v->r = malloc(sizeof(struct roll));
+      int i, length = countvalue(r->d->faces);
+      for (i = 0; i < r->d->count; i++)
+        v->r->out = newvalue(randroll(length, r->d->faces), v->r->out);
+      v->r->faces = r->d->faces;
+      //resultfree(r);
+      free(r);
+      break;
+    }
 
     case 'E':
       v->type = R_int;
