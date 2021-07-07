@@ -28,8 +28,8 @@ int countvalue(struct value *val){
   struct value *t;
   int c = 0;
 
-  for (t = val; t->next != NULL; t=t->next) c++;
-  printf("count %d\n",c);
+  for (t = val; t != NULL; t=t->next) c++;
+  /*printf("count %d\n",c);*/
   return c;
 }
 
@@ -86,7 +86,7 @@ bool containvalue(struct value *key, struct value *list){
 /* create the faces of a natural die for result */
 struct value *createnatdieface(int min, int max){
   if (min>max) yyerror("invalid die, %d,%d", min, max);
-  struct value *a = newvalue(min,NULL);
+  struct value *a;
   int i;
   printf("new die : ");
   for (i = min; i <= max; i++){
