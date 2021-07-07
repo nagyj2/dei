@@ -679,10 +679,26 @@ struct result *eval(struct ast *a){
       break;
     }
 
-    /*
+
     case 'Q':
       v->type = R_roll;
-      */
+      v->r = malloc(sizeof(struct roll));       /* need to malloc space */
+      v->r->out = ((struct setres *)a)->faces;
+      /* v->r->faces = NULL */
+      break;
+
+    case 'S':
+      v->type = R_int;
+      struct result *r = eval(a->l);
+
+      if (r->type != R_roll){
+        yyerror("roll node expected! got %c",r->type);
+        exit(0);
+      }
+
+      v->i = sumvalue(r->r->out);
+      /* v->r->faces = NULL */
+      break;
 
     case 'E':
       v->type = R_int;
