@@ -28,8 +28,7 @@ int countvalue(struct value *val){
   struct value *t;
   int c = 0;
 
-  for (t = val; t->next != NULL; t=t->next) c++;
-  //printf("length %d\n",c);
+  for (t = val; t != NULL; t=t->next) c++;
   return c;
 }
 
@@ -39,13 +38,10 @@ int countvalue(struct value *val){
 }*/
 
 /* generate a random number within a set of faces */
-int randroll(int len, struct value *faces){
+int randint(struct value *faces){
   struct value *t = faces;
   int index, len = countvalue(faces);
   for (index = rand() % len; index > 0; index--)
-  int index = rand() % len;
-  //printf("pos %d\n",index);
-  for (index; index > 0; index--)
     t = t->next;
   return t->v;
 }
@@ -172,7 +168,6 @@ struct roll *evalSetUnion(struct roll *a, struct roll *b){
 }
 
 /* roll a natural die */
-/*
 struct roll *evalNatRoll(struct die *d){
   struct roll *r = malloc(sizeof(struct roll));
   int i;
@@ -182,10 +177,8 @@ struct roll *evalNatRoll(struct die *d){
   r->faces = d->faces;
   return r;
 }
-*/
 
 /* roll a special die */
-/*
 struct roll *evalSetRoll(struct die *d){
   struct roll *r = malloc(sizeof(struct roll));
   int i;
@@ -195,7 +188,6 @@ struct roll *evalSetRoll(struct die *d){
   r->faces = d->faces;
   return r;
 }
-*/
 
 /* sum results of a roll */
 int evalSum(struct roll *r){
@@ -226,7 +218,7 @@ struct symbol *lookup(char * sym){
     /* if entry exists, check if it is the same and return if it is */
     if (sp->name && !strcmp(sp->name, sym)) {
 
-      /* printf("found %s at %p\n", sp->name, sp); */
+      printf("found %s at %p\n", sp->name, sp);
       return sp;
     }
 
@@ -235,7 +227,7 @@ struct symbol *lookup(char * sym){
       sp->name = strdup(sym);
       sp->func = malloc(sizeof(struct ast));
       sp->func = newnatint(0);                /* initialize to protect against errors */
-      /* printf("new %s at %p(%p)\n", sp->name, sp, sp->func); */
+      printf("new %s at %p(%p)\n", sp->name, sp, sp->func);
       return sp;
     }
 
@@ -250,7 +242,7 @@ struct symbol *lookup(char * sym){
 
 /* define a symbol (variable) */
 void setsym(struct symbol *name, struct ast *val){
-  /* printf("place at %p\n", name); */
+  printf("place at %p\n", name);
   if (name->func){ /* NOTE allocated in lookup, so this will always run*/
     treefree(name->func);
     name->func = malloc(sizeof(struct ast));
@@ -526,9 +518,9 @@ void printtree(struct ast *a){
     break;
 
   case 'E':
-    printf("<%s:", ((struct symcall *)a)->s->name );
+    printf("$%s:", ((struct symcall *)a)->s->name );
     printtree( ((struct symcall *)a)->s->func );
-    printf(">");
+    printf("$");
     break;
 
   case 'A':
@@ -687,6 +679,7 @@ struct result *eval(struct ast *a){
       break;
     }
 
+
     case 'Q':
       v->type = R_roll;
       v->r = malloc(sizeof(struct roll));       /* need to malloc space */
@@ -694,7 +687,7 @@ struct result *eval(struct ast *a){
       /* v->r->faces = NULL */
       break;
 
-    case 'S': {
+    case 'S':
       v->type = R_int;
       struct result *r = eval(a->l);
 
@@ -706,35 +699,6 @@ struct result *eval(struct ast *a){
       v->i = sumvalue(r->r->out);
       /* v->r->faces = NULL */
       break;
-    }
-
-    case 'D':
-      v->type = R_die;
-      v->d = malloc(sizeof(struct die));
-      v->d->count = ((struct natdie *)a)->count;
-      v->d->faces = createnatdieface( ((struct natdie *)a)->min, ((struct natdie *)a)->max );
-      break;
-
-    case 'R': {
-      v->type = R_roll;
-      struct result *r = eval(a->l);
-
-      if (r->type != R_die){
-        yyerror("die node expected! got %c",r->type);
-        exit(0);
-      }
-
-      v->r = malloc(sizeof(struct roll));
-      int i, length = countvalue(r->d->faces);
-
-      for (i = 0; i < r->d->count; i++)
-        v->r->out = newvalue(randroll(length, r->d->faces), v->r->out);
-      v->r->faces = r->d->faces;
-
-      //resultfree(r);
-      free(r);
-      break;
-    }
 
     case 'E':
       v->type = R_int;
