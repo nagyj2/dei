@@ -102,8 +102,20 @@ list: NUM                               { $$ = newvalue($1, NULL); }
   ;
 
   /* performs top-level actions */
-start:start math EOL										{ printf("out <- "); printtree($2); treefree($2); printf("\n> "); /* eval($2)->ivalue); treefree($2);*/ }
-  |   start IDENT ':' math EOL					{ struct ast *a = newasgn($2, $4); printtree(a); treefree(a); /* TODO: setsym */ printf("\n> "); }
+start:start math EOL										{
+        struct result *r = eval($2);
+        printf("out <- "); printtree($2);
+        printf(" = %d",r->i);
+        resultfree(r);
+        treefree($2);
+        printf("\n> ");
+  }
+  |   start IDENT ':' math EOL					{
+        printtree($4);
+        setsym($2,$4);
+        //treefree($4); /* CANNOT FREE */
+        printf("\n> ");
+  }
   |   start error EOL										{ printf("error!\n> "); }
   |   start EOL													{ printf("> "); }
   |   start EXIT EOL						        { exit(0); }
