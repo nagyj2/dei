@@ -188,6 +188,9 @@ struct result *eval(struct ast *a);
 /* print the ast to the screen */
 void printtree(struct ast *a);
 
+/* print a chain of values */
+void printvalue(struct value *a);
+
 
 /* delete and free ast */
 void treefree(struct ast *a);

@@ -37,7 +37,7 @@ int countvalue(struct value *val){
 int randroll(int len, struct value *faces){
   struct value *t = faces;
   int index  = rand() % len;
-  printf("pos %d\n",index);
+  /*printf("pos %d\n",index);*/
   for (; index > 0; index--)
     t = t->next;
   return t->v;
@@ -88,18 +88,16 @@ struct value *createnatdieface(int min, int max){
   if (min>max) yyerror("invalid die, %d,%d", min, max);
   struct value *a;
   int i;
-  printf("new die : ");
   for (i = min; i <= max; i++){
     a = newvalue(i,a);
-    printf(" %d",i);
   }
-  printf("\n");
   return a;
 }
 
 /* create the faces of a set die for result */
 struct value *createsetdieface(struct value *a){
   if (!a) { yyerror("invalid set die"); return newvalue(0,NULL); }
+  /*printvalue(a);*/
   return a;
 }
 
@@ -242,6 +240,14 @@ void printsymtab(){
       printf("\n");
   }
   printf("======\n");
+}
+
+void printvalue(struct value *val){
+  struct value *t;
+  printf("val chain");
+  for(t = val; t != NULL; t = t->next)
+    printf(" %d", t->v);
+  printf("\n");
 }
 
 
@@ -658,7 +664,6 @@ struct result *eval(struct ast *a){
       break;
     }
 
-
     case 'Q':
       v->type = R_roll;
       v->r = malloc(sizeof(struct roll));       /* need to malloc space */
@@ -686,7 +691,14 @@ struct result *eval(struct ast *a){
       v->d->faces = createnatdieface( ((struct natdie *)a)->min, ((struct natdie *)a)->max );
       break;
 
-    case 'R': {
+    case 'd':
+      v->type = R_die;
+      v->d = malloc(sizeof(struct die));
+      v->d->count = ((struct setdie *)a)->count;
+      v->d->faces = ((struct setdie *)a)->faces;
+      break;
+
+    case 'R': case 'r': {
       v->type = R_roll;
       struct result *r = eval(a->l);
 
