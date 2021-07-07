@@ -11,6 +11,12 @@
 */
 %x COMMENT
 
+/* COMMANDS - Top level instructions */
+/* CALC -> math */
+/* DEFINE -> <sym> : math */
+/* DELETE ->  */
+/* ANALYZE -> ? */
+
 %%
 
   /* multichar matches - perform first to prevent 2 identical, sequential tokens */

@@ -64,12 +64,12 @@ struct symbol {         /* a user defined symbol */
 
 struct die {            /* result for a die defintion */
   int count;            /* number of rolls */
-  struct value* faces;  /* die faces */
+  struct value *faces;  /* die faces */
 };
 
 struct roll {           /* result for a die roll */
   struct value *out;    /* roll result */
-  struct value *faces;  /* used die */
+  struct value *faces;  /* used die - WARNING : NULLABLE */
 };
 
 struct result {         /* result value of */
