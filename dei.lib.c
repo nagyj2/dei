@@ -5,6 +5,7 @@
 #include <math.h> /* needed for pow() */
 #include <time.h> /* needed for time() */
 #include <stdbool.h> /* needed for bool, true, false */
+#include <assert.h> /* for assert */
 
 #include "dei.tab.h"
 #include "dei.h"
@@ -87,7 +88,9 @@ bool containvalue(int key, struct value *list){
   struct value *t;
 
   for (t = list; t; t = t->next){
-    if (t->v == key) return true;
+    if (t->v == key) {
+      return true;
+    }
   }
 
   return false;
@@ -328,7 +331,7 @@ struct ast *newnatdie(int count, int min, int max){
   return (struct ast *)a;
 }
 
-/* d : create a special face die */
+/* d : create a artificial face die */
 struct ast *newsetdie(int count, struct value *faces){
   struct setdie *a = malloc(sizeof(struct setdie));
 
@@ -637,9 +640,7 @@ struct result *eval(struct ast *a){
 
   switch (a->nodetype){
 
-      /* Leaf Nodes */
-      /* a leaf integer */
-    case 'I':
+    case 'I': /* create an integer */
       v->type = R_int;
       v->i = ((struct natint *)a)->integer;
       break;
@@ -692,14 +693,14 @@ struct result *eval(struct ast *a){
       break;
     }
 
-    case 'Q':
+    case 'Q': /* create a artifical roll */
       v->type = R_roll;
       v->r = malloc(sizeof(struct roll));       /* need to malloc space */
       v->r->out = ((struct setres *)a)->faces;
       /* v->r->faces = NULL */
       break;
 
-    case 'S':{
+    case 'S': { /* sum a die roll */
       v->type = R_int;
       struct result *r = eval(a->l);
 
@@ -715,7 +716,7 @@ struct result *eval(struct ast *a){
       break;
     }
 
-    case 'D':
+    case 'D': /* create a natural die */
       v->type = R_die;
       v->d = malloc(sizeof(struct die));
       v->d->count = ((struct natdie *)a)->count;
@@ -723,7 +724,7 @@ struct result *eval(struct ast *a){
       /* printf("new die: "); printvalue(v->d->faces); printf("\n"); */
       break;
 
-    case 'd':
+    case 'd': /* create a artificial die */
       v->type = R_die;
       v->d = malloc(sizeof(struct die));
       v->d->count = ((struct setdie *)a)->count;
@@ -731,7 +732,7 @@ struct result *eval(struct ast *a){
       /* printf("new die: "); printvalue(v->d->faces); printf("\n"); */
       break;
 
-    case 'R': case 'r': {
+    case 'R': case 'r': { /* roll a die */
       v->type = R_roll;
       struct result *r = eval(a->l);
 
@@ -754,7 +755,7 @@ struct result *eval(struct ast *a){
       break;
     }
 
-    case 'F':{
+    case 'F':{ /* execute a function */
       /* all functions happen at least one time, so execute with null result value */
       v = callbuiltin( NULL, ((struct funcall *)a)->functype, ((struct funcall *)a)->selector, ((struct funcall *)a)->l );
       int i;
@@ -764,12 +765,12 @@ struct result *eval(struct ast *a){
       break;
     }
 
-    case 'E':
+    case 'E': /* symbol reference */
       v->type = R_int;
       v->i = eval( (((struct symcall *)a)->s)->func )->i;
       break;
 
-    case 'A':
+    case 'A': /* set a symbol to a value */
       setsym( ((struct symasgn *)a)->s, ((struct symasgn *)a)->l );
       /*printf("stored %s as ", ((struct symasgn *)a)->s->name);
       printtree(((struct symasgn *)a)->s->func);
@@ -785,89 +786,139 @@ struct result *eval(struct ast *a){
   return v;
 }
 
-/* TODO: move looping to callbuiltin */
-/* TODO: make all variable allocation restricted to the specific case */
-struct roll *funcreroll(int selector, struct roll *r){
-  /* length of rolls, length of faces  */
-  int outlen = countvalue(r->out), facelen = countvalue(r->faces);
-  struct value *t = NULL; /* iterator for searching */
 
+
+/* create a chain of selected */
+struct selected *newselected(struct value *v, struct selected *prev){
+  struct selected *a = malloc(sizeof(struct selected));
+
+  if (!a){
+    yyerror("out of space");
+    exit(0);
+  }
+
+  if (prev) a->next = prev; /* if not null, set old head to the 2nd element */
+  a->val = v; /* point to the new value */
+  return a;
+
+}
+
+/* search selected list for a value */
+bool hasSelected(int key, struct selected *list){
+  struct selected *t;
+
+  for (t = list; t; t = t->next){
+    if (t->val->v == key) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/* select elements of dieroll and stores them in special pointers for callbuiltin to operate on */
+struct selected *select(int selector, struct roll *dieroll){
+  struct selected *sel = NULL; /* set to null so outside it can be seen if nothing was selected */
+  struct value *t; /* traversal variable */
+
+  switch (selector){
+    case S_high: {
+      sel->val = dieroll->out;    /* assume first is max */
+      //struct value *t;            /* traversal variable */
+      for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
+        if (sel->val->v < t->v){  /* saved -> initialized, so never null */
+          if (sel)  sel->val = t; /* save address */
+          else sel = newselected(t, NULL);
+        }
+      }
+      assert(sel != NULL);
+      break;
+    }
+    case S_low: {
+      sel->val = dieroll->out;    /* assume first is max */
+      for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
+        if (sel->val->v > t->v){  /* saved -> initialized, so never null */
+          if (sel)  sel->val = t; /* save address */
+          else sel = newselected(t, NULL);
+        }
+      }
+      assert(sel != NULL);
+      break;
+    }
+    case S_rand: {
+      int index = randint(0, countvalue(dieroll->out)-1); /* index which will be updated */
+      for (t = dieroll->out; index-- > 0; t = t->next) { /* just need to update t */ }
+      sel = newselected(t, NULL);
+      assert(sel != NULL);
+      break;
+    }
+    case S_unique:
+      /* cont holds list of unique values found */
+      t = dieroll->out; /* start at the first roll */
+      do {
+        if (!sel || !hasSelected(t->v, sel)){
+          /* initialize -> cannot init outside b/c it messes with containvalue */
+          sel = newselected(t, sel); /* cont will be null on first, starting the chain */
+        }
+        t = t->next;
+      } while (t);
+      assert(sel != NULL);
+      break;
+    default:
+      /* find first instance of specific die outcome */
+      assert(selector > 0);
+      for (t = dieroll->out; t; t = t->next){
+        if (selector == t->v){  /* check for match */
+          sel = newselected(t, NULL);
+          break; /* TODO: once per loop? */
+        }
+      }
+      break;
+  }
+  return sel;
+}
+
+void freeselected(struct selected *a){
+  struct selected *na;
+  while(a != NULL){
+    na = a->next;
+    free(a);
+    a = na;
+  }
+}
+
+
+struct roll *funcreroll(int selector, struct roll *r){
+  /* length of faces  */
+  int facelen;
+  if (r->faces) { facelen = countvalue(r->faces); }
+  else { yyerror("error: no die face provided\n"); return r; }
+
+  #ifdef DEBUG
   printf("before: ");
   printvalue(r->out);
   printf("\n");
+  #endif
 
-  switch (selector){
-  case S_high: {
-    struct value *cont = r->out;  /* holder pointer for min */
-    for (t = r->out; t; t = t->next){ /* dont immediately go to next in case it is null */
-      if (cont->v < t->v){        /* saved -> initialized, so never null */
-        cont = t;                 /* save address */
-      }
+  struct selected *sel = select(selector, r);
+  if (sel){
+    struct selected *t = NULL; /* iterator for searching */
+    for (t = sel; t; t = t->next){
+      int roll = randroll(facelen, r->faces);
+      t->val->v = roll; /* update pointed to's value */
     }
-    int roll = randroll(facelen, r->faces);
-    cont->v = roll; /* assign new roll */
-    free(cont);
-    break;
+    freeselected(sel);
   }
 
-  case S_low: {
-    struct value *cont = r->out;  /* holder pointer for min */
-    for (t = r->out; t; t = t->next){
-      if (cont->v > t->v){        /* saved -> initialized, so never null */
-        cont = t;                 /* save address */
-      }
-    }
-    int roll = randroll(facelen, r->faces);
-    cont->v = roll; /* assign new roll */
-    //free(cont);
-    break;
-  }
-
-  case S_rand: {
-    int index = randint(0, outlen-1); /* index which will be updated */
-    for (t = r->out; index-- > 0; t = t->next) { /* just need to update t */ }
-    int roll = randroll(facelen, r->faces);
-    t->v = roll; /* assign new roll to final location */
-    break;
-  }
-
-  case S_unique: {
-    /* cont holds list of unique values found */
-    struct value *cont = NULL; /* must start null */
-    t = r->out; /* start at the first roll */
-    do {
-      if (!cont || !(containvalue(t->v, cont))){
-        /* initialize -> cannot init outside b/c it messes with containvalue */
-        cont = newvalue(t->v, cont); /* cont will be null on first, starting the chain */
-        int roll = randroll(facelen, r->faces);
-        t->v = roll; /* assign new roll */
-      }
-      t = t->next;
-    } while (t);
-    valuefree(cont);
-    break;
-  }
-
-  default: { /* operate on a specific die outcome */
-    for (t = r->out; t; t = t->next){
-      if (selector == t->v){  /* check for match */
-        int roll = randroll(facelen, r->faces);
-        t->v = roll; /* assign new roll */
-        break; /* TODO: once per loop? */
-      }
-    }
-    break;
-  }
-
-  }
-
+  #ifdef DEBUG
   printf("after: ");
   printvalue(r->out);
   printf("\n");
+  #endif
 
-  free(t);
   return r;
 }
+
 
 /* call a function with a selector on the ast described by frame */
 struct result *callbuiltin(struct result *output, int functype, int selector, struct ast *frame){
@@ -879,10 +930,13 @@ struct result *callbuiltin(struct result *output, int functype, int selector, st
 
   switch (functype){
     case B_drop:
+      printf("warning: drop is not fully implemented\n");
       break;
     case B_append:
+      printf("warning: append is not fully implemented\n");
       break;
     case B_choose:
+      printf("warning: choose is not fully implemented\n");
       break;
     case B_reroll: {
       if (!r->r->faces) { yyerror("reroll requires unaltered die"); return r; };
@@ -893,6 +947,7 @@ struct result *callbuiltin(struct result *output, int functype, int selector, st
 
     case B_count: {
 
+      printf("warning: count is not fully implemented\n");
       int count = countvalue(r->r->out);
       valuefree(r->r->out);
       r->r->out = newvalue(count, NULL);
@@ -904,7 +959,7 @@ struct result *callbuiltin(struct result *output, int functype, int selector, st
   }
 
   /* since we transfer data from output to r, release output */
-  if (output) { free(output); }
+  //if (output) { free(output); }
   return r;
 }
 

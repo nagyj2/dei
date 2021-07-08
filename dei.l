@@ -59,11 +59,14 @@
 "choose"  { yylval.fn = B_choose; return FUNC; }
 "reroll"  { yylval.fn = B_reroll; return FUNC; }
 "count"   { yylval.fn = B_count; return FUNC; }
-    /* selectors */
+    /* selectors -> singular */
 "highest" { yylval.fn = S_high; return SELECT; }
 "lowest"  { yylval.fn = S_low; return SELECT; }
 "random"  { yylval.fn = S_rand; return SELECT; }
+
+  /* selectors -> plural */
 "unique"  { yylval.fn = S_unique; return SELECT; }
+  /* Normal number selectors are plural */
 
     /* quantifiers */
 "once"    { yylval.d = 1; return QUANT; }

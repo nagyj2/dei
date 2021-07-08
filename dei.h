@@ -79,6 +79,11 @@ struct result {         /* result value of */
   struct die *d;        /* holder for die faces, rolls required */
 };
 
+struct selected {         /* a chain of pointers to assorted value nodes */
+  struct value *val;      /* selected node */
+  struct selected *next;  /* next selected node */
+};
+
 
 /* ==== AST NODE ==== */
 
