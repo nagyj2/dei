@@ -11,6 +11,8 @@ dei.output
 dei.log
 R
 
+lldebug
+
 save*/**/*
 storage*/**/*
 test*/**/*
