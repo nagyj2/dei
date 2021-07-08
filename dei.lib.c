@@ -33,12 +33,17 @@ int countvalue(struct value *val){
   return c;
 }
 
+/* inclusive random int */
+int randint(min, max){
+  return (rand() % (max + 1 - min)) + min;
+}
+
 /* pick a random face from the offered faces and the length of the list */
 int randroll(int len, struct value *faces){
   struct value *t = faces;
-  int index  = rand() % len;
+  int index, select = rand() % len;
   /*printf("pos %d\n",index);*/
-  for (; index > 0; index--)
+  for (index = select; index > 0; index--)
     t = t->next;
   return t->v;
 }
@@ -64,17 +69,17 @@ struct value *newvalue(int i, struct value *val){
     exit(0);
   }
 
-  a->v = i;
   if (val) a->next = val;
+  a->v = i;
   return a;
 }
 
 /* check if key is in list's CHAIN */
-bool containvalue(struct value *key, struct value *list){
+bool containvalue(int key, struct value *list){
   struct value *t;
 
-  for (t = list; t != NULL; t = t->next){
-    if (t->v == key->v) return true;
+  for (t = list; t; t = t->next){
+    if (t->v == key) return true;
   }
 
   return false;
@@ -101,6 +106,7 @@ struct value *createsetdieface(struct value *a){
   return a;
 }
 
+#ifdef FIX
 /* find intersection and append intersecting to a */
 struct roll *evalElemInter(struct roll *a, struct roll *b){
   struct roll *r;   /* output  */
@@ -165,6 +171,7 @@ struct roll *evalSetUnion(struct roll *a, struct roll *b){
   // free(b);  /* DEBUG : does freeing a leave r? */
   return r;
 }
+#endif
 
 /* sum results of a roll */
 int evalSum(struct roll *r){
@@ -724,6 +731,11 @@ struct result *eval(struct ast *a){
       break;
     }
 
+    case 'F':
+      v = callbuiltin( (struct funcall *)a );
+
+      break;
+
     case 'E':
       v->type = R_int;
       v->i = eval( (((struct symcall *)a)->s)->func )->i;
@@ -743,6 +755,136 @@ struct result *eval(struct ast *a){
   }
 
   return v;
+}
+
+/* TODO: move looping to callbuiltin */
+/* TODO: make all variable allocation restricted to the specific case */
+struct roll *funcreroll(int selector, int times, struct roll *r){
+  int i, len = countvalue(r->out); /* iterator counter (external and internal), length of  */
+  int facelen = countvalue(r->faces);
+  struct value *cont = malloc(sizeof(struct value)), *t = NULL;    /* holds highest, lowest or chain of unique */
+
+  // printf("before: ");
+  // printvalue(r->out);
+  // printf("\n");
+
+  for (i = 0; i < times; i++){
+
+    int wait = 0; /* signal to do swap at the end -> S_high, S_low, S_unique */
+
+    switch (selector){
+    case S_high: {
+      wait = S_high;  /* signal delayed action */
+      cont = r->out;  /* copy pointer b/c operation can be inplace */
+      for (t = r->out; t; t = t->next){
+        if (cont->v < t->v){ /* value check -> initialized, so never null */
+          cont = t; /* copy address */
+        }
+      }
+      break;
+    }
+
+    case S_low: {
+      wait = S_low; /* signal delayed action */
+      cont = r->out;  /* copy pointer b/c operation can be inplace */
+      for (t = r->out; t; t = t->next){
+        if (cont->v > t->v){ /* value check -> initialized, so never null */
+          cont = t; /* copy address */
+        }
+      }
+      break;
+    }
+
+    case S_rand: {
+      int index = randint(0,len-1); /* index which will be updated */
+      for (t = r->out; index-- > 0; t = t->next) { /* just need to update t */ }
+      int roll = randroll(facelen, r->faces);
+      t->v = roll; /* assign new roll */
+
+      break;
+    }
+
+    case S_unique: {
+      wait = S_unique;
+      /* cont holds list of unique values found */
+      free(cont); /* since malloced earlier */
+      cont = NULL;
+      for (t = r->out; t; t = t->next){
+        if (!(containvalue(t->v, cont))){ /* value check */
+          if (!cont){ cont = newvalue(r->out->v, NULL); /* Initialize */ }
+          else{ cont = newvalue(t->v, cont); /* append */ }
+          int roll = randroll(facelen, r->faces);
+          t->v = roll; /* assign new roll */
+        }
+      }
+      valuefree(cont); /* since its used to make a chain */
+      cont = malloc(sizeof(struct value)); /* b/c malloc at the end */
+      break;
+    }
+
+    default: {
+      for (t = r->out; t; t = t->next){
+        if (selector == t->v){  /* check for match */
+          int roll = randroll(facelen, r->faces);
+          t->v = roll; /* assign new roll */
+          break; /* once per loop */
+        }
+      }
+    }
+
+      break;
+
+    }
+
+    if (wait == S_high || wait == S_low){  /* max or min */
+      int roll = randroll(facelen, r->faces);
+      cont->v = roll; /* assign new roll */
+    }
+
+  }
+
+  // printf("after: ");
+  // printvalue(r->out);
+  // printf("\n");
+
+  free(cont);
+  return r;
+}
+
+struct result *callbuiltin(struct funcall *a){
+  struct result *r = eval(a->l);
+
+  if (r->type != R_roll) { yyerror("expected roll type, got %d",r->type); return r; };
+
+  switch (a->functype){
+    case B_drop:
+      break;
+    case B_append:
+      break;
+    case B_choose:
+      break;
+    case B_reroll: {
+      if (!r->r->faces) { yyerror("reroll requires unaltered die"); return r; };
+
+      r->r = funcreroll(a->selector, a->times, r->r);
+      break;
+    }
+
+    case B_count: {
+
+      if (a->times > 0) printf("count only occurs once, ignoring\n");
+
+      int count = countvalue(r->r->out);
+      valuefree(r->r->out);
+      r->r->out = newvalue(count, NULL);
+      break;
+    }
+
+    default:
+      printf("unrecognized builtin id, %d",a->functype);
+  }
+
+  return r;
 }
 
 int main(int argc, char **argv){

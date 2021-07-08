@@ -69,6 +69,7 @@
 "once"    { yylval.d = 1; return QUANT; }
 "twice"   { yylval.d = 2; return QUANT; }
 "thrice"  { yylval.d = 3; return QUANT; }
+"always"  { yylval.d = 100; return QUANT; }
 
 "times"   { return XQUANT; }
 "time"    { return XQUANT; }
