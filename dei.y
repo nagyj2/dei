@@ -125,3 +125,19 @@ start:start math EOL										{
 %%
 
 /* die: '['  ']' {  } */
+
+/* PROPOSAL
+ *
+ * func: func FUNC SELECT QUANT
+ *
+ * into
+ *
+ * func: func FUNC PSELECT QUANT      // Allows for plural selection
+ * func: func FUNC SSELECT QUANT      // Allows for single selection
+ * func: func FUNC NUM SSELECT QUANT      // Allows for single to plural transformation
+ * func: func FUNC SQUANT SSELECT QUANT   // Allows for single to plural transformation
+ *
+ * SQUANT = "one" | "two" | "three" | ... | "all"
+ *
+ *
+ */
