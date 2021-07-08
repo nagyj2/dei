@@ -209,7 +209,7 @@ struct symbol *lookup(char * sym){
     /* if entry exists, check if it is the same and return if it is */
     if (sp->name && !strcmp(sp->name, sym)) {
 
-      printf("found %s at %p\n", sp->name, sp);
+      //printf("found %s at %p\n", sp->name, sp);
       return sp;
     }
 
@@ -218,7 +218,7 @@ struct symbol *lookup(char * sym){
       sp->name = strdup(sym);
       sp->func = malloc(sizeof(struct ast));
       sp->func = newnatint(0);                /* initialize to protect against errors */
-      printf("new %s at %p(%p)\n", sp->name, sp, sp->func);
+      //printf("new %s at %p(%p)\n", sp->name, sp, sp->func);
       return sp;
     }
 
@@ -233,7 +233,7 @@ struct symbol *lookup(char * sym){
 
 /* define a symbol (variable) */
 void setsym(struct symbol *name, struct ast *val){
-  printf("place at %p\n", name);
+  //printf("place at %p\n", name);
   if (name->func){ /* NOTE allocated in lookup, so this will always run*/
     treefree(name->func);
     name->func = malloc(sizeof(struct ast));
@@ -775,9 +775,9 @@ struct roll *funcreroll(int selector, struct roll *r){
   int outlen = countvalue(r->out), facelen = countvalue(r->faces);
   struct value *t = NULL; /* iterator for searching */
 
-  printf("before: ");
-  printvalue(r->out);
-  printf("\n");
+  //printf("before: ");
+  //printvalue(r->out);
+  //printf("\n");
 
   switch (selector){
   case S_high: {
@@ -844,9 +844,9 @@ struct roll *funcreroll(int selector, struct roll *r){
 
   }
 
-  printf("after: ");
-  printvalue(r->out);
-  printf("\n");
+  //printf("after: ");
+  //printvalue(r->out);
+  //printf("\n");
 
   free(t);
   return r;

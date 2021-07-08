@@ -104,14 +104,14 @@ list: NUM                               { $$ = newvalue($1, NULL); }
   /* performs top-level actions */
 start:start math EOL										{
         struct result *r = eval($2);
-        printf("out <- "); printtree($2);
+        //printf("out <- "); /*printtree($2);*/
         printf(" = %d",r->i);
         resultfree(r);
         treefree($2);
         printf("\n> ");
   }
   |   start IDENT ':' math EOL					{
-        printtree($4);
+        /*printtree($4);*/
         setsym($2,$4);
         //treefree($4); /* CANNOT FREE */
         printf("\n> ");
