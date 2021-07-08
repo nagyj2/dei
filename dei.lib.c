@@ -10,9 +10,10 @@
 #include "dei.h"
 
 /* One line log statement for debugging */
-#define DEBUGLOG(text)        \
-#ifdef DEBUG                  \
-fprintf(logger, "%s", text);  \
+#ifdef DEBUG
+#define DEBUGLOG(text) fprintf(logger, "%s", text);
+#else
+#define DEBUGLOG(text)
 #endif
 
 
