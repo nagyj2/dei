@@ -202,4 +202,4 @@ void valuefree(struct value *a);
 void resultfree(struct result *a);
 
 /* perform a function on a function call */
-struct result *callbuiltin(struct funcall *a);
+struct result *callbuiltin(struct result *output, int functype, int selectype, struct ast *frame);

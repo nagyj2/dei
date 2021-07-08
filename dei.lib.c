@@ -9,6 +9,13 @@
 #include "dei.tab.h"
 #include "dei.h"
 
+/* One line log statement for debugging */
+#define DEBUGLOG(text)        \
+#ifdef DEBUG                  \
+fprintf(logger, "%s", text);  \
+#endif
+
+
 /* ------------- UTILITY FUNC ------------- */
 
 FILE *logger;
@@ -696,7 +703,7 @@ struct result *eval(struct ast *a){
       v->d = malloc(sizeof(struct die));
       v->d->count = ((struct natdie *)a)->count;
       v->d->faces = createnatdieface( ((struct natdie *)a)->min, ((struct natdie *)a)->max );
-      printf("new die: "); printvalue(v->d->faces); printf("\n");
+      /* printf("new die: "); printvalue(v->d->faces); printf("\n"); */
       break;
 
     case 'd':
@@ -704,7 +711,7 @@ struct result *eval(struct ast *a){
       v->d = malloc(sizeof(struct die));
       v->d->count = ((struct setdie *)a)->count;
       v->d->faces = ((struct setdie *)a)->faces;
-      printf("new die: "); printvalue(v->d->faces); printf("\n");
+      /* printf("new die: "); printvalue(v->d->faces); printf("\n"); */
       break;
 
     case 'R': case 'r': {
@@ -731,10 +738,14 @@ struct result *eval(struct ast *a){
       break;
     }
 
-    case 'F':
-      v = callbuiltin( (struct funcall *)a );
-
+    case 'F':{
+      int i;
+      v = callbuiltin( NULL, ((struct funcall *)a)->functype, ((struct funcall *)a)->selector, ((struct funcall *)a)->l );
+      for (i = 1; i < ((struct funcall *)a)->times; i++){
+        v = callbuiltin( v, ((struct funcall *)a)->functype, ((struct funcall *)a)->selector, ((struct funcall *)a)->l );
+      }
       break;
+    }
 
     case 'E':
       v->type = R_int;
@@ -759,104 +770,97 @@ struct result *eval(struct ast *a){
 
 /* TODO: move looping to callbuiltin */
 /* TODO: make all variable allocation restricted to the specific case */
-struct roll *funcreroll(int selector, int times, struct roll *r){
-  int i, len = countvalue(r->out); /* iterator counter (external and internal), length of  */
-  int facelen = countvalue(r->faces);
-  struct value *cont = malloc(sizeof(struct value)), *t = NULL;    /* holds highest, lowest or chain of unique */
+struct roll *funcreroll(int selector, struct roll *r){
+  /* length of rolls, length of faces  */
+  int outlen = countvalue(r->out), facelen = countvalue(r->faces);
+  struct value *t = NULL; /* iterator for searching */
 
-  // printf("before: ");
-  // printvalue(r->out);
-  // printf("\n");
+  printf("before: ");
+  printvalue(r->out);
+  printf("\n");
 
-  for (i = 0; i < times; i++){
-
-    int wait = 0; /* signal to do swap at the end -> S_high, S_low, S_unique */
-
-    switch (selector){
-    case S_high: {
-      wait = S_high;  /* signal delayed action */
-      cont = r->out;  /* copy pointer b/c operation can be inplace */
-      for (t = r->out; t; t = t->next){
-        if (cont->v < t->v){ /* value check -> initialized, so never null */
-          cont = t; /* copy address */
-        }
-      }
-      break;
-    }
-
-    case S_low: {
-      wait = S_low; /* signal delayed action */
-      cont = r->out;  /* copy pointer b/c operation can be inplace */
-      for (t = r->out; t; t = t->next){
-        if (cont->v > t->v){ /* value check -> initialized, so never null */
-          cont = t; /* copy address */
-        }
-      }
-      break;
-    }
-
-    case S_rand: {
-      int index = randint(0,len-1); /* index which will be updated */
-      for (t = r->out; index-- > 0; t = t->next) { /* just need to update t */ }
-      int roll = randroll(facelen, r->faces);
-      t->v = roll; /* assign new roll */
-
-      break;
-    }
-
-    case S_unique: {
-      wait = S_unique;
-      /* cont holds list of unique values found */
-      free(cont); /* since malloced earlier */
-      cont = NULL;
-      for (t = r->out; t; t = t->next){
-        if (!(containvalue(t->v, cont))){ /* value check */
-          if (!cont){ cont = newvalue(r->out->v, NULL); /* Initialize */ }
-          else{ cont = newvalue(t->v, cont); /* append */ }
-          int roll = randroll(facelen, r->faces);
-          t->v = roll; /* assign new roll */
-        }
-      }
-      valuefree(cont); /* since its used to make a chain */
-      cont = malloc(sizeof(struct value)); /* b/c malloc at the end */
-      break;
-    }
-
-    default: {
-      for (t = r->out; t; t = t->next){
-        if (selector == t->v){  /* check for match */
-          int roll = randroll(facelen, r->faces);
-          t->v = roll; /* assign new roll */
-          break; /* once per loop */
-        }
+  switch (selector){
+  case S_high: {
+    struct value *cont = r->out;  /* holder pointer for min */
+    for (t = r->out; t; t = t->next){ /* dont immediately go to next in case it is null */
+      if (cont->v < t->v){        /* saved -> initialized, so never null */
+        cont = t;                 /* save address */
       }
     }
+    int roll = randroll(facelen, r->faces);
+    cont->v = roll; /* assign new roll */
+    free(cont);
+    break;
+  }
 
-      break;
-
+  case S_low: {
+    struct value *cont = r->out;  /* holder pointer for min */
+    for (t = r->out; t; t = t->next){
+      if (cont->v > t->v){        /* saved -> initialized, so never null */
+        cont = t;                 /* save address */
+      }
     }
+    int roll = randroll(facelen, r->faces);
+    cont->v = roll; /* assign new roll */
+    //free(cont);
+    break;
+  }
 
-    if (wait == S_high || wait == S_low){  /* max or min */
-      int roll = randroll(facelen, r->faces);
-      cont->v = roll; /* assign new roll */
+  case S_rand: {
+    int index = randint(0, outlen-1); /* index which will be updated */
+    for (t = r->out; index-- > 0; t = t->next) { /* just need to update t */ }
+    int roll = randroll(facelen, r->faces);
+    t->v = roll; /* assign new roll to final location */
+    break;
+  }
+
+  case S_unique: {
+    /* cont holds list of unique values found */
+    struct value *cont = NULL; /* must start null */
+    t = r->out; /* start at the first roll */
+    do {
+      if (!cont || !(containvalue(t->v, cont))){
+        /* initialize -> cannot init outside b/c it messes with containvalue */
+        cont = newvalue(t->v, cont); /* cont will be null on first, starting the chain */
+        int roll = randroll(facelen, r->faces);
+        t->v = roll; /* assign new roll */
+      }
+      t = t->next;
+    } while (t);
+    valuefree(cont);
+    break;
+  }
+
+  default: { /* operate on a specific die outcome */
+    for (t = r->out; t; t = t->next){
+      if (selector == t->v){  /* check for match */
+        int roll = randroll(facelen, r->faces);
+        t->v = roll; /* assign new roll */
+        break; /* TODO: once per loop? */
+      }
     }
+    break;
+  }
 
   }
 
-  // printf("after: ");
-  // printvalue(r->out);
-  // printf("\n");
+  printf("after: ");
+  printvalue(r->out);
+  printf("\n");
 
-  free(cont);
+  free(t);
   return r;
 }
 
-struct result *callbuiltin(struct funcall *a){
-  struct result *r = eval(a->l);
+/* call a function with a selector on the ast described by frame */
+struct result *callbuiltin(struct result *output, int functype, int selector, struct ast *frame){
+  struct result *r = NULL;
+  if (output){ r = output; }
+  else { r = eval(frame); }
 
   if (r->type != R_roll) { yyerror("expected roll type, got %d",r->type); return r; };
 
-  switch (a->functype){
+  switch (functype){
     case B_drop:
       break;
     case B_append:
@@ -866,13 +870,11 @@ struct result *callbuiltin(struct funcall *a){
     case B_reroll: {
       if (!r->r->faces) { yyerror("reroll requires unaltered die"); return r; };
 
-      r->r = funcreroll(a->selector, a->times, r->r);
+      r->r = funcreroll(selector, r->r);
       break;
     }
 
     case B_count: {
-
-      if (a->times > 0) printf("count only occurs once, ignoring\n");
 
       int count = countvalue(r->r->out);
       valuefree(r->r->out);
@@ -881,7 +883,7 @@ struct result *callbuiltin(struct funcall *a){
     }
 
     default:
-      printf("unrecognized builtin id, %d",a->functype);
+      printf("unrecognized builtin id, %d", functype);
   }
 
   return r;
@@ -890,7 +892,6 @@ struct result *callbuiltin(struct funcall *a){
 int main(int argc, char **argv){
   #ifdef DEBUG
   yydebug = 1;
-  #endif
 
   logger = fopen("dei.log", "a+"); // a+ (create + append) option will allow appending which is useful in a log file
   if (logger == NULL) { perror("Failed: "); return 1; }
@@ -901,13 +902,10 @@ int main(int argc, char **argv){
   timeinfo = localtime(&rawtime);
 
   fprintf(logger, "=== %s  ===\n", asctime(timeinfo));
+  #endif
 
   /* seed rng with current time */
   srand(time(NULL));
-
-  /* allocate memory for symbol table */
-  // struct symbol *symtab = malloc(NHASH * sizeof(struct symbol));
-
 
   if (argc > 1){
     if (!(yyin = fopen(argv[1], "r"))){

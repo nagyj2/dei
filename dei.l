@@ -69,7 +69,7 @@
 "once"    { yylval.d = 1; return QUANT; }
 "twice"   { yylval.d = 2; return QUANT; }
 "thrice"  { yylval.d = 3; return QUANT; }
-"always"  { yylval.d = 100; return QUANT; }
+"always"  { yylval.d = 50; return QUANT; } /* TODO: use always as default, dependant on functype in dei.y */
 
 "times"   { return XQUANT; }
 "time"    { return XQUANT; }
