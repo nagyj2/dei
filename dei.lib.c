@@ -115,56 +115,56 @@ struct value *createsetdieface(struct value *a){
 }
 
 #ifdef FIX
-/* find intersection and append intersecting to a */
-struct roll *evalElemInter(struct roll *a, struct roll *b){
-  struct roll *r;   /* output  */
-  struct value *t;
+  /* find intersection and append intersecting to a */
+  struct roll *evalElemInter(struct roll *a, struct roll *b){
+    struct roll *r;   /* output  */
+    struct value *t;
 
-  r = a; /* set r to a initially */
+    r = a; /* set r to a initially */
 
-  for (t = a->out; t != NULL; t = t->next)
-    if (containvalue(t, b->out))
+    for (t = a->out; t != NULL; t = t->next)
+      if (containvalue(t, b->out))
+        r->out = newvalue(t->v, a->out);
+
+    /* TODO : Need to use resultfree */
+    // free(a);  /* WARNING : Side effect is freeing args */
+    // free(b);  /* DEBUG : does freeing a leave r? */
+    return r;
+  }
+
+  /* find union and append intersecting to a */
+  struct roll *evalElemUnion(struct roll *a, struct roll *b){
+    struct roll *r;   /* output  */
+    struct value *t;
+
+    r = a; /* set r to a initially */
+
+    for (t = a->out; t != NULL; t = t->next)
       r->out = newvalue(t->v, a->out);
 
-  /* TODO : Need to use resultfree */
-  // free(a);  /* WARNING : Side effect is freeing args */
-  // free(b);  /* DEBUG : does freeing a leave r? */
-  return r;
-}
+    /* TODO : Need to use resultfree */
+    // free(a);  /* WARNING : Side effect is freeing args */
+    // free(b);  /* DEBUG : does freeing a leave r? */
+    return r;
+  }
 
-/* find union and append intersecting to a */
-struct roll *evalElemUnion(struct roll *a, struct roll *b){
-  struct roll *r;   /* output  */
-  struct value *t;
+  /* find intersection of two operands */
+  struct roll *evalSetInter(struct roll *a, struct roll *b){
+    struct roll *r = malloc(sizeof(struct roll));   /* output  */
+    struct value *t;
 
-  r = a; /* set r to a initially */
+    for (t = a->out; t != NULL; t = t->next)
+      if (containvalue(t, b->out))
+        r->out = newvalue(t->v, a->out);
 
-  for (t = a->out; t != NULL; t = t->next)
-    r->out = newvalue(t->v, a->out);
+    /* TODO : Need to use resultfree */
+    // free(a);  /* WARNING : Side effect is freeing args */
+    // free(b);
+    return r;
+  }
 
-  /* TODO : Need to use resultfree */
-  // free(a);  /* WARNING : Side effect is freeing args */
-  // free(b);  /* DEBUG : does freeing a leave r? */
-  return r;
-}
-
-/* find intersection of two operands */
-struct roll *evalSetInter(struct roll *a, struct roll *b){
-  struct roll *r = malloc(sizeof(struct roll));   /* output  */
-  struct value *t;
-
-  for (t = a->out; t != NULL; t = t->next)
-    if (containvalue(t, b->out))
-      r->out = newvalue(t->v, a->out);
-
-  /* TODO : Need to use resultfree */
-  // free(a);  /* WARNING : Side effect is freeing args */
-  // free(b);
-  return r;
-}
-
-/* find union of two operands */
-struct roll *evalSetUnion(struct roll *a, struct roll *b){
+  /* find union of two operands */
+  struct roll *evalSetUnion(struct roll *a, struct roll *b){
   struct roll *r;   /* output  */
   struct value *t;
 
@@ -243,8 +243,21 @@ void setsym(struct symbol *name, struct ast *val){
   name->func = val;
 }
 
+/* free the entire symbol table */
+void freesymboltable(void){
+  int i;
+  for (i = 0; i < NHASH; i++){
+    struct symbol *sp = &symtab[i];
 
-void printsymtab(){
+    if (sp->name){
+      printf("found %s at %p\n", sp->name, sp);
+      treefree(sp->func);
+    }
+    free(sp);
+  }
+}
+
+void printsymtab(void){
   int i;
   printf("Start table>");
   for (i=0; i<NHASH; i++){
@@ -686,7 +699,7 @@ struct result *eval(struct ast *a){
       /* v->r->faces = NULL */
       break;
 
-    case 'S':
+    case 'S':{
       v->type = R_int;
       struct result *r = eval(a->l);
 
@@ -697,7 +710,10 @@ struct result *eval(struct ast *a){
 
       v->i = sumvalue(r->r->out);
       /* v->r->faces = NULL */
+      /*WARNING causes seg faults for some reason*/
+      //resultfree(r); /* roll result is no longer needed */
       break;
+    }
 
     case 'D':
       v->type = R_die;
@@ -725,23 +741,23 @@ struct result *eval(struct ast *a){
       }
 
       v->r = malloc(sizeof(struct roll));
-      v->r->faces = r->d->faces;
+      v->r->faces = r->d->faces; /* duplicate pointer */
       int i = 1, length = countvalue(v->r->faces);
       /*printf("len:%d\n", length);*/
       do {
         int roll = randroll(length, v->r->faces);
-        v->r->out = newvalue(roll, (v->r->out) ? v->r->out : NULL );
+        v->r->out = newvalue(roll, (v->r->out) ? v->r->out : NULL ); /* use NULL on first */
         /* printf("roll %d\n", roll); printvalue(v->r->out); */
       } while (i++ < r->d->count);
 
-      //resultfree(r);
-      free(r);
+      free(r); /* free just the r pointer : keep faces */
       break;
     }
 
     case 'F':{
-      int i;
+      /* all functions happen at least one time, so execute with null result value */
       v = callbuiltin( NULL, ((struct funcall *)a)->functype, ((struct funcall *)a)->selector, ((struct funcall *)a)->l );
+      int i;
       for (i = 1; i < ((struct funcall *)a)->times; i++){
         v = callbuiltin( v, ((struct funcall *)a)->functype, ((struct funcall *)a)->selector, ((struct funcall *)a)->l );
       }
@@ -887,12 +903,16 @@ struct result *callbuiltin(struct result *output, int functype, int selector, st
       printf("unrecognized builtin id, %d", functype);
   }
 
+  /* since we transfer data from output to r, release output */
+  if (output) { free(output); }
   return r;
 }
 
 int main(int argc, char **argv){
   #ifdef DEBUG
+  #ifdef YYDEBUG
   yydebug = 1;
+  #endif
 
   logger = fopen("dei.log", "a+"); // a+ (create + append) option will allow appending which is useful in a log file
   if (logger == NULL) { perror("Failed: "); return 1; }
@@ -903,6 +923,23 @@ int main(int argc, char **argv){
   timeinfo = localtime(&rawtime);
 
   fprintf(logger, "=== %s  ===\n", asctime(timeinfo));
+
+
+  printf("value bytes: %lu\n", sizeof(struct value));
+  printf("symbol bytes: %lu\n", sizeof(struct symbol));
+  printf("die bytes: %lu\n", sizeof(struct die));
+  printf("roll bytes: %lu\n", sizeof(struct roll));
+  printf("result bytes: %lu\n", sizeof(struct result));
+  printf("\n");
+  printf("ast bytes: %lu\n", sizeof(struct ast));
+  printf("natdie bytes: %lu\n", sizeof(struct natdie));
+  printf("setdie bytes: %lu\n", sizeof(struct setdie));
+  printf("natint bytes: %lu\n", sizeof(struct natint));
+  printf("setres bytes: %lu\n", sizeof(struct setres));
+  printf("funcall bytes: %lu\n", sizeof(struct funcall));
+  printf("symcall bytes: %lu\n", sizeof(struct symcall));
+  printf("symasgn bytes: %lu\n", sizeof(struct symasgn));
+
   #endif
 
   /* seed rng with current time */
@@ -917,5 +954,9 @@ int main(int argc, char **argv){
     printf("> ");
   }
 
-  return yyparse();
+  int end = yyparse();
+
+  freesymboltable();
+
+  return end;
 }
