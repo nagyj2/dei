@@ -1,7 +1,7 @@
 %option noyywrap nodefault yylineno
 %{
 #include "dei.tab.h"
-#include "dei.h"
+#include "symboltable.h"
 %}
 
 /*

@@ -3,7 +3,12 @@
 #include <stdlib.h>
 
 #include "dei.tab.h"
-#include "dei.h"
+
+#include "struct.h"
+#include "mem.h"
+#include "symboltable.h"
+#include "evaluation.h"
+#include "util.h"
 
 int yylex(void);
 %}

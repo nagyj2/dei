@@ -8,7 +8,12 @@
 #include <assert.h> /* for assert */
 
 #include "dei.tab.h"
-#include "dei.h"
+
+#include "struct.h"
+#include "mem.h"
+#include "symboltable.h"
+#include "evaluation.h"
+#include "util.h"
 
 /* One line log statement for debugging */
 #ifdef DEBUG
