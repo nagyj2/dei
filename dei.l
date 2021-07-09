@@ -60,12 +60,12 @@
 "reroll"  { yylval.fn = B_reroll; return FUNC; }
 "count"   { yylval.fn = B_count; return FUNC; }
     /* selectors -> singular */
-"highest" { yylval.fn = S_high; return SELECT; }
-"lowest"  { yylval.fn = S_low; return SELECT; }
-"random"  { yylval.fn = S_rand; return SELECT; }
+"highest" { yylval.fn = S_high; return SSELECT; }
+"lowest"  { yylval.fn = S_low; return SSELECT; }
+"random"  { yylval.fn = S_rand; return SSELECT; }
 
   /* selectors -> plural */
-"unique"  { yylval.fn = S_unique; return SELECT; }
+"unique"  { yylval.fn = S_unique; return PSELECT; }
   /* Normal number selectors are plural */
 
     /* temporal quantifiers */
