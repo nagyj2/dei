@@ -5,7 +5,6 @@
 #include "dei.tab.h"
 
 #include "struct.h"
-#include "mem.h"
 #include "symboltable.h"
 #include "evaluation.h"
 #include "util.h"
@@ -82,28 +81,28 @@ dice: dice '&' dice											{ $$ = newast('&', $1, $3); }
 func: ndie															   { $$ = newast('R', $1, NULL); }
   |   sdie                                 { $$ = newast('r', $1, NULL); }
   |   '[' list ']'											   { $$ = newsetres($2); }
-  |		func FUNC SSELECT                    { $$ = newfunc($2, newselector($3, 1), 1, $1); }
-  |		func FUNC SSELECT TQUANT             { $$ = newfunc($2, newselector($3, 1), $4, $1); }
-  |		func FUNC SSELECT NUM XQUANT         { $$ = newfunc($2, newselector($3, 1), $4, $1); }
-  |		func FUNC SSELECT NUM                { $$ = newfunc($2, newselector($3, $4), 1, $1); /* same as 'reroll lowest 3' */ }
-  |		func FUNC NUM SSELECT                { $$ = newfunc($2, newselector($4, $3), 1, $1); }
-  |		func FUNC NUM SSELECT TQUANT         { $$ = newfunc($2, newselector($4, $3), $5, $1); }
-  |		func FUNC NUM SSELECT NUM XQUANT     { $$ = newfunc($2, newselector($4, $3), $5, $1); }
-  |		func FUNC SQUANT SSELECT             { $$ = newfunc($2, newselector($4, $3), 1, $1); }
-  |		func FUNC SQUANT SSELECT TQUANT      { $$ = newfunc($2, newselector($4, $3), $5, $1); }
-  |		func FUNC SQUANT SSELECT NUM XQUANT  { $$ = newfunc($2, newselector($4, $3), $5, $1); }
-  |		func FUNC NUM                    { $$ = newfunc($2, newselector($3, 1), 1, $1); }
-  |		func FUNC NUM TQUANT             { $$ = newfunc($2, newselector($3, 1), $4, $1); }
-  |		func FUNC NUM NUM XQUANT         { $$ = newfunc($2, newselector($3, 1), $4, $1); }
-  |		func FUNC NUM NUM                { $$ = newfunc($2, newselector($4, $3), 1, $1); }
-  |		func FUNC NUM NUM TQUANT         { $$ = newfunc($2, newselector($4, $3), $5, $1); }
-  |		func FUNC NUM NUM NUM XQUANT     { $$ = newfunc($2, newselector($4, $3), $5, $1); }
-  |		func FUNC SQUANT NUM             { $$ = newfunc($2, newselector($4, $3), 1, $1); }
-  |		func FUNC SQUANT NUM TQUANT      { $$ = newfunc($2, newselector($4, $3), $5, $1); }
-  |		func FUNC SQUANT NUM NUM XQUANT  { $$ = newfunc($2, newselector($4, $3), $5, $1); }
-  |		func FUNC PSELECT                    { $$ = newfunc($2, newselector($3, 1), 1, $1); }
-  |		func FUNC PSELECT TQUANT             { $$ = newfunc($2, newselector($3, 1), $4, $1); }
-  |		func FUNC PSELECT NUM XQUANT         { $$ = newfunc($2, newselector($3, 1), $4, $1); }
+  |		func FUNC SSELECT                    { $$ = newfunc($2, newSelector($3, 1), 1, $1); }
+  |		func FUNC SSELECT TQUANT             { $$ = newfunc($2, newSelector($3, 1), $4, $1); }
+  |		func FUNC SSELECT NUM XQUANT         { $$ = newfunc($2, newSelector($3, 1), $4, $1); }
+  |		func FUNC SSELECT NUM                { $$ = newfunc($2, newSelector($3, $4), 1, $1); /* same as 'reroll lowest 3' */ }
+  |		func FUNC NUM SSELECT                { $$ = newfunc($2, newSelector($4, $3), 1, $1); }
+  |		func FUNC NUM SSELECT TQUANT         { $$ = newfunc($2, newSelector($4, $3), $5, $1); }
+  |		func FUNC NUM SSELECT NUM XQUANT     { $$ = newfunc($2, newSelector($4, $3), $5, $1); }
+  |		func FUNC SQUANT SSELECT             { $$ = newfunc($2, newSelector($4, $3), 1, $1); }
+  |		func FUNC SQUANT SSELECT TQUANT      { $$ = newfunc($2, newSelector($4, $3), $5, $1); }
+  |		func FUNC SQUANT SSELECT NUM XQUANT  { $$ = newfunc($2, newSelector($4, $3), $5, $1); }
+  |		func FUNC NUM                    { $$ = newfunc($2, newSelector($3, 1), 1, $1); }
+  |		func FUNC NUM TQUANT             { $$ = newfunc($2, newSelector($3, 1), $4, $1); }
+  |		func FUNC NUM NUM XQUANT         { $$ = newfunc($2, newSelector($3, 1), $4, $1); }
+  |		func FUNC NUM NUM                { $$ = newfunc($2, newSelector($4, $3), 1, $1); }
+  |		func FUNC NUM NUM TQUANT         { $$ = newfunc($2, newSelector($4, $3), $5, $1); }
+  |		func FUNC NUM NUM NUM XQUANT     { $$ = newfunc($2, newSelector($4, $3), $5, $1); }
+  |		func FUNC SQUANT NUM             { $$ = newfunc($2, newSelector($4, $3), 1, $1); }
+  |		func FUNC SQUANT NUM TQUANT      { $$ = newfunc($2, newSelector($4, $3), $5, $1); }
+  |		func FUNC SQUANT NUM NUM XQUANT  { $$ = newfunc($2, newSelector($4, $3), $5, $1); }
+  |		func FUNC PSELECT                    { $$ = newfunc($2, newSelector($3, 1), 1, $1); }
+  |		func FUNC PSELECT TQUANT             { $$ = newfunc($2, newSelector($3, 1), $4, $1); }
+  |		func FUNC PSELECT NUM XQUANT         { $$ = newfunc($2, newSelector($3, 1), $4, $1); }
   ;
 
   /* performs a die roll */
@@ -118,8 +117,8 @@ sdie: DNUM 'd' '{' list '}'							{ $$ = newsetdie($1, $4); }
   |   'd' '{' list '}'									{ $$ = newsetdie(1, $3); }
 
   /* creates a list of values */
-list: NUM                               { $$ = newvalue($1, NULL); }
-  |		NUM ',' list                      { $$ = newvalue($1, $3); }
+list: NUM                               { $$ = newValue($1, NULL); }
+  |		NUM ',' list                      { $$ = newValue($1, $3); }
   ;
 
   /* performs top-level actions */

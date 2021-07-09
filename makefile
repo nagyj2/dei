@@ -5,6 +5,8 @@ FLEXOUT = dei.lex.c
 
 DEIFUNC = dei.lib.c
 
+OBJS = struct.o symboltable.o evaluation.o util.o
+
 CFLAGS = -Wall -g -std=c11 -ll
 
 all: clean dei_bison dei_flex dei deid
@@ -16,11 +18,11 @@ dei_flex: dei.l
 	flex -o $(FLEXOUT) $<
 
 # release
-dei: dei.tab.c $(FLEXOUT) $(DEIFUNC)
+dei: dei.tab.c $(FLEXOUT) $(DEIFUNC) $(OBJS)
 	gcc $(CFLAGS) -O2 -o $@ $^
 
 # debug
-deid: dei.tab.c $(FLEXOUT) $(DEIFUNC)
+deid: dei.tab.c $(FLEXOUT) $(DEIFUNC) $(OBJS)
 	@gcc $(CFLAGS) -D DEBUG -g -o $@ $^
 
 clean:
