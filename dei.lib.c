@@ -213,7 +213,7 @@ struct symbol *lookup(char * sym){
     /* if entry exists, check if it is the same and return if it is */
     if (sp->name && !strcmp(sp->name, sym)) {
 
-      printf("found %s at %p\n", sp->name, sp);
+      //DEBUGLOG("found %s at %p\n", sp->name, sp);
       return sp;
     }
 
@@ -222,7 +222,7 @@ struct symbol *lookup(char * sym){
       sp->name = strdup(sym);
       sp->func = malloc(sizeof(struct ast));
       sp->func = newnatint(0);                /* initialize to protect against errors */
-      printf("new %s at %p(%p)\n", sp->name, sp, sp->func);
+      //DEBUGLOG("new %s at %p(%p)\n", sp->name, sp, sp->func);
       return sp;
     }
 
@@ -237,7 +237,7 @@ struct symbol *lookup(char * sym){
 
 /* define a symbol (variable) */
 void setsym(struct symbol *name, struct ast *val){
-  printf("place at %p\n", name);
+  //DEBUGLOGLN("place at %p", name);
   if (name->func){ /* NOTE allocated in lookup, so this will always run*/
     treefree(name->func);
     name->func = malloc(sizeof(struct ast));
@@ -253,7 +253,7 @@ void freesymboltable(void){
     struct symbol *sp = &symtab[i];
 
     if (sp->name){
-      printf("found %s at %p\n", sp->name, sp);
+      //DEBUGLOG("freed %s at %p\n", sp->name, sp);
       treefree(sp->func);
     }
     free(sp);
@@ -296,6 +296,7 @@ struct ast *newast(int nodetype, struct ast *l, struct ast *r){
   a->nodetype = nodetype;
   a->l = l;
   a->r = r;
+  //DEBUGLOG("new %c node. l at %p, r at %p\n", a->nodetype, a->l, a->r);
   return a;
 }
 
@@ -311,6 +312,7 @@ struct ast *newcmp(int cmptype, struct ast *l, struct ast *r){
   a->nodetype = '0' + cmptype;
   a->l = l;
   a->r = r;
+  //DEBUGLOG("new cmp %c node. l at %p, r at %p\n", '0' + a->nodetype, a->l, a->r);
   return a;
 }
 
@@ -327,6 +329,7 @@ struct ast *newnatdie(int count, int min, int max){
   a->count = count;
   a->min = min;
   a->max = max;
+  //DEBUGLOG("new nat die: %dd{%d..%d}\n", a->count, a->min, a->max);
 
   return (struct ast *)a;
 }
@@ -343,7 +346,13 @@ struct ast *newsetdie(int count, struct value *faces){
   a->nodetype = 'd';
   a->count = count;
   a->faces = faces;
-
+  /*DEBUGLOG("new set die: ");
+  #ifdef DEBUG
+  struct value *t;
+  for (t = faces; t; t = t->next);
+    DEBUGLOG("%d ")
+  DEBUGLOG("\n");
+  #endif*/
   return (struct ast *)a;
 }
 
