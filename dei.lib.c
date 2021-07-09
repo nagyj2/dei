@@ -832,8 +832,8 @@ struct selected *select(int selector, struct roll *dieroll){
 
   switch (selector){
     case S_high: {
-      sel->val = dieroll->out;    /* assume first is max */
-      //struct value *t;            /* traversal variable */
+      sel = newselected(dieroll->out, NULL); /* assume first is max */
+      //sel->val = dieroll->out;
       for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
         if (sel->val->v < t->v){  /* saved -> initialized, so never null */
           if (sel)  sel->val = t; /* save address */
@@ -844,7 +844,8 @@ struct selected *select(int selector, struct roll *dieroll){
       break;
     }
     case S_low: {
-      sel->val = dieroll->out;    /* assume first is max */
+      sel = newselected(dieroll->out, NULL); /* assume first is min */
+      //sel->val = dieroll->out;
       for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
         if (sel->val->v > t->v){  /* saved -> initialized, so never null */
           if (sel)  sel->val = t; /* save address */
@@ -897,35 +898,17 @@ void freeselected(struct selected *a){
 }
 
 
-struct roll *funcreroll(int selector, struct roll *r){
+/* rerolls all pointers pointed to by sel according to faces */
+/* NEITHER sel or faces can be NULL */
+void funcreroll(struct selected *sel, struct value *faces){
   /* length of faces  */
-  int facelen;
-  if (r->faces) { facelen = countvalue(r->faces); }
-  else { yyerror("error: no die face provided\n"); return r; }
+  int facelen = countvalue(faces);
 
-  #ifdef DEBUG
-  printf("before: ");
-  printvalue(r->out);
-  printf("\n");
-  #endif
-
-  struct selected *sel = select(selector, r);
-  if (sel){
-    struct selected *t = NULL; /* iterator for searching */
-    for (t = sel; t; t = t->next){
-      int roll = randroll(facelen, r->faces);
-      t->val->v = roll; /* update pointed to's value */
-    }
-    freeselected(sel);
+  struct selected *t; /* iterator variable */
+  for (t = sel; t; t = t->next){
+    int roll = randroll(facelen, faces);
+    t->val->v = roll; /* update pointed to's value */
   }
-
-  #ifdef DEBUG
-  printf("after: ");
-  printvalue(r->out);
-  printf("\n");
-  #endif
-
-  return r;
 }
 
 
@@ -937,22 +920,31 @@ struct result *callbuiltin(struct result *output, int functype, int selector, st
 
   if (r->type != R_roll) { yyerror("expected roll type, got %d",r->type); return r; };
 
-  switch (functype){
-    case B_drop:
+  struct selected *sel = select(selector, r->r); /* select appropriate values */
+
+  /* select can return null, so verify something was selected! */
+  if (sel){
+
+    #ifdef DEBUG
+    printf("before: ");
+    printvalue(r->r->out);
+    #endif
+
+    switch (functype){
+      case B_drop:
       printf("warning: drop is not fully implemented\n");
       break;
-    case B_append:
+      case B_append:
       printf("warning: append is not fully implemented\n");
       break;
-    case B_choose:
+      case B_choose:
       printf("warning: choose is not fully implemented\n");
       break;
-    case B_reroll: {
-      if (!r->r->faces) { yyerror("reroll requires unaltered die"); return r; };
-
-      r->r = funcreroll(selector, r->r);
-      break;
-    }
+      case B_reroll: {
+        if (!r->r->faces) { yyerror("reroll requires unaltered die"); return r; };
+        funcreroll(sel, r->r->faces);
+        break;
+      }
 
     case B_count: {
 
@@ -963,8 +955,12 @@ struct result *callbuiltin(struct result *output, int functype, int selector, st
       break;
     }
 
-    default:
-      printf("unrecognized builtin id, %d", functype);
+    #ifdef DEBUG
+    printf("after: ");
+    printvalue(r->r->out);
+    #endif
+
+    freeselected(sel);
   }
 
   /* since we transfer data from output to r, release output */
@@ -1002,7 +998,7 @@ int main(int argc, char **argv){
   printf("setres bytes: %lu\n", sizeof(struct setres));
   printf("funcall bytes: %lu\n", sizeof(struct funcall));
   printf("symcall bytes: %lu\n", sizeof(struct symcall));
-  printf("symasgn bytes: %lu\n", sizeof(struct symasgn));
+  printf("symasgn bytes: %lu\n\n", sizeof(struct symasgn));
 
   #endif
 
