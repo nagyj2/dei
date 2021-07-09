@@ -42,6 +42,16 @@ int countvalue(struct value *val){
   return c;
 }
 
+/* count values in a chain */
+int countselected(struct selected *val){
+  struct selected *t;
+  int c = 0;
+
+  for (t = val; t != NULL; t=t->next) c++;
+  /*printf("count %d\n",c);*/
+  return c;
+}
+
 /* inclusive random int */
 int randint(min, max){
   return (rand() % (max + 1 - min)) + min;
@@ -946,13 +956,15 @@ struct result *callbuiltin(struct result *output, int functype, int selector, st
         break;
       }
 
-    case B_count: {
+      case B_count: {
+        int count = countselected(sel);
+        valuefree(r->r->out);
+        r->r->out = newvalue(count, NULL);
+        break;
+      }
 
-      printf("warning: count is not fully implemented\n");
-      int count = countvalue(r->r->out);
-      valuefree(r->r->out);
-      r->r->out = newvalue(count, NULL);
-      break;
+      default:
+        printf("unrecognized builtin id, %d", functype);
     }
 
     #ifdef DEBUG
@@ -962,6 +974,7 @@ struct result *callbuiltin(struct result *output, int functype, int selector, st
 
     freeselected(sel);
   }
+
 
   /* since we transfer data from output to r, release output */
   //if (output) { free(output); }
