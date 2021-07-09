@@ -22,7 +22,7 @@ int yylex(void);
 
 /* declare tokens */
 /* TODO declare tokens and types */
-%token <d> NUM DNUM QUANT
+%token <d> NUM DNUM TQUANT SQUANT
 %token <s> IDENT
 %token <fn> FUNC SELECT CMP
 %token UNION INTER DIV RANGE
@@ -78,10 +78,10 @@ func: ndie															{ $$ = newast('R', $1, NULL); }
   |   sdie                              { $$ = newast('r', $1, NULL); }
   |   '[' list ']'											{ $$ = newsetres($2); }
   |		func FUNC SELECT									{ $$ = newfunc($2, $3, 1, $1); }
-  |   func FUNC SELECT QUANT						{ $$ = newfunc($2, $3, $4, $1); }
+  |   func FUNC SELECT TQUANT					  { $$ = newfunc($2, $3, $4, $1); }
   |   func FUNC SELECT NUM XQUANT	  		{ $$ = newfunc($2, $3, $4, $1); }
   |   func FUNC NUM									    { $$ = newfunc($2, $3, 1, $1); }
-  |   func FUNC NUM QUANT							  { $$ = newfunc($2, $3, $4, $1); }
+  |   func FUNC NUM TQUANT						  { $$ = newfunc($2, $3, $4, $1); }
   |   func FUNC NUM NUM XQUANT				  { $$ = newfunc($2, $3, $4, $1); }
   ;
 

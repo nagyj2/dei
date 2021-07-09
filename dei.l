@@ -68,14 +68,29 @@
 "unique"  { yylval.fn = S_unique; return SELECT; }
   /* Normal number selectors are plural */
 
-    /* quantifiers */
-"once"    { yylval.d = 1; return QUANT; }
-"twice"   { yylval.d = 2; return QUANT; }
-"thrice"  { yylval.d = 3; return QUANT; }
-"always"  { yylval.d = 50; return QUANT; } /* TODO: use always as default, dependant on functype in dei.y */
+    /* temporal quantifiers */
+"once"    { yylval.d = 1; return TQUANT; }
+"twice"   { yylval.d = 2; return TQUANT; }
+"thrice"  { yylval.d = 3; return TQUANT; }
+"always"  { yylval.d = 50; return TQUANT; } /* TODO: use always as default, dependant on functype in dei.y */
 
+    /* arbitrary temporal quantifier */
 "times"   { return XQUANT; }
 "time"    { return XQUANT; }
+
+    /* singular quantifiers */
+"one"   { yylval.d =  1; return SQUANT; }
+"two"   { yylval.d =  2; return SQUANT; }
+"three" { yylval.d =  3; return SQUANT; }
+"four"  { yylval.d =  4; return SQUANT; }
+"five"  { yylval.d =  5; return SQUANT; }
+"six"   { yylval.d =  6; return SQUANT; }
+"seven" { yylval.d =  7; return SQUANT; }
+"eight" { yylval.d =  8; return SQUANT; }
+"nine"  { yylval.d =  9; return SQUANT; }
+"ten"   { yylval.d = 10; return SQUANT; }
+"all"   { yylval.d = -1; return SQUANT; }
+
 
 "quit"    |
 "q"       { return EXIT;}
