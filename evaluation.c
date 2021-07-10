@@ -506,7 +506,7 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
         break;
       default:
         /* find first instance of specific die outcome */
-        assert(seltype > 0);
+        assert(seltype >= 0 || seltype == S_all);
         for (t = dieroll->out; t; t = t->next){
           if (t->v == seltype && !hasSelected(t, retsel)){  /* check for match */
             sel = newSelected(t, NULL);
