@@ -21,7 +21,10 @@ DEXEC = dei
 
 exec: parser lexer release_exec
 debug: CFLAGS += -D DEBUG -g
+<<<<<<< HEAD
 debug: BISONFLAGS += -v
+=======
+>>>>>>> 9b7dad65fb9676c320e25205f17bfc3ef9082a36
 debug:	parser lexer debug_exec
 
 parser: dei.y
