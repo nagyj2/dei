@@ -55,7 +55,7 @@ void freesymboltable(void){
 
     if (sp->name){
       debug_report("freed %s at %p\n", sp->name, sp);
-      freeAst(sp->func);
+      freeAst(&sp->func);
     }
     free(sp);
   }

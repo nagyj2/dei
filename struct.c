@@ -1,6 +1,7 @@
 
-#include "dei.tab.h"
+#include <assert.h>
 
+#include "dei.tab.h"
 #include "struct.h"
 
 /* === Data Functions === */
@@ -35,7 +36,7 @@ int sumValue(struct value *val){
   struct value *t;
   int s = 0;
 
-  for (t = val; t && t->v; t = t->next){
+  for (t = val; t; t = t->next){
     s += (t->v);
   }
 
@@ -208,28 +209,31 @@ struct ast *newasgn(struct symbol *s, struct ast *defn){
 /* === Memory Management === */
 
 /* sequentially free chain of values */
-void freeValue(struct value *a){
+void freeValue(struct value **a){
   struct value *na;
-  while(a != NULL){
-    na = a->next;
-    free(a);
-    a = na;
+  while(*a != NULL){
+    na = (*a)->next;
+    free(*a);
+    *a = na;
   }
+  *a = NULL;
 }
 
-void freeAst(struct ast *a){
+void freeAst(struct ast **a){
 
-  switch (a->nodetype){
+  switch ( (*a)->nodetype ){
 
   /* 2 ast subtrees */
   case '+': case '-': case '*': case '%': case '^': case '&': case '|':
   case DIV: case INTER: case UNION:
   case '1': case '2': case '3': case '4': case '5': case '6':
-    freeAst(a->r);
+    freeAst( &((*a)->r) );
+    assert(! (*a)->r );
 
   /* 1 ast subtrees */
   case 'M': case 'R': case 'r': case 'S':
-    freeAst(a->l);
+    freeAst( &((*a)->l) );
+    assert(! (*a)->l );
 
   /* 0 ast subtrees */
   case 'D': case 'I': case 'E':
@@ -238,28 +242,35 @@ void freeAst(struct ast *a){
     /* special */
   /* 1 value subtree */
   case 'd':
-    freeValue( ((struct setdie *)a)->faces );
+    freeValue( &(((struct setdie *)*a)->faces) );
+    assert(! ((struct setdie *)*a)->faces );
     break;
 
   case 'Q':
-    freeValue( ((struct setres *)a)->faces );
+    freeValue( &(((struct setres *)*a)->faces) );
+    assert(! ((struct setres *)*a)->faces );
     break;
 
   /* function call -> requires cast */
   case 'F':
-    freeAst(((struct funcall *)a)->l);
+    freeAst( &(((struct funcall *)*a)->l) );
+    assert(! ((struct funcall *)*a)->l );
     break;
 
   /* assignment -> free pointer to value; now stored by symbol table */
   case 'A':
-    freeAst( ((struct symasgn *)a)->l );
+    freeAst( &(((struct symasgn *)*a)->l) );
+    assert(! ((struct symasgn *)*a)->l );
     break;
 
-  default:;
-    //printf("unknown nodetype: %d:", a->nodetype);
+  default:
+    printf("unknown nodetype: %d:", (*a)->nodetype);
+    *a = NULL;
+    return;
 
   }
-  free(a); /* free node itself */
+  free(*a); /* free node itself */
+  *a = NULL;
 }
 
 void yyerror(char *s, ...){

@@ -134,7 +134,8 @@ struct value *createSetdieFace(struct value *faces){
 void setsym(struct symbol *name, struct ast *val){
   debug_report("place at %p", name);
   if (name->func){ /* NOTE allocated in lookup, so this will always run*/
-    name->func = freeAst(name->func);
+    freeAst( &(name->func) );
+    assert(! name->func );
     name->func = malloc(sizeof(struct ast));
   }
 
@@ -180,8 +181,8 @@ struct result *eval(struct ast *a){
         case '^': v->i = (int) pow(l->i, r->i); break;
       }
 
-      freeResult(l);
-      freeResult(r);
+      freeResultSafe( &l );
+      freeResultSafe( &r );
       break;
     }
 
@@ -204,8 +205,8 @@ struct result *eval(struct ast *a){
         case '6': v->i = (l->i <= r->i)? 1 : 0; break;
       }
 
-      freeResult(l);
-      freeResult(r);
+      freeResultSafe( &l );
+      freeResultSafe( &r );
       break;
     }
 
@@ -227,7 +228,7 @@ struct result *eval(struct ast *a){
 
       v->i = sumValue(r->r->out);
       /* WARNING causes seg faults for some reason? */
-      freeResult(r); /* roll result is no longer needed */
+      freeResultSafe( &r ); /* roll result is no longer needed */
       break;
     }
 
@@ -354,7 +355,7 @@ struct result *callbuiltin(struct result *output, int functype, int seltype, int
     printValue(r->r->out);
     #endif
 
-    sel = freeSelected(sel);
+    freeSelected( &sel );
   }
 
 
@@ -395,8 +396,9 @@ void funcchoose(struct selected *sel, struct value *out){
 void funccount(struct selected *sel, struct value **out){
   struct value *val = NULL;
   val = newValue( countSelected(sel), NULL );
-  *out = freeValue(*out);
-  //*out = NULL;
+  //*out = freeValue( out );
+  freeValue( out ); /* SETS POINTER TO NULL */
+
   // assert(!out); // (Need to set to null to detect)
   // sel = freeSelected(sel);
   // assert(!sel);
@@ -497,37 +499,70 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
 /* === Memory Management === */
 
 /* Frees a single result variable. Also frees attached data */
-void *freeResult(struct result *a){
-  switch (a->type){
+void freeResult(struct result **a){
+  switch ( (*a)->type ){
   case R_int:
     break;
 
   case R_roll:
-    if (a->r->faces)
-      a->r->faces = freeValue(a->r->faces);
-    if (a->r->out)
-      a->r->out = freeValue(a->r->out);
+    if ( (*a)->r->faces )
+      freeValue( &((*a)->r->faces) );
+    if ( (*a)->r->out )
+      freeValue( &((*a)->r->out) );
+
+    assert(! (*a)->r->faces );
+    assert(! (*a)->r->out );
     break;
 
   case R_die:
-    if (a->d->faces)
-      a->r->faces = freeValue(a->d->faces);
+    if ( (*a)->d->faces )
+      freeValue( &((*a)->d->faces) );
+
+    assert(!(*a)->d->faces);
     break;
 
   default:
-    printf("unrecognized result: %c",a->type);
+    printf("unrecognized result: %c",(*a)->type);
   }
-  free(a);
-  return NULL;
+  free(*a);
+  *a = NULL;
+  assert(! *a );
+}
+
+/* Frees a single result variable, but leaves attached data pointed to by others */
+void freeResultSafe(struct result **a){
+  switch ( (*a)->type ){
+  case R_int:
+    break;
+
+  case R_roll:
+    if ( (*a)->r->out )
+      freeValue( &((*a)->r->out) );
+
+    assert(! (*a)->r->out );
+    break;
+
+  case R_die:
+
+    assert(!(*a)->d->faces);
+    break;
+
+  default:
+    printf("unrecognized result: %c",(*a)->type);
+  }
+  free(*a);
+  *a = NULL;
+  assert(! *a );
 }
 
 /* Frees an entire selected chain. Does NOT free the referenced pointers */
-void *freeSelected(struct selected *a){
+void freeSelected(struct selected **a){
   struct selected *na;
-  while(a != NULL){
-    na = a->next;
-    free(a);
-    a = na;
+  while(*a != NULL){
+    na = (*a)->next;
+    free(*a);
+    *a = na;
   }
-  return NULL;
+  *a = NULL;
+  assert(! *a );
 }

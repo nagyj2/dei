@@ -110,10 +110,12 @@ void funccount(struct selected *sel, struct value **out);
 struct selected *select(int seltype, int scount, struct roll *dieroll);
 
 
-/* free result variable */
-void *freeResult(struct result *a);
+/* free result variable, AND contained data - SETS ARGS TO NULL */
+void freeResult(struct result **a);
+/* free result variable, but leaves connected non-eval components - SETS ARGS TO NULL */
+void freeResultSafe(struct result **a);
 /* free selected nodes, but NOT the value nodes they hold */
-void *freeSelected(struct selected *a);
+void freeSelected(struct selected **a);
 
 
 

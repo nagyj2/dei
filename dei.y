@@ -123,16 +123,18 @@ list: NUM                               { $$ = newValue($1, NULL); }
   /* performs top-level actions */
 start:start math EOL										{
         struct result *r = eval($2);
+        #ifdef DEBUG
         printf("out <- "); printAst($2);
-        printf(" = %d",r->i);
-        freeResult(r);
-        freeAst($2);
+        #endif
+        printf(" = %d", r->i);
+        freeResultSafe( &r );
+        freeAst( &($2) );
         printf("\n> ");
   }
   |   start IDENT ':' math EOL					{
         printAst($4);
-        setsym($2,$4);
-        //treefree($4); /* CANNOT FREE */
+        setsym($2, $4);
+        //treefree( &($4) ); /* CANNOT FREE b/c saved */
         printf("\n> ");
   }
   |   start error EOL										{ printf("error!\n> "); }

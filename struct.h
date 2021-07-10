@@ -160,9 +160,9 @@ struct ast *newref(struct symbol *s);
 struct ast *newasgn(struct symbol *s, struct ast *defn);
 
 
-/* delete and free ast */
-void freeAst(struct ast *a);
-/* free all elements of a value chain */
-void freeValue(struct value *a);
+/* delete and free ast - SETS ARG TO NULL */
+void freeAst(struct ast **a);
+/* free all elements of a value chain - SETS ARG TO NULL */
+void freeValue(struct value **a);
 
 #endif /* DEI_STRUCT_H_INCLUDED */
