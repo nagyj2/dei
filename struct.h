@@ -4,7 +4,6 @@
  * - Explanation of structs
  * - Methods to operate on the structs
  * - essential lexer functions
- * TODO: unroll 'selector'
  */
 
 

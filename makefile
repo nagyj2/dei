@@ -21,10 +21,7 @@ DEXEC = dei
 
 exec: parser lexer release_exec
 debug: CFLAGS += -D DEBUG -g
-<<<<<<< HEAD
 debug: BISONFLAGS += -v
-=======
->>>>>>> 9b7dad65fb9676c320e25205f17bfc3ef9082a36
 debug:	parser lexer debug_exec
 
 parser: dei.y
@@ -47,4 +44,4 @@ debug_exec: dei.tab.c $(FLEXOUT) $(MAIN) $(OBJS)
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 clean:
-	rm -rf dei deid dei.output dei.dSYM deid.dSYM dei.tab.* $(FLEXOUT) $(OBJS)
+	rm -rf $(EXEC) $(DEXEC) dei.output $(EXEC).dSYM $(DEXEC).dSYM dei.tab.* $(FLEXOUT) $(OBJS)
