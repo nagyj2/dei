@@ -1,6 +1,7 @@
 
-#include "struct.h"
+#include "dei.tab.h"
 #include "util.h"
+
 
 /* inclusive random int */
 int randint(int min, int max){
@@ -18,100 +19,77 @@ int randroll(struct value *faces){
 }
 
 
-/* print the ast to the screen */
-void printsymtab(void){
-  int i;
-  printf("Start table>");
-  for (i=0; i<NHASH; i++){
-    struct symbol *sp = &symtab[i];
-    if (sp->name)
-      printf("\t> %s : ", sp->name);
-      printtree(sp->func);
-      printf("\n");
-  }
-  printf("======\n");
-}
-
-/* print a chain of values */
-void printvalue(struct value *val){
-  struct value *t;
-  printf("val chain");
-  for(t = val; t != NULL; t = t->next)
-    printf(" %d", t->v);
-  printf("\n");
-}
-
 /* print the ast to stdout */
-void printtree(struct ast *a){
+void printAst(struct ast *a){
   switch (a->nodetype){
 
   case '+': case '-': case '*': case '%': case '^': case '&': case '|':
     printf("(");/*printf("%c(", a->nodetype);*/
-    printtree(a->l);
+    printAst(a->l);
     printf("%c",a->nodetype);/*printf(",");*/
-    printtree(a->r);
+    printAst(a->r);
     printf(")");
     break;
 
   case 'M': case 'R': case 'r': case 'S':
     printf("%c(", a->nodetype);
-    printtree(a->l);
+    printAst(a->l);
     printf(")");
     break;
 
   case DIV: case INTER: case UNION:
     printf("(");/*printf("//(");*/
-    printtree(a->l);
+    printAst(a->l);
     printf("%s",(a->nodetype==DIV?"//":a->nodetype==INTER?"&&":"||"));/*printf(",");*/
-    printtree(a->r);
+    printAst(a->r);
     printf(")");
     break;
 
   case '1': /* > */
     printf("(");
-    printtree(a->l);
+    printAst(a->l);
     printf(">");
-    printtree(a->r);
+    printAst(a->r);
     printf(")");
     break;
 
   case '2': /* < */
     printf("(");
-    printtree(a->l);
+    printAst(a->l);
     printf("<");
-    printtree(a->r);
+    printAst(a->r);
     printf(")");
     break;
 
   case '3': /* != */
     printf("(");
-    printtree(a->l);
+    printAst(a->l);
     printf("!=");
-    printtree(a->r);
+    printAst(a->r);
     printf(")");
     break;
 
   case '4': /* == */
     printf("(");
-    printtree(a->l);
+    printAst(a->l);
     printf("==");
-    printtree(a->r);
+    printAst(a->r);
     printf(")");
     break;
 
   case '5': /* >= */
     printf("(");
-    printtree(a->l);
+    printAst(a->l);
     printf(">=");
-    printtree(a->r);
+    printAst(a->r);
     printf(")");
     break;
 
   case '6': /* <= */
     printf("(");
-    printtree(a->l);
+    printAst(a->l);
     printf("<=");
-    printtree(a->r);
+    printAst(a->r);
     printf(")");
     break;
 
@@ -140,11 +118,11 @@ void printtree(struct ast *a){
   case 'F':
     printf("F(%d,%d,%d,(",
       ((struct funcall *)a)->functype,
-      ((struct funcall *)a)->sel->sel,
-      ((struct funcall *)a)->sel->count
+      ((struct funcall *)a)->seltype,
+      ((struct funcall *)a)->scount
     );
-    printtree(((struct funcall *)a)->l);
-    printf(")x%d)", ((struct funcall *)a)->times);
+    printAst(((struct funcall *)a)->l);
+    printf(")x%d)", ((struct funcall *)a)->fcount);
     break;
 
   case 'I':
@@ -153,15 +131,38 @@ void printtree(struct ast *a){
 
   case 'E':
     printf("$%s:", ((struct symcall *)a)->s->name );
-    printtree( ((struct symcall *)a)->s->func );
+    printAst( ((struct symcall *)a)->s->func );
     printf("$");
     break;
 
   case 'A':
     printf("%s", ((struct symasgn *)a)->s->name );
     printf(" ::= ");
-    printtree( ((struct symasgn *)a)->l );
+    printAst( ((struct symasgn *)a)->l );
     break;
 
   }
+}
+
+/* print a chain of values */
+void printValue(struct value *val){
+  struct value *t;
+  printf("val chain");
+  for(t = val; t != NULL; t = t->next)
+    printf(" %d", t->v);
+  printf("\n");
+}
+
+/* print the ast to the screen */
+void printSymtab(struct symbol table[]){
+  int i;
+  printf("Start table>\n");
+  for (i=0; i<NHASH; i++){
+    struct symbol *sp = &table[i];
+    if (sp->name)
+      printf("\t> %s : ", sp->name);
+      printAst(sp->func);
+      printf("\n");
+  }
+  printf("======\n");
 }

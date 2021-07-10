@@ -6,13 +6,14 @@
 #ifndef SYMBOLTABLE_H_INCLUDED
 #define SYMBOLTABLE_H_INCLUDED
 
+#include <stdlib.h> /* needed for malloc(), free() */
 #include <string.h> /* needed for strdup() */
 
+#include "defines.h"
 #include "struct.h"
 
 /* === DATA === */
 
-#define NHASH 9997 /* size of symbol table */
 struct symbol symtab[NHASH];    /* symbol table itself */
 
 /* === FUNCTIONS === */

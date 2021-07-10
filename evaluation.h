@@ -7,10 +7,13 @@
 #ifndef DEI_EVALUATION_H_INCLUDED
 #define DEI_EVALUATION_H_INCLUDED
 
+#include <stdlib.h> /* needed for malloc(), free() */
 #include <math.h> /* needed for pow() */
+#include <assert.h> /* needed for assert() */
 
-#include "dei.tab.h"
+#include "defines.h"
 #include "struct.h"
+#include "util.h"
 
 /* ====== DATA ====== */
 /* Support Data
@@ -51,10 +54,10 @@ struct selected {       /* a chain of pointers to assorted value nodes */
  struct selected *next;  /* next selected node */
 };
 
-struct selector {       /* multiselect  */
- int sel;              /* what to select -> sifs */
- int count;            /* number of times to perform */
-};
+/*struct selector { */      /* multiselect  */
+/* int sel;     */         /* what to select -> sifs */
+/* int count;  */          /* number of times to perform */
+/*};*/
 
 
 /* Created a new selected struct. If 'prev' != NULL, it will occupy the 'next' attr of the new var */
@@ -67,6 +70,12 @@ int sumSelected(struct selected *sel);
 bool hasSelected(struct value *key, struct selected *sel);
 /* Iterate over a selected chain and determine if a SPECIFIC INTEGER is contained */
 bool hasSelectedInt(int key, struct selected *sel);
+/* Place elem's of 'sel2' into 'sel1' if they aren't already there */
+/* 'sel2' is safe to be freed after usage. Number of merges are returned */
+int mergeSelected(struct selected **sel1, struct selected *sel2);
+/* Look through 'opts' and return the first not in 'has' */
+/* CAUTION : Can return NULL */
+struct value *firstunique(struct value *opts, struct selected *has);
 
 
 /* Create a die's face values from the max and min values */
@@ -82,16 +91,22 @@ void setsym(struct symbol *name, struct ast *val);
 /* Recursively evaluate an AST to retrieve a result */
 struct result *eval(struct ast *a);
 /* Perform a builtin function to an evaluated AST result */
-struct result *callbuiltin(struct result *output, int functype, struct selector *sel, struct ast *frame);
-
+struct result *callbuiltin(struct result *output, int functype, int seltype, int scount, struct ast *frame);
+/* rerandomizes all pointers within 'sel' according to the options of 'faces' */
+/* NEITHER sel or faces can be NULL */
+void funcreroll(struct selected *sel, struct value *faces);
 
 /* Create a new selector. 'seltype' is the type of select and 'count' is the number of selections */
-struct selector *newSelector(int seltype, int count);
+/*struct selector *newSelector(int seltype, int count);*/
+/* Returns selected roll results according to input selection data */
+struct selected *select(int seltype, int scount, struct roll *dieroll);
 
 
 /* free result variable */
 void freeResult(struct result *a);
 /* free selected nodes, but NOT the value nodes they hold */
 void freeSelected(struct selected *a);
+
+
 
 #endif /* DEI_EVALUATION_H_INCLUDED */

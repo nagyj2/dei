@@ -1,4 +1,6 @@
 
+#include "dei.tab.h"
+
 #include "struct.h"
 
 /* === Data Functions === */
@@ -142,7 +144,7 @@ struct ast *newsetres(struct value *faces){
 }
 
 /* F : create a built in function call node */
-struct ast *newfunc(int functype, struct selector *selectype, int times, struct ast *l){
+struct ast *newfunc(int functype, int seltype, int fcount, int scount, struct ast *l){
   struct funcall *a = malloc(sizeof(struct funcall));
 
   if (!a){
@@ -151,9 +153,10 @@ struct ast *newfunc(int functype, struct selector *selectype, int times, struct 
   }
 
   a->nodetype = 'F';
-  a->times = times;
   a->functype = functype;
-  a->sel = selectype;
+  a->seltype = seltype;
+  a->fcount = fcount;
+  a->scount = scount;
   a->l = l;                 /* operand */
   return (struct ast *)a;
 }
@@ -257,4 +260,13 @@ void freeAst(struct ast *a){
 
   }
   free(a); /* free node itself */
+}
+
+void yyerror(char *s, ...){
+  va_list ap;
+  va_start(ap, s);
+
+  fprintf(stderr, "%d: error : ", yylineno);
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
 }

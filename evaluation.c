@@ -1,11 +1,13 @@
 
+#include "dei.tab.h"
+
 #include "struct.h"
 #include "evaluation.h"
 
 /* === Data Functions === */
 
 /* create a new selection descriptor */
-struct selector *newSelector(int seltype, int count){
+/*struct selector *newSelector(int seltype, int count){
   struct selector *s = malloc(sizeof(struct selector));
 
   if (!s){
@@ -16,7 +18,7 @@ struct selector *newSelector(int seltype, int count){
   s->sel = seltype;
   s->count = count;
   return s;
-}
+}*/
 
 /* create a chain of selected */
 struct selected *newSelected(struct value *elem, struct selected *prev){
@@ -76,6 +78,45 @@ bool hasSelectedInt(int key, struct selected *list){
   return false;
 }
 
+/* places all elements missing from 'sel2' into 'sel1' */
+/* after, 'sel1' is modified and 'sel2' can be freed. Returns number of transfers */
+int mergeSelected(struct selected **sel1, struct selected *sel2){
+  struct selected *t1 = NULL, *t2 = NULL;
+  int num = 0; /* number of merges */
+
+  if (!sel2) return num;  /* if sel2 is null, return */
+
+  for (t2 = sel2; t2 && t2->val; t2 = t2->next){
+    int missing = 1;
+    for (t1 = *sel1; t1; t1 = t1->next){
+      if (t1 == t2){ /* check for pointers to the same address */
+        missing = 0;
+      }
+    }
+
+    /* if not found, append */
+    if (missing == 1){ /* if there was no match, append */
+      num += 1;
+      *sel1 = newSelected(t2->val, *sel1);
+    }
+  }
+
+  return num;
+}
+
+/* Returns the first element in 'opts' not in 'has' */
+struct value *firstunique(struct value *opts, struct selected *has){
+  struct value *p = NULL;
+
+  for (p = opts; p; p = p->next){
+      if (!hasSelected(p, has)){
+        return p;
+      }
+  }
+
+  return NULL;
+}
+
 
 /* === Dice Definitions ===*/
 
@@ -93,7 +134,7 @@ struct value *createNatdieFace(int min, int max){
 /* create the faces of a set die for result */
 struct value *createSetdieFace(struct value *faces){
   if (!faces) { yyerror("invalid set die"); return newValue(0,NULL); }
-  /*printvalue(a);*/
+  /*printValue(a);*/
   return faces;
 }
 
@@ -243,15 +284,15 @@ struct result *eval(struct ast *a){
       v->d = malloc(sizeof(struct die));
       v->d->count = ((struct natdie *)a)->count;
       v->d->faces = createNatdieFace( ((struct natdie *)a)->min, ((struct natdie *)a)->max );
-      /* printf("new die: "); printvalue(v->d->faces); printf("\n"); */
+      /* printf("new die: "); printValue(v->d->faces); printf("\n"); */
       break;
 
     case 'd': /* create a artificial die */
       v->type = R_die;
       v->d = malloc(sizeof(struct die));
       v->d->count = ((struct setdie *)a)->count;
-      v->d->faces = createSetDieFace(((struct setdie *)a)->faces);
-      /* printf("new die: "); printvalue(v->d->faces); printf("\n"); */
+      v->d->faces = createSetdieFace(((struct setdie *)a)->faces);
+      /* printf("new die: "); printValue(v->d->faces); printf("\n"); */
       break;
 
     case 'R': case 'r': { /* roll a die */
@@ -265,12 +306,12 @@ struct result *eval(struct ast *a){
 
       v->r = malloc(sizeof(struct roll));
       v->r->faces = r->d->faces; /* duplicate pointer */
-      int i = 1, length = countValue(v->r->faces);
+      int i = 1; //, length = countValue(v->r->faces);
       /*printf("len:%d\n", length);*/
       do {
         int roll = randroll(v->r->faces);
         v->r->out = newValue(roll, (v->r->out) ? v->r->out : NULL ); /* use NULL on first */
-        /* printf("roll %d\n", roll); printvalue(v->r->out); */
+        /* printf("roll %d\n", roll); printValue(v->r->out); */
       } while (i++ < r->d->count);
 
       free(r); /* free just the r pointer : keep faces */
@@ -279,10 +320,10 @@ struct result *eval(struct ast *a){
 
     case 'F':{ /* execute a function */
       /* all functions happen at least one time, so execute with null result value */
-      v = callbuiltin( NULL, ((struct funcall *)a)->functype, ((struct funcall *)a)->sel, ((struct funcall *)a)->l );
+      v = callbuiltin( NULL, ((struct funcall *)a)->functype, ((struct funcall *)a)->seltype, ((struct funcall *)a)->scount, ((struct funcall *)a)->l );
       int i;
-      for (i = 1; i < ((struct funcall *)a)->times; i++){
-        v = callbuiltin( v, ((struct funcall *)a)->functype, ((struct funcall *)a)->sel, ((struct funcall *)a)->l );
+      for (i = 1; i < ((struct funcall *)a)->fcount; i++){
+        v = callbuiltin( v, ((struct funcall *)a)->functype, ((struct funcall *)a)->seltype, ((struct funcall *)a)->scount, ((struct funcall *)a)->l );
       }
       break;
     }
@@ -309,7 +350,7 @@ struct result *eval(struct ast *a){
 }
 
 /* Compute a builtin function on a roll result */
-struct result *callbuiltin(struct result *output, int functype, struct selector *sele, struct ast *frame){
+struct result *callbuiltin(struct result *output, int functype, int seltype, int scount, struct ast *frame){
   struct result *r = NULL;
   if (output){ r = output; }
   else { r = eval(frame); }
@@ -317,12 +358,12 @@ struct result *callbuiltin(struct result *output, int functype, struct selector 
   if (r->type != R_roll) { yyerror("expected roll type, got %d",r->type); return r; };
 
   struct selected *sel = NULL;
-  sel = select(sele, r->r); /* select appropriate values */
+  sel = select(seltype, scount, r->r); /* select appropriate values */
 
 
   #ifdef DEBUG
   printf("before: ");
-  printvalue(r->r->out);
+  printValue(r->r->out);
   #endif
 
   /* select can return null, so verify something was selected! */
@@ -357,7 +398,7 @@ struct result *callbuiltin(struct result *output, int functype, struct selector 
 
     #ifdef DEBUG
     printf("after: ");
-    printvalue(r->r->out);
+    printValue(r->r->out);
     #endif
 
     freeSelected(sel);
@@ -367,4 +408,108 @@ struct result *callbuiltin(struct result *output, int functype, struct selector 
   /* since we transfer data from output to r, release output */
   //if (output) { free(output); }
   return r;
+}
+
+/* select elements of dieroll and stores them in special pointers for callbuiltin to operate on */
+struct selected *select(int seltype, int scount, struct roll *dieroll){
+  struct selected *retsel = NULL, *sel = NULL; /* set to null so outside it can be seen if nothing was selected */
+  struct value *t; /* traversal variable */
+
+  int i = scount;
+  if (i > countValue(dieroll->out)) printf("warning: requesting more selects than available");
+  if (i == 0) return retsel;
+
+  debug_report("<%d>",seltype);
+
+  do {
+
+    switch (seltype){
+      case S_high: {
+        sel = newSelected(firstunique(dieroll->out, retsel),NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
+        if (!sel) break;
+        //sel->val = dieroll->out;
+        for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
+          if (sel->val->v < t->v && !hasSelected(t, retsel)) {  /* saved -> initialized, so never null */
+            sel->val = t; /* save address */
+          }
+        }
+        assert(sel != NULL);
+        break;
+      }
+      case S_low: {
+        sel = newSelected(firstunique(dieroll->out, retsel),NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
+        if (!sel) break;
+        //sel->val = dieroll->out;
+        for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
+          if (sel->val->v > t->v && !hasSelected(t, retsel)) {  /* saved -> initialized, so never null */
+            sel->val = t; /* save address */
+          }
+        }
+        assert(sel != NULL);
+        break;
+      }
+      case S_rand: {
+        int index = randint(0, countValue(dieroll->out)-1); /* index which will be updated */
+        for (t = dieroll->out; index-- > 0; t = t->next) { /* just need to update t */ }
+        sel = newSelected(t, NULL);
+        assert(sel != NULL);
+        break;
+      }
+      case S_unique:
+        /* cont holds list of unique values found */
+        t = dieroll->out; /* start at the first roll */
+        do {
+          if (!sel || !hasSelectedInt(t->v, retsel)){
+            /* initialize -> cannot init outside b/c it messes with hasValue */
+            sel = newSelected(t, sel); /* cont will be null on first, starting the chain */
+          }
+          t = t->next;
+        } while (t);
+        assert(sel != NULL);
+        break;
+      default:
+        /* find first instance of specific die outcome */
+        assert(seltype > 0);
+        for (t = dieroll->out; t; t = t->next){
+          if (t->v == seltype && !hasSelected(t, retsel)){  /* check for match */
+            sel = newSelected(t, NULL);
+            break; /* TODO: once per loop? */
+          }
+        }
+        break;
+    }
+
+    //(!sel) break;
+    if (sel){
+      //if (!retsel) retsel = malloc(sizeof(struct selected));
+      int merges = mergeSelected(&retsel, sel); /* merge current and newly found */
+      if (sel) freeSelected(sel);
+      if (merges == 0 && seltype != S_all)
+        break;  /* short circuit of mergeSelected returns 0, so ensure nothing was actually entered */
+    }else{
+      break;
+    }
+
+  } while (--i > 0); /* stop when counting numbers, but continue */
+
+  debug_state("selected:");
+  for (sel = retsel; sel; sel = sel->next)
+    debug_report(" %d",sel->val->v);
+  debug_state("\n");
+
+  if (t) free(t);
+  return retsel;
+}
+
+/* rerolls all pointers pointed to by sel according to faces */
+/* NEITHER sel or faces can be NULL */
+void funcreroll(struct selected *sel, struct value *faces){
+  /* length of faces  */
+  //int facelen = countValue(faces);
+
+  struct selected *t; /* iterator variable */
+  for (t = sel; t; t = t->next){
+    int roll = randroll(faces);
+    t->val->v = roll; /* update pointed to's value */
+  }
 }

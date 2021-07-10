@@ -11,17 +11,11 @@
 #ifndef DEI_STRUCT_H_INCLUDED
 #define DEI_STRUCT_H_INCLUDED
 
-#include <stdarg.h> /* needed for yyerror */
+#include <stdlib.h> /* needed for malloc(), free() */
 #include <stdbool.h> /* for booleans */
+#include <stdarg.h> /* needed for yyerror */
 
-#include "dei.tab.h"
-
-/* interface to the lexer */
-extern int yylineno;        /* current lexer lin */
-extern int yydebug;         /* debug flag */
-extern FILE *yyin;          /* input stream */
-void yyerror(char *s, ...); /* similar to printf */
-int yyparse(void);          /* start the lexing process */
+#include "defines.h"
 
 
 /* ====== DATA ====== */
@@ -117,9 +111,10 @@ struct setres {       /* Q: a set roll outcome */
 
 struct funcall {      /* F: function call */
  int nodetype;        /* F */
- int times;           /* times to perform function */
- int functype;        /* function id */
- struct selector *sel;/* selector id */
+ int functype;        /* function type -> bifs */
+ int seltype;         /* selection type -> sifs */
+ int fcount;          /* times to perform function */
+ int scount;          /* times to perform select */
  struct ast *l;       /* astroll used */
 };
 
@@ -157,7 +152,7 @@ struct ast *newsetdie(int count, struct value *faces);
 /* Q : create a node to roll the contained die */
 struct ast *newsetres(struct value *faces);
 /* F : create a builtin function call node */
-struct ast *newfunc(int functype, struct selector *selectype, int times, struct ast *l);
+struct ast *newfunc(int functype, int seltype, int fcount, int scount, struct ast *l);
 /* I : create a natural integer node */
 struct ast *newnatint(int integer);
 /* E : create a symbol (variable) call node */

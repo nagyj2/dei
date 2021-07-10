@@ -8,9 +8,10 @@
 #ifndef DEI_UTIL_H_INCLUDED
 #define DEI_UTIL_H_INCLUDED
 
-#include <stdlib.h> /* needed for rand() */
+#include <stdlib.h> /* needed for malloc(), free(), rand() */
 #include <time.h> /* needed for time() */
 
+#include "defines.h"
 #include "struct.h"
 
 
@@ -22,10 +23,10 @@ int randint(int min, int max);
 int randroll(struct value *faces);
 
 /* print the ast to the screen */
-void printtree(struct ast *a);
+void printAst(struct ast *a);
 /* print a chain of values */
-void printvalue(struct value *a);
+void printValue(struct value *a);
 /* print the contents of a symbol table */
-void printsymtab(void);
+void printSymtab(struct symbol symtab[]);
 
 #endif /* DEI_UTIL_H_INCLUDED */
