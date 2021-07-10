@@ -43,8 +43,7 @@
 %left '+' '-'
 %left '*' DIV '%'
 %right '^'
-%left UNION INTER
-%left '&' '|'
+%left UNION INTER '&' '|' /* same lvl b/c there are no paren */
 %nonassoc UMINUS
 %nonassoc PAREN
 
