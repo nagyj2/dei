@@ -4,6 +4,8 @@
 #include "struct.h"
 #include "evaluation.h"
 
+#include "util.h" /* for debug printing */
+
 /* === Data Functions === */
 
 /* create a new selection descriptor */
@@ -86,7 +88,8 @@ int mergeSelected(struct selected **sel1, struct selected *sel2){
 
   if (!sel2) return num;  /* if sel2 is null, return */
 
-  for (t2 = sel2; t2 && t2->val; t2 = t2->next){
+
+  for (t2 = sel2; t2; t2 = t2->next){
     int missing = 1;
     for (t1 = *sel1; t1; t1 = t1->next){
       if (t1 == t2){ /* check for pointers to the same address */
@@ -273,9 +276,8 @@ struct result *eval(struct ast *a){
       }
 
       v->i = sumValue(r->r->out);
-      /* v->r->faces = NULL */
-      /*WARNING causes seg faults for some reason*/
-      //freeResult(r); /* roll result is no longer needed */
+      /* WARNING causes seg faults for some reason? */
+      freeResult(r); /* roll result is no longer needed */
       break;
     }
 
@@ -306,8 +308,7 @@ struct result *eval(struct ast *a){
 
       v->r = malloc(sizeof(struct roll));
       v->r->faces = r->d->faces; /* duplicate pointer */
-      int i = 1; //, length = countValue(v->r->faces);
-      /*printf("len:%d\n", length);*/
+      int i = 1;
       do {
         int roll = randroll(v->r->faces);
         v->r->out = newValue(roll, (v->r->out) ? v->r->out : NULL ); /* use NULL on first */
@@ -333,19 +334,18 @@ struct result *eval(struct ast *a){
       v->i = eval( (((struct symcall *)a)->s)->func )->i;
       break;
 
-    case 'A': /* set a symbol to a value */
+    case 'A': /* set a symbol to a value - CURRENTLY UNUSED */
+      printf("warning: untested ast node type\n");
       setsym( ((struct symasgn *)a)->s, ((struct symasgn *)a)->l );
-      /*printf("stored %s as ", ((struct symasgn *)a)->s->name);
-      printtree(((struct symasgn *)a)->s->func);
-      printf("\n");*/
       v->type = R_int;
       v->i = 0; //eval( ((struct symasgn *)a)->s->func );
       break;
 
     default:
-      printf("unrecognized ast: >%c<\n", a->nodetype);
+      printf("unrecognized ast: got %c\n", a->nodetype);
   }
 
+  assert(v);
   return v;
 }
 
@@ -355,16 +355,19 @@ struct result *callbuiltin(struct result *output, int functype, int seltype, int
   if (output){ r = output; }
   else { r = eval(frame); }
 
-  if (r->type != R_roll) { yyerror("expected roll type, got %d",r->type); return r; };
+  if (r->type != R_roll) { yyerror("expected roll type, got %d\n",r->type); return r; };
+
+
+  debug_report("select type %d, %d times\n",seltype, scount);
 
   struct selected *sel = NULL;
   sel = select(seltype, scount, r->r); /* select appropriate values */
 
-
   #ifdef DEBUG
-  printf("before: ");
+  debug_state("before: ");
   printValue(r->r->out);
   #endif
+
 
   /* select can return null, so verify something was selected! */
   if (sel){
@@ -380,7 +383,7 @@ struct result *callbuiltin(struct result *output, int functype, int seltype, int
       printf("warning: choose is not fully implemented\n");
       break;
       case B_reroll: {
-        if (!r->r->faces) { yyerror("reroll requires unaltered die"); return r; };
+        if (!r->r->faces) { yyerror("reroll requires unaltered die\n"); return r; };
         funcreroll(sel, r->r->faces);
         break;
       }
@@ -393,11 +396,11 @@ struct result *callbuiltin(struct result *output, int functype, int seltype, int
       }
 
       default:
-        printf("unrecognized builtin id, %d", functype);
+        printf("unrecognized builtin id: got %d\n", functype);
     }
 
     #ifdef DEBUG
-    printf("after: ");
+    debug_state("after: ");
     printValue(r->r->out);
     #endif
 
@@ -416,10 +419,8 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
   struct value *t; /* traversal variable */
 
   int i = scount;
-  if (i > countValue(dieroll->out)) printf("warning: requesting more selects than available");
+  if (i > countValue(dieroll->out)) printf("warning: requesting more selects than available\n");
   if (i == 0) return retsel;
-
-  debug_report("<%d>",seltype);
 
   do {
 
@@ -429,6 +430,7 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
         if (!sel) break;
         //sel->val = dieroll->out;
         for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
+          assert(t->v);
           if (sel->val->v < t->v && !hasSelected(t, retsel)) {  /* saved -> initialized, so never null */
             sel->val = t; /* save address */
           }
@@ -437,10 +439,11 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
         break;
       }
       case S_low: {
-        sel = newSelected(firstunique(dieroll->out, retsel),NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
+        sel = newSelected(firstunique(dieroll->out, retsel), NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
         if (!sel) break;
         //sel->val = dieroll->out;
         for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
+          assert(t->v);
           if (sel->val->v > t->v && !hasSelected(t, retsel)) {  /* saved -> initialized, so never null */
             sel->val = t; /* save address */
           }
@@ -479,7 +482,6 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
         break;
     }
 
-    //(!sel) break;
     if (sel){
       //if (!retsel) retsel = malloc(sizeof(struct selected));
       int merges = mergeSelected(&retsel, sel); /* merge current and newly found */
