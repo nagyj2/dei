@@ -16,9 +16,12 @@ FLEXOUT = dei.lex.c
 
 OBJS = deimain.o struct.o symboltable.o evaluation.o util.o
 
-exec: parser lexer dei
+EXEC = dei
+DEXEC = dei
+
+exec: parser lexer release_exec
 debug: CFLAGS += -D DEBUG -g
-debug:	parser lexer deid
+debug:	parser lexer debug_exec
 
 parser: dei.y
 	bison $(BISONFLAGS) -d $^
@@ -28,12 +31,12 @@ lexer: dei.l
 
 
 # Release
-dei: dei.tab.c $(FLEXOUT) $(OBJS)
-	$(CC) $(CFLAGS) $(OSS) -O2 -o $@ $?
+release_exec: dei.tab.c $(FLEXOUT) $(OBJS)
+	$(CC) $(CFLAGS) $(OSS) -O2 -o $(EXEC) $?
 
 # Debug Options
-deid: dei.tab.c $(FLEXOUT) $(MAIN) $(OBJS)
-	@$(CC) $(CFLAGS) $(OSS) -o $@ $?
+debug_exec: dei.tab.c $(FLEXOUT) $(MAIN) $(OBJS)
+	@$(CC) $(CFLAGS) $(OSS) -o $(DEXEC) $?
 
 # Create object files
 %.o: %.c
