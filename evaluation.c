@@ -210,6 +210,20 @@ struct result *eval(struct ast *a){
       break;
     }
 
+    case 'M': /* negate a result */
+      v->type = R_int;
+      struct result *l = eval( a->l);
+
+      if (l->type != R_int){
+        yyerror("integer node expected! got %c",l->type);
+        exit(0);
+      }
+
+      v->i = -l->i;
+
+      freeResultSafe( &l );
+      break;
+
     case 'Q': /* create a artifical roll */
       v->type = R_roll;
       v->r = malloc(sizeof(struct roll));       /* need to malloc space */
