@@ -13,7 +13,6 @@
 
 #include "defines.h"
 #include "struct.h"
-#include "util.h"
 
 /* ====== DATA ====== */
 /* Support Data
@@ -92,9 +91,18 @@ void setsym(struct symbol *name, struct ast *val);
 struct result *eval(struct ast *a);
 /* Perform a builtin function to an evaluated AST result */
 struct result *callbuiltin(struct result *output, int functype, int seltype, int scount, struct ast *frame);
-/* rerandomizes all pointers within 'sel' according to the options of 'faces' */
+/* Rerandomizes all pointers within 'sel' according to the options of 'faces' */
 /* NEITHER sel or faces can be NULL */
 void funcreroll(struct selected *sel, struct value *faces);
+/* Removes the pointers contained within 'sel' from 'out' */
+void funcdrop(struct selected *sel, struct value *out);
+/* Append selected point from 'sel' onto 'out' */
+void funcappend(struct selected *sel, struct value *out);
+/* Return elements of 'sel' */
+void funcchoose(struct selected *sel, struct value *out);
+/* Count the number of elements in 'sel' and place it in 'out' */
+void funccount(struct selected *sel, struct value **out);
+
 
 /* Create a new selector. 'seltype' is the type of select and 'count' is the number of selections */
 /*struct selector *newSelector(int seltype, int count);*/
@@ -103,9 +111,9 @@ struct selected *select(int seltype, int scount, struct roll *dieroll);
 
 
 /* free result variable */
-void freeResult(struct result *a);
+void *freeResult(struct result *a);
 /* free selected nodes, but NOT the value nodes they hold */
-void freeSelected(struct selected *a);
+void *freeSelected(struct selected *a);
 
 
 

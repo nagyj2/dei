@@ -1,26 +1,12 @@
 
 #include "dei.tab.h"
 
-#include "struct.h"
 #include "evaluation.h"
 
 #include "util.h" /* for debug printing */
 
+
 /* === Data Functions === */
-
-/* create a new selection descriptor */
-/*struct selector *newSelector(int seltype, int count){
-  struct selector *s = malloc(sizeof(struct selector));
-
-  if (!s){
-    printf("ran out of space");
-    exit(0);
-  }
-
-  s->sel = seltype;
-  s->count = count;
-  return s;
-}*/
 
 /* create a chain of selected */
 struct selected *newSelected(struct value *elem, struct selected *prev){
@@ -136,59 +122,23 @@ struct value *createNatdieFace(int min, int max){
 
 /* create the faces of a set die for result */
 struct value *createSetdieFace(struct value *faces){
-  if (!faces) { yyerror("invalid set die"); return newValue(0,NULL); }
+  if (!faces) { yyerror("invalid set die"); return newValue(0, NULL); }
   /*printValue(a);*/
   return faces;
 }
+
 
 /* === Evaluation Functions === */
 
 /* define a symbol (variable) */
 void setsym(struct symbol *name, struct ast *val){
-  //DEBUGLOGLN("place at %p", name);
+  debug_report("place at %p", name);
   if (name->func){ /* NOTE allocated in lookup, so this will always run*/
-    freeAst(name->func);
+    name->func = freeAst(name->func);
     name->func = malloc(sizeof(struct ast));
   }
 
   name->func = val;
-}
-
-
-/* === Memory Management === */
-
-/* Frees a single result variable. Also frees attached data */
-void freeResult(struct result *a){
-  switch (a->type){
-  case R_int:
-    break;
-
-  case R_roll:
-    if (a->r->faces)
-      freeValue(a->r->faces);
-    if (a->r->out)
-      freeValue(a->r->out);
-    break;
-
-  case R_die:
-    if (a->d->faces)
-      freeValue(a->d->faces);
-    break;
-
-  default:
-    printf("unrecognized result: %c",a->type);
-  }
-  free(a);
-}
-
-/* Frees an entire selected chain. Does NOT free the referenced pointers */
-void freeSelected(struct selected *a){
-  struct selected *na;
-  while(a != NULL){
-    na = a->next;
-    free(a);
-    a = na;
-  }
 }
 
 /* Recursive function to evlauate an AST */
@@ -213,8 +163,8 @@ struct result *eval(struct ast *a){
 
     case '+': case '-': case '*': case DIV: case '%': case '^': {
       v->type = R_int;
-      struct result *l = eval(a->l);
-      struct result *r = eval(a->r);
+      struct result *l = eval( a->l);
+      struct result *r = eval( a->r);
 
       if (l->type != R_int || r->type != R_int){
         yyerror("integer nodes expected! got %c, %c",l->type,r->type);
@@ -237,8 +187,8 @@ struct result *eval(struct ast *a){
 
     case '1': case '2': case '3': case '4': case '5': case '6': {
       v->type = R_int;
-      struct result *l = eval(a->l);
-      struct result *r = eval(a->r);
+      struct result *l = eval( a->l);
+      struct result *r = eval( a->r);
 
       if (l->type != R_int || r->type != R_int){
         yyerror("integer nodes expected! got %c, %c",l->type,r->type);
@@ -268,7 +218,7 @@ struct result *eval(struct ast *a){
 
     case 'S': { /* sum a die roll */
       v->type = R_int;
-      struct result *r = eval(a->l);
+      struct result *r = eval( a->l);
 
       if (r->type != R_roll){
         yyerror("roll node expected! got %c",r->type);
@@ -299,7 +249,7 @@ struct result *eval(struct ast *a){
 
     case 'R': case 'r': { /* roll a die */
       v->type = R_roll;
-      struct result *r = eval(a->l);
+      struct result *r = eval( a->l);
 
       if (r->type != R_die){
         yyerror("die node expected! got %c",r->type);
@@ -308,6 +258,7 @@ struct result *eval(struct ast *a){
 
       v->r = malloc(sizeof(struct roll));
       v->r->faces = r->d->faces; /* duplicate pointer */
+      v->r->out = NULL;
       int i = 1;
       do {
         int roll = randroll(v->r->faces);
@@ -353,7 +304,7 @@ struct result *eval(struct ast *a){
 struct result *callbuiltin(struct result *output, int functype, int seltype, int scount, struct ast *frame){
   struct result *r = NULL;
   if (output){ r = output; }
-  else { r = eval(frame); }
+  else { r = eval( frame); }
 
   if (r->type != R_roll) { yyerror("expected roll type, got %d\n",r->type); return r; };
 
@@ -361,6 +312,7 @@ struct result *callbuiltin(struct result *output, int functype, int seltype, int
   debug_report("select type %d, %d times\n",seltype, scount);
 
   struct selected *sel = NULL;
+  /**/
   sel = select(seltype, scount, r->r); /* select appropriate values */
 
   #ifdef DEBUG
@@ -374,14 +326,14 @@ struct result *callbuiltin(struct result *output, int functype, int seltype, int
 
     switch (functype){
       case B_drop:
-      printf("warning: drop is not fully implemented\n");
-      break;
+        printf("warning: drop is not fully implemented\n");
+        break;
       case B_append:
-      printf("warning: append is not fully implemented\n");
-      break;
+        printf("warning: append is not fully implemented\n");
+        break;
       case B_choose:
-      printf("warning: choose is not fully implemented\n");
-      break;
+        printf("warning: choose is not fully implemented\n");
+        break;
       case B_reroll: {
         if (!r->r->faces) { yyerror("reroll requires unaltered die\n"); return r; };
         funcreroll(sel, r->r->faces);
@@ -389,9 +341,7 @@ struct result *callbuiltin(struct result *output, int functype, int seltype, int
       }
 
       case B_count: {
-        int count = countSelected(sel);
-        freeValue(r->r->out);
-        r->r->out = newValue(count, NULL);
+        funccount(sel, &r->r->out);
         break;
       }
 
@@ -404,7 +354,7 @@ struct result *callbuiltin(struct result *output, int functype, int seltype, int
     printValue(r->r->out);
     #endif
 
-    freeSelected(sel);
+    sel = freeSelected(sel);
   }
 
 
@@ -413,7 +363,48 @@ struct result *callbuiltin(struct result *output, int functype, int seltype, int
   return r;
 }
 
+/* rerolls all pointers pointed to by sel according to faces */
+/* NEITHER sel or faces can be NULL */
+void funcreroll(struct selected *sel, struct value *faces){
+  /* length of faces  */
+  //int facelen = countValue(faces);
+
+  struct selected *t; /* iterator variable */
+  for (t = sel; t; t = t->next){
+    int roll = randroll(faces);
+    t->val->v = roll; /* update pointed to's value */
+  }
+}
+
+/* Remove elements of 'sel' from 'out' */
+void funcdrop(struct selected *sel, struct value *out){
+
+}
+
+/* Append selected point from 'sel' onto 'out' */
+void funcappend(struct selected *sel, struct value *out){
+
+}
+
+/* Return elements of 'sel' -> must deal with 'out' specially b/c I can't just clear the chain  */
+void funcchoose(struct selected *sel, struct value *out){
+
+}
+
+/* Count the number of elements in 'sel' and place it in 'out' */
+void funccount(struct selected *sel, struct value **out){
+  struct value *val = NULL;
+  val = newValue( countSelected(sel), NULL );
+  *out = freeValue(*out);
+  //*out = NULL;
+  // assert(!out); // (Need to set to null to detect)
+  // sel = freeSelected(sel);
+  // assert(!sel);
+  *out = val;
+}
+
 /* select elements of dieroll and stores them in special pointers for callbuiltin to operate on */
+/* FIX : creates extra selected elements at the end which have no value? */
 struct selected *select(int seltype, int scount, struct roll *dieroll){
   struct selected *retsel = NULL, *sel = NULL; /* set to null so outside it can be seen if nothing was selected */
   struct value *t; /* traversal variable */
@@ -426,7 +417,7 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
 
     switch (seltype){
       case S_high: {
-        sel = newSelected(firstunique(dieroll->out, retsel),NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
+        sel = newSelected((struct value *) firstunique(dieroll->out, retsel), NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
         if (!sel) break;
         //sel->val = dieroll->out;
         for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
@@ -439,7 +430,7 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
         break;
       }
       case S_low: {
-        sel = newSelected(firstunique(dieroll->out, retsel), NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
+        sel = newSelected((struct value *) firstunique(dieroll->out, retsel), NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
         if (!sel) break;
         //sel->val = dieroll->out;
         for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
@@ -483,9 +474,8 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
     }
 
     if (sel){
-      //if (!retsel) retsel = malloc(sizeof(struct selected));
       int merges = mergeSelected(&retsel, sel); /* merge current and newly found */
-      if (sel) freeSelected(sel);
+      //if (sel) freeSelected(sel);
       if (merges == 0 && seltype != S_all)
         break;  /* short circuit of mergeSelected returns 0, so ensure nothing was actually entered */
     }else{
@@ -503,15 +493,41 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
   return retsel;
 }
 
-/* rerolls all pointers pointed to by sel according to faces */
-/* NEITHER sel or faces can be NULL */
-void funcreroll(struct selected *sel, struct value *faces){
-  /* length of faces  */
-  //int facelen = countValue(faces);
 
-  struct selected *t; /* iterator variable */
-  for (t = sel; t; t = t->next){
-    int roll = randroll(faces);
-    t->val->v = roll; /* update pointed to's value */
+/* === Memory Management === */
+
+/* Frees a single result variable. Also frees attached data */
+void *freeResult(struct result *a){
+  switch (a->type){
+  case R_int:
+    break;
+
+  case R_roll:
+    if (a->r->faces)
+      a->r->faces = freeValue(a->r->faces);
+    if (a->r->out)
+      a->r->out = freeValue(a->r->out);
+    break;
+
+  case R_die:
+    if (a->d->faces)
+      a->r->faces = freeValue(a->d->faces);
+    break;
+
+  default:
+    printf("unrecognized result: %c",a->type);
   }
+  free(a);
+  return NULL;
+}
+
+/* Frees an entire selected chain. Does NOT free the referenced pointers */
+void *freeSelected(struct selected *a){
+  struct selected *na;
+  while(a != NULL){
+    na = a->next;
+    free(a);
+    a = na;
+  }
+  return NULL;
 }
