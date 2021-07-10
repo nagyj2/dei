@@ -23,7 +23,7 @@ struct symbol *lookup(char * sym){
     /* if entry exists, check if it is the same and return if it is */
     if (sp->name && !strcmp(sp->name, sym)) {
 
-      //DEBUGLOG("found %s at %p\n", sp->name, sp);
+      debug_report("found %s at %p\n", sp->name, sp);
       return sp;
     }
 
@@ -32,7 +32,7 @@ struct symbol *lookup(char * sym){
       sp->name = strdup(sym);
       sp->func = malloc(sizeof(struct ast));
       sp->func = newnatint(0);                /* initialize to protect against errors */
-      //DEBUGLOG("new %s at %p(%p)\n", sp->name, sp, sp->func);
+      debug_report("new %s at %p(%p)\n", sp->name, sp, sp->func);
       return sp;
     }
 
@@ -54,7 +54,7 @@ void freesymboltable(void){
     struct symbol *sp = &symtab[i];
 
     if (sp->name){
-      //DEBUGLOG("freed %s at %p\n", sp->name, sp);
+      debug_report("freed %s at %p\n", sp->name, sp);
       freeAst(sp->func);
     }
     free(sp);
