@@ -22,7 +22,6 @@
  * eval rep. of a die roll       (roll)
  * eval rep. of a result         (result)
  * contains a list of value ref. (selected)
- * desc. of what is selected.    (selector)
  */
 
 enum rifs {             /* result type */
@@ -74,7 +73,7 @@ bool hasSelectedInt(int key, struct selected *sel);
 int mergeSelected(struct selected **sel1, struct selected *sel2);
 /* Look through 'opts' and return the first not in 'has' */
 /* CAUTION : Can return NULL */
-struct value *firstunique(struct value *opts, struct selected *has);
+struct value *firstunique(struct value **opts, struct selected *has);
 
 
 /* Create a die's face values from the max and min values */
@@ -90,7 +89,7 @@ void setsym(struct symbol *name, struct ast *val);
 /* Recursively evaluate an AST to retrieve a result */
 struct result *eval(struct ast *a);
 /* Perform a builtin function to an evaluated AST result */
-struct result *callbuiltin(struct result *output, int functype, int seltype, int scount, struct ast *frame);
+struct result *callbuiltin(int functype, int seltype, int fcount, int scount, struct ast *frame);
 /* Rerandomizes all pointers within 'sel' according to the options of 'faces' */
 /* NEITHER sel or faces can be NULL */
 void funcreroll(struct selected *sel, struct value *faces);

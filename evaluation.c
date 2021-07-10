@@ -94,10 +94,10 @@ int mergeSelected(struct selected **sel1, struct selected *sel2){
 }
 
 /* Returns the first element in 'opts' not in 'has' */
-struct value *firstunique(struct value *opts, struct selected *has){
+struct value *firstunique(struct value **opts, struct selected *has){
   struct value *p = NULL;
 
-  for (p = opts; p; p = p->next){
+  for (p = *opts; p; p = p->next){
       if (!hasSelected(p, has)){
         return p;
       }
@@ -273,11 +273,11 @@ struct result *eval(struct ast *a){
 
     case 'F':{ /* execute a function */
       /* all functions happen at least one time, so execute with null result value */
-      v = callbuiltin( NULL, ((struct funcall *)a)->functype, ((struct funcall *)a)->seltype, ((struct funcall *)a)->scount, ((struct funcall *)a)->l );
-      int i;
+      v = callbuiltin( ((struct funcall *)a)->functype, ((struct funcall *)a)->seltype, ((struct funcall *)a)->fcount, ((struct funcall *)a)->scount, ((struct funcall *)a)->l );
+      /*int i;
       for (i = 1; i < ((struct funcall *)a)->fcount; i++){
-        v = callbuiltin( v, ((struct funcall *)a)->functype, ((struct funcall *)a)->seltype, ((struct funcall *)a)->scount, ((struct funcall *)a)->l );
-      }
+        v = callbuiltin( &v, ((struct funcall *)a)->functype, ((struct funcall *)a)->seltype, ((struct funcall *)a)->scount, ((struct funcall *)a)->l );
+      }*/
       break;
     }
 
@@ -302,62 +302,91 @@ struct result *eval(struct ast *a){
 }
 
 /* Compute a builtin function on a roll result */
-struct result *callbuiltin(struct result *output, int functype, int seltype, int scount, struct ast *frame){
+struct result *callbuiltin(int functype, int fcount, int seltype, int scount, struct ast *frame){
   struct result *r = NULL;
-  if (output){ r = output; }
-  else { r = eval( frame); }
+  r = eval( frame ); /* PUT EVALUATED RESULT INTO 'r->r->out' */
 
   if (r->type != R_roll) { yyerror("expected roll type, got %d\n",r->type); return r; };
-
-
   debug_report("select type %d, %d times\n",seltype, scount);
 
-  struct selected *sel = NULL;
-  /**/
-  sel = select(seltype, scount, r->r); /* select appropriate values */
-
-  #ifdef DEBUG
-  debug_state("before: ");
-  printValue(r->r->out);
-  #endif
-
-
-  /* select can return null, so verify something was selected! */
-  if (sel){
-
-    switch (functype){
-      case B_drop:
-        printf("warning: drop is not fully implemented\n");
-        break;
-      case B_append:
-        printf("warning: append is not fully implemented\n");
-        break;
-      case B_choose:
-        printf("warning: choose is not fully implemented\n");
-        break;
-      case B_reroll: {
-        if (!r->r->faces) { yyerror("reroll requires unaltered die\n"); return r; };
-        funcreroll(sel, r->r->faces);
-        break;
-      }
-
-      case B_count: {
-        funccount(sel, &r->r->out);
-        break;
-      }
-
-      default:
-        printf("unrecognized builtin id: got %d\n", functype);
-    }
+  int i = fcount;
+  do {
+    struct selected *sel = NULL; /* temporary select */
+    /* Perform selection algorithm according to times, type and available */
+    sel = select(seltype, scount, r->r);
 
     #ifdef DEBUG
-    debug_state("after: ");
+    debug_state("before: ");
     printValue(r->r->out);
     #endif
 
-    freeSelected( &sel );
-  }
+    /* select can return null, so verify something was selected! */
+    if (sel){
 
+      switch (functype){
+        case B_drop:
+        printf("warning: drop is not fully implemented\n");
+        break; /* End of drop */
+        case B_append:
+        printf("warning: append is not fully implemented\n");
+        break; /* End of append */
+        case B_choose:
+        printf("warning: choose is not fully implemented\n");
+        break; /* End of choose */
+        case B_reroll:
+        if (!r->r->faces) { yyerror("reroll requires unaltered die\n"); break; };
+        funcreroll(sel, r->r->faces);
+        break; /* End of reroll */
+        case B_count:
+        funccount(sel, &r->r->out);
+        break; /* End of count */
+
+        default:
+        printf("unrecognized builtin id: got %d\n", functype);
+      }
+
+      #ifdef DEBUG
+      debug_state("after: ");
+      printValue(r->r->out);
+      #endif
+
+      freeSelected( &sel );
+
+    }else{ /* Default returns */
+      switch (functype){
+        case B_drop:
+        //printf("warning: drop is not fully implemented\n");
+        /* Simply return the input */
+        break;
+        case B_append:
+        //printf("warning: append is not fully implemented\n");
+        /* Simply return the input */
+        break;
+        case B_choose:
+        //printf("warning: choose is not fully implemented\n");
+        /* Simply return the input */
+        break;
+        case B_reroll: {
+        //printf("warning: choose is not fully implemented\n");
+        /* Simply return the input */
+        break;
+        }
+
+        case B_count: {
+        /* Return a count of 0 */
+        r->r->out = newValue( 0, NULL );
+        break;
+        }
+
+        default:
+        printf("unrecognized default builtin id: got %d\n", functype);
+      }
+    }
+
+
+
+
+  } while ( --i > 0);
 
   /* since we transfer data from output to r, release output */
   //if (output) { free(output); }
@@ -396,13 +425,10 @@ void funcchoose(struct selected *sel, struct value *out){
 void funccount(struct selected *sel, struct value **out){
   struct value *val = NULL;
   val = newValue( countSelected(sel), NULL );
-  //*out = freeValue( out );
+  //if (!val)
   freeValue( out ); /* SETS POINTER TO NULL */
-
-  // assert(!out); // (Need to set to null to detect)
-  // sel = freeSelected(sel);
-  // assert(!sel);
   *out = val;
+  assert(out);
 }
 
 /* select elements of dieroll and stores them in special pointers for callbuiltin to operate on */
@@ -419,7 +445,7 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
 
     switch (seltype){
       case S_high: {
-        sel = newSelected((struct value *) firstunique(dieroll->out, retsel), NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
+        sel = newSelected( firstunique(&dieroll->out, retsel), NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
         if (!sel) break;
         //sel->val = dieroll->out;
         for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
@@ -432,7 +458,8 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
         break;
       }
       case S_low: {
-        sel = newSelected((struct value *) firstunique(dieroll->out, retsel), NULL); /* can't assume 1st without checking value b/c it wrecks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
+        /* can't assume 1st without checking value b/c it breaks with "sel->val->v > t->v && !hasSelected(t, retsel)" */
+        sel = newSelected( firstunique(&dieroll->out, retsel), NULL);
         if (!sel) break;
         //sel->val = dieroll->out;
         for (t = dieroll->out; t; t = t->next){ /* dont immediately go to next in case it is null */
@@ -560,7 +587,11 @@ void freeSelected(struct selected **a){
   struct selected *na;
   while(*a != NULL){
     na = (*a)->next;
-    free(*a);
+    struct value *t = (*a)->val;
+
+    free(*a);   /* free node */
+    assert(t);  /* ensure held value is untouched */
+
     *a = na;
   }
   *a = NULL;
