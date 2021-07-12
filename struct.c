@@ -211,7 +211,7 @@ struct ast *newasgn(struct symbol *s, struct ast *defn){
 /* sequentially free chain of values */
 void freeValue(struct value **a){
   struct value *na;
-  while(*a != NULL){
+  while(*a && (*a)->v != 0){
     na = (*a)->next;
     free(*a);
     *a = na;
@@ -242,12 +242,14 @@ void freeAst(struct ast **a){
     /* special */
   /* 1 value subtree */
   case 'd':
-    freeValue( &(((struct setdie *)*a)->faces) );
+    if (((struct setdie *)*a)->faces)
+      freeValue( &(((struct setdie *)*a)->faces) );
     assert(! ((struct setdie *)*a)->faces );
     break;
 
   case 'Q':
-    freeValue( &(((struct setres *)*a)->faces) );
+    if (((struct setres *)*a)->faces)
+      freeValue( &(((struct setres *)*a)->faces) );
     assert(! ((struct setres *)*a)->faces );
     break;
 

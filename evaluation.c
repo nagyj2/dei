@@ -226,9 +226,9 @@ struct result *eval(struct ast *a){
 
     case 'Q': /* create a artifical roll */
       v->type = R_roll;
-      v->r = malloc(sizeof(struct roll));       /* need to malloc space */
-      v->r->out = ((struct setres *)a)->faces;
-      /* v->r->faces = NULL */
+      v->r = malloc(sizeof(struct roll));       /* need to malloc space for result */
+      v->r->out = ((struct setres *)a)->faces;  /* echo die definition */
+      v->r->faces = NULL;                       /* set to detectable NULL */
       break;
 
     case 'S': { /* sum a die roll */
@@ -242,7 +242,7 @@ struct result *eval(struct ast *a){
 
       v->i = sumValue(r->r->out);
       /* WARNING causes seg faults for some reason? */
-      freeResultSafe( &r ); /* roll result is no longer needed */
+      //freeResultSafe( &r ); /* roll result is no longer needed */
       break;
     }
 
@@ -397,52 +397,9 @@ struct result *callbuiltin(int functype, int fcount, int seltype, int scount, st
       }
     }
 
-
-
-
   } while ( --i > 0);
 
-  /* since we transfer data from output to r, release output */
-  //if (output) { free(output); }
   return r;
-}
-
-/* rerolls all pointers pointed to by sel according to faces */
-/* NEITHER sel or faces can be NULL */
-void funcreroll(struct selected *sel, struct value *faces){
-  /* length of faces  */
-  //int facelen = countValue(faces);
-
-  struct selected *t; /* iterator variable */
-  for (t = sel; t; t = t->next){
-    int roll = randroll(faces);
-    t->val->v = roll; /* update pointed to's value */
-  }
-}
-
-/* Remove elements of 'sel' from 'out' */
-void funcdrop(struct selected *sel, struct value *out){
-
-}
-
-/* Append selected point from 'sel' onto 'out' */
-void funcappend(struct selected *sel, struct value *out){
-
-}
-
-/* Return elements of 'sel' -> must deal with 'out' specially b/c I can't just clear the chain  */
-void funcchoose(struct selected *sel, struct value *out){
-
-}
-
-/* Count the number of elements in 'sel' and place it in 'out' */
-void funccount(struct selected *sel, struct value **out){
-  struct value *val = NULL;
-  val = newValue( countSelected(sel), NULL );
-  //if (!val)
-  freeValue( out ); /* SETS POINTER TO NULL */
-  *out = val;
-  assert(out);
 }
 
 /* select elements of dieroll and stores them in special pointers for callbuiltin to operate on */
@@ -522,22 +479,60 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
         break;
     }
 
-    if (sel){
-      int merges = mergeSelected(&retsel, sel); /* merge current and newly found */
-      //if (sel) freeSelected(sel);
-      if (merges == 0 && seltype != S_all)
-        break;  /* short circuit of mergeSelected returns 0, so ensure nothing was actually entered */
 
     DEBUG_STATE("selected:");
     struct selected *t2 = NULL;
+    for (t2 = sel; t2; t2 = t2->next)
+    DEBUG_REPORT(" %d",t2->val->v);
+    DEBUG_STATE("\n");
 
-  debug_state("selected:");
-  for (sel = retsel; sel; sel = sel->next)
-    debug_report(" %d",sel->val->v);
-  debug_state("\n");
+    int merges = mergeSelected(&retsel, sel); /* merge current and newly found */
+    if (merges == 0)
+      break;  /* short circuit of mergeSelected returns 0, so ensure nothing was actually entered */
 
-  if (t) free(t);
+  } while (--i != 0 && seltype != S_all); /* stop when counting numbers, but continue */
+
+  //if (t) free(t);
   return retsel;
+}
+
+/* rerolls all pointers pointed to by sel according to faces */
+/* NEITHER sel or faces can be NULL */
+void funcreroll(struct selected *sel, struct value *faces){
+  /* length of faces  */
+  //int facelen = countValue(faces);
+
+  struct selected *t; /* iterator variable */
+  for (t = sel; t; t = t->next){
+    int roll = randroll(faces);
+    t->val->v = roll; /* update pointed to's value */
+  }
+}
+
+/* Remove elements of 'sel' from 'out' */
+void funcdrop(struct selected *sel, struct value **out){
+
+
+
+}
+
+/* Append selected point from 'sel' onto 'out' */
+void funcappend(struct selected *sel, struct value **out){
+
+}
+
+/* Return elements of 'sel' -> must deal with 'out' specially b/c I can't just clear the chain  */
+void funcchoose(struct selected *sel, struct value **out){
+
+}
+
+/* Count the number of elements in 'sel' and place it in 'out' */
+void funccount(struct selected *sel, struct value **out){
+  struct value *val = NULL;
+  val = newValue( countSelected(sel), NULL );
+  //freeValue( out ); /* CANNOT FREE IN THE EVENT OF A FIXED DIE */
+  *out = val;
+  assert(out);
 }
 
 
@@ -581,10 +576,10 @@ void freeResultSafe(struct result **a){
     break;
 
   case R_roll:
-    if ( (*a)->r->out )
-      freeValue( &((*a)->r->out) );
+    //if ( (*a)->r->out )
+      //freeValue( &(*a)->r->out );
 
-    assert(! (*a)->r->out );
+    //assert(! (*a)->r->out );
     break;
 
   case R_die:
