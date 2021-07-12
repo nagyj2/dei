@@ -132,7 +132,7 @@ struct value *createSetdieFace(struct value *faces){
 
 /* define a symbol (variable) */
 void setsym(struct symbol *name, struct ast *val){
-  debug_report("place at %p", name);
+  DEBUG_REPORT("place at %p", name);
   if (name->func){ /* NOTE allocated in lookup, so this will always run*/
     freeAst( &(name->func) );
     assert(! name->func );
@@ -321,7 +321,7 @@ struct result *callbuiltin(int functype, int fcount, int seltype, int scount, st
   r = eval( frame ); /* PUT EVALUATED RESULT INTO 'r->r->out' */
 
   if (r->type != R_roll) { yyerror("expected roll type, got %d\n",r->type); return r; };
-  debug_report("select type %d, %d times\n",seltype, scount);
+  DEBUG_REPORT("Func type: %d, times: %d\n",functype, fcount);
 
   int i = fcount;
   do {
@@ -330,7 +330,7 @@ struct result *callbuiltin(int functype, int fcount, int seltype, int scount, st
     sel = select(seltype, scount, r->r);
 
     #ifdef DEBUG
-    debug_state("before: ");
+    DEBUG_STATE("before: ");
     printValue(r->r->out);
     #endif
 
@@ -360,11 +360,11 @@ struct result *callbuiltin(int functype, int fcount, int seltype, int scount, st
       }
 
       #ifdef DEBUG
-      debug_state("after: ");
+      DEBUG_STATE("after: ");
       printValue(r->r->out);
       #endif
 
-      freeSelected( &sel );
+      //freeSelected( &sel );
 
     }else{ /* Default returns */
       switch (functype){
@@ -449,7 +449,10 @@ void funccount(struct selected *sel, struct value **out){
 /* FIX : creates extra selected elements at the end which have no value? */
 struct selected *select(int seltype, int scount, struct roll *dieroll){
   struct selected *retsel = NULL, *sel = NULL; /* set to null so outside it can be seen if nothing was selected */
-  struct value *t; /* traversal variable */
+  struct value *t = NULL; /* traversal variable */
+
+  DEBUG_REPORT("Select type: %d, times: %d\n",seltype, scount);
+
 
   int i = scount;
   if (i > countValue(dieroll->out)) printf("warning: requesting more selects than available\n");
@@ -507,8 +510,11 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
       default:
         /* find first instance of specific die outcome */
         assert(seltype >= 0 || seltype == S_all);
+        sel = NULL;
         for (t = dieroll->out; t; t = t->next){
-          if (t->v == seltype && !hasSelected(t, retsel)){  /* check for match */
+          bool has = hasSelected(t, retsel);
+          bool match = t->v == seltype;
+          if (match && !has){  /* check for match */
             sel = newSelected(t, NULL);
             break; /* TODO: once per loop? */
           }
@@ -521,11 +527,9 @@ struct selected *select(int seltype, int scount, struct roll *dieroll){
       //if (sel) freeSelected(sel);
       if (merges == 0 && seltype != S_all)
         break;  /* short circuit of mergeSelected returns 0, so ensure nothing was actually entered */
-    }else{
-      break;
-    }
 
-  } while (--i > 0); /* stop when counting numbers, but continue */
+    DEBUG_STATE("selected:");
+    struct selected *t2 = NULL;
 
   debug_state("selected:");
   for (sel = retsel; sel; sel = sel->next)
