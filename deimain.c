@@ -2,7 +2,11 @@
 #include "dei.tab.h"
 
 #include "deimain.h"
+#include "struct.h"
+#include "evaluation.h"
 
+
+FILE *logger;
 
 int main(int argc, char **argv){
   #ifdef DEBUG

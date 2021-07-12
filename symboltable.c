@@ -1,6 +1,9 @@
 
 #include "symboltable.h"
 
+struct symbol symtab[NHASH];    /* symbol table itself */
+
+
 /* === FUNCTIONS === */
 
 /* hash a symbol to produce an index to place in symbol table at */

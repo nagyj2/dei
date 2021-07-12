@@ -4,7 +4,6 @@
  * - Lexer utility functions
  * - Logging capabilities
  * - essential lexer functions
- * TODO: unroll 'selector'
  */
 
 #ifndef DEIMAIN_H_INCLUDED
@@ -13,12 +12,11 @@
 #include <stdlib.h>
 #include <stdio.h> /* needed for FILE */
 #include <assert.h> /* for assert */
+#include <time.h> /* needed for time() */
 
 #include "defines.h"
-#include "symboltable.h"
-#include "evaluation.h"
-#include "struct.h"
-#include "util.h"
+//#include "symboltable.h"
+//#include "util.h"
 
 /* start the parsing process */
 int yyparse(void);

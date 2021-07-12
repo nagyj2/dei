@@ -1,5 +1,5 @@
 
-CC = gcc
+CC = gcc-11
 CFLAGS := -Wall -g -std=c11
 
 #OS Specific flags
@@ -44,4 +44,4 @@ debug_exec: dei.tab.c $(FLEXOUT) $(MAIN) $(OBJS)
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 clean:
-	rm -rf $(EXEC) $(DEXEC) dei.output $(EXEC).dSYM $(DEXEC).dSYM dei.tab.* $(FLEXOUT) $(OBJS)
+	rm -rf $(EXEC) $(DEXEC) dei.output $(EXEC).dSYM $(DEXEC).dSYM dei.tab.c $(FLEXOUT) $(OBJS) *.h.gch

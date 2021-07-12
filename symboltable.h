@@ -14,7 +14,7 @@
 
 /* === DATA === */
 
-struct symbol symtab[NHASH];    /* symbol table itself */
+extern struct symbol symtab[NHASH];    /* symbol table itself */
 
 /* === FUNCTIONS === */
 
