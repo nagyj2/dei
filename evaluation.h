@@ -40,11 +40,13 @@ struct roll {           /* result for a die roll */
  struct value *faces;  /* used die - WARNING : NULLABLE */
 };
 
-struct result {         /* result value of */
+struct result {        /* result value of */
  int type;             /* type of result -> rifs */
  int i;                /* holder for integer */
  struct roll *r;       /* holder for roll result, die used */
  struct die *d;        /* holder for die faces, rolls required */
+ struct result *pl;    /* previous result -> used to chain together results to free easier */
+ struct result *pr;
 };
 
 struct selected {       /* a chain of pointers to assorted value nodes */

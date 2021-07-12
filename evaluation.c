@@ -160,12 +160,17 @@ struct result *eval(struct ast *a){
     case 'I': /* create an integer */
       v->type = R_int;
       v->i = ((struct natint *)a)->integer;
+      v->pl = NULL;
+      v->pr = NULL;
       break;
 
     case '+': case '-': case '*': case DIV: case '%': case '^': {
       v->type = R_int;
       struct result *l = eval( a->l);
       struct result *r = eval( a->r);
+
+      v->pl = l;
+      v->pr = r;
 
       if (l->type != R_int || r->type != R_int){
         yyerror("integer nodes expected! got %c, %c",l->type,r->type);
@@ -181,8 +186,8 @@ struct result *eval(struct ast *a){
         case '^': v->i = (int) pow(l->i, r->i); break;
       }
 
-      freeResultSafe( &l );
-      freeResultSafe( &r );
+      //freeResultSafe( &l );
+      //freeResultSafe( &r );
       break;
     }
 
@@ -190,6 +195,9 @@ struct result *eval(struct ast *a){
       v->type = R_int;
       struct result *l = eval( a->l);
       struct result *r = eval( a->r);
+
+      v->pl = l;
+      v->pr = r;
 
       if (l->type != R_int || r->type != R_int){
         yyerror("integer nodes expected! got %c, %c",l->type,r->type);
@@ -205,14 +213,17 @@ struct result *eval(struct ast *a){
         case '6': v->i = (l->i <= r->i)? 1 : 0; break;
       }
 
-      freeResultSafe( &l );
-      freeResultSafe( &r );
+      //freeResultSafe( &l );
+      //freeResultSafe( &r );
       break;
     }
 
     case 'M': /* negate a result */
       v->type = R_int;
       struct result *l = eval( a->l);
+
+      v->pl = l;
+      v->pr = NULL;
 
       if (l->type != R_int){
         yyerror("integer node expected! got %c",l->type);
@@ -221,7 +232,7 @@ struct result *eval(struct ast *a){
 
       v->i = -l->i;
 
-      freeResultSafe( &l );
+      //freeResultSafe( &l );
       break;
 
     case 'Q': /* create a artifical roll */
@@ -229,11 +240,18 @@ struct result *eval(struct ast *a){
       v->r = malloc(sizeof(struct roll));       /* need to malloc space for result */
       v->r->out = ((struct setres *)a)->faces;  /* echo die definition */
       v->r->faces = NULL;                       /* set to detectable NULL */
+
+      v->pl = NULL;
+      v->pr = NULL;
+
       break;
 
     case 'S': { /* sum a die roll */
       v->type = R_int;
-      struct result *r = eval( a->l);
+      struct result *r = eval( a->l); /* roll */
+
+      v->pl = r;
+      v->pr = NULL;
 
       if (r->type != R_roll){
         yyerror("roll node expected! got %c",r->type);
@@ -252,6 +270,9 @@ struct result *eval(struct ast *a){
       v->d->count = ((struct natdie *)a)->count;
       v->d->faces = createNatdieFace( ((struct natdie *)a)->min, ((struct natdie *)a)->max );
       /* printf("new die: "); printValue(v->d->faces); printf("\n"); */
+      v->pl = NULL;
+      v->pr = NULL;
+
       break;
 
     case 'd': /* create a artificial die */
@@ -260,11 +281,18 @@ struct result *eval(struct ast *a){
       v->d->count = ((struct setdie *)a)->count;
       v->d->faces = createSetdieFace(((struct setdie *)a)->faces);
       /* printf("new die: "); printValue(v->d->faces); printf("\n"); */
+
+      v->pl = NULL;
+      v->pr = NULL;
+
       break;
 
     case 'R': case 'r': { /* roll a die */
       v->type = R_roll;
       struct result *r = eval( a->l);
+
+      v->pl = r;
+      v->pr = NULL;
 
       if (r->type != R_die){
         yyerror("die node expected! got %c",r->type);
@@ -281,7 +309,7 @@ struct result *eval(struct ast *a){
         /* printf("roll %d\n", roll); printValue(v->r->out); */
       } while (i++ < r->d->count);
 
-      free(r); /* free just the r pointer : keep faces */
+      //free(r); /* free just the r pointer : keep faces */
       break;
     }
 
@@ -292,12 +320,20 @@ struct result *eval(struct ast *a){
       for (i = 1; i < ((struct funcall *)a)->fcount; i++){
         v = callbuiltin( &v, ((struct funcall *)a)->functype, ((struct funcall *)a)->seltype, ((struct funcall *)a)->scount, ((struct funcall *)a)->l );
       }*/
+      v->pl = NULL;
+      v->pr = NULL;
+
       break;
     }
 
     case 'E': /* symbol reference */
       v->type = R_int;
-      v->i = eval( (((struct symcall *)a)->s)->func )->i;
+      struct result *r = eval( (((struct symcall *)a)->s)->func );
+      v->i = r->i;
+
+      v->pl = r;
+      v->pr = NULL;
+
       break;
 
     case 'A': /* set a symbol to a value - CURRENTLY UNUSED */
@@ -594,15 +630,19 @@ void freeResult(struct result **a){
 
 /* Frees a single result variable, but leaves attached data pointed to by others */
 void freeResultSafe(struct result **a){
+
+  if ((*a)->pl) freeResultSafe( &(*a)->pl );
+  if ((*a)->pr) freeResultSafe( &(*a)->pr );
+
   switch ( (*a)->type ){
   case R_int:
     break;
 
   case R_roll:
-    //if ( (*a)->r->out )
-      //freeValue( &(*a)->r->out );
+    if ( (*a)->r->out )
+      freeValue( &(*a)->r->out );
 
-    //assert(! (*a)->r->out );
+    assert(! (*a)->r->out );
     break;
 
   case R_die:
@@ -617,6 +657,7 @@ void freeResultSafe(struct result **a){
   *a = NULL;
   assert(! *a );
 }
+
 
 /* Frees an entire selected chain. Does NOT free the referenced pointers */
 void freeSelected(struct selected **a){
