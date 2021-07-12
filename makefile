@@ -20,7 +20,7 @@ EXEC = dei
 DEXEC = dei
 
 exec: parser lexer release_exec
-debug: CFLAGS += -D DEBUG -g
+debug: CFLAGS += -D DEBUG
 debug: BISONFLAGS += -v
 debug:	parser lexer debug_exec
 
