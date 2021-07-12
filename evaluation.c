@@ -339,7 +339,8 @@ struct result *callbuiltin(int functype, int fcount, int seltype, int scount, st
 
       switch (functype){
         case B_drop:
-        printf("warning: drop is not fully implemented\n");
+        //printf("warning: drop is not fully implemented\n");
+        funcdrop(sel, &r->r->out);
         break; /* End of drop */
         case B_append:
         printf("warning: append is not fully implemented\n");
@@ -511,7 +512,29 @@ void funcreroll(struct selected *sel, struct value *faces){
 
 /* Remove elements of 'sel' from 'out' */
 void funcdrop(struct selected *sel, struct value **out){
+  struct selected *st = NULL;
+  struct value *curr = NULL, *last = NULL;
 
+  for (st = sel; st; st = st->next){
+    for (curr = *out; curr; curr = curr->next){
+
+      if (st->val == curr){ /* found to be dropped */
+        if (!last){ /* is first */
+          *out = (*out)->next;  /* shift one value forward */
+          free( curr );      /* release old value */
+        }else{
+          /* Save subsequent */
+          /* Connect last to subsequent */
+          /* Free detached node */
+
+          last->next = curr->next; /* skip over current */
+          free( curr );
+        }
+        break;
+      }
+      last = curr; /* update last node */
+    }
+  }
 
 
 }
