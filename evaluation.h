@@ -94,11 +94,11 @@ struct result *callbuiltin(int functype, int seltype, int fcount, int scount, st
 /* NEITHER sel or faces can be NULL */
 void funcreroll(struct selected *sel, struct value *faces);
 /* Removes the pointers contained within 'sel' from 'out' */
-void funcdrop(struct selected *sel, struct value *out);
+void funcdrop(struct selected *sel, struct value **out);
 /* Append selected point from 'sel' onto 'out' */
-void funcappend(struct selected *sel, struct value *out);
+void funcappend(struct selected *sel, struct value **out);
 /* Return elements of 'sel' */
-void funcchoose(struct selected *sel, struct value *out);
+void funcchoose(struct selected *sel, struct value **out);
 /* Count the number of elements in 'sel' and place it in 'out' */
 void funccount(struct selected *sel, struct value **out);
 

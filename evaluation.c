@@ -287,7 +287,7 @@ struct result *eval(struct ast *a){
 
     case 'F':{ /* execute a function */
       /* all functions happen at least one time, so execute with null result value */
-      v = callbuiltin( ((struct funcall *)a)->functype, ((struct funcall *)a)->seltype, ((struct funcall *)a)->fcount, ((struct funcall *)a)->scount, ((struct funcall *)a)->l );
+      v = callbuiltin( ((struct funcall *)a)->functype, ((struct funcall *)a)->fcount, ((struct funcall *)a)->seltype, ((struct funcall *)a)->scount, ((struct funcall *)a)->l );
       /*int i;
       for (i = 1; i < ((struct funcall *)a)->fcount; i++){
         v = callbuiltin( &v, ((struct funcall *)a)->functype, ((struct funcall *)a)->seltype, ((struct funcall *)a)->scount, ((struct funcall *)a)->l );

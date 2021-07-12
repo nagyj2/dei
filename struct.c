@@ -145,7 +145,7 @@ struct ast *newsetres(struct value *faces){
 }
 
 /* F : create a built in function call node */
-struct ast *newfunc(int functype, int seltype, int fcount, int scount, struct ast *l){
+struct ast *newfunc(int functype, int fcount, int seltype, int scount, struct ast *l){
   struct funcall *a = malloc(sizeof(struct funcall));
 
   if (!a){

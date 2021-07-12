@@ -151,7 +151,7 @@ struct ast *newsetdie(int count, struct value *faces);
 /* Q : create a node to roll the contained die */
 struct ast *newsetres(struct value *faces);
 /* F : create a builtin function call node */
-struct ast *newfunc(int functype, int seltype, int fcount, int scount, struct ast *l);
+struct ast *newfunc(int functype, int fcount, int seltype, int scount, struct ast *l);
 /* I : create a natural integer node */
 struct ast *newnatint(int integer);
 /* E : create a symbol (variable) call node */
