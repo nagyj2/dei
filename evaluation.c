@@ -327,7 +327,7 @@ struct result *callbuiltin(int functype, int fcount, int seltype, int scount, st
   do {
     struct selected *sel = NULL; /* temporary select */
     /* Perform selection algorithm according to times, type and available */
-    sel = select(seltype, scount, r->r);
+    sel = _select(seltype, scount, r->r);
 
     #ifdef DEBUG
     DEBUG_STATE("before: ");
@@ -405,7 +405,7 @@ struct result *callbuiltin(int functype, int fcount, int seltype, int scount, st
 
 /* select elements of dieroll and stores them in special pointers for callbuiltin to operate on */
 /* FIX : creates extra selected elements at the end which have no value? */
-struct selected *select(int seltype, int scount, struct roll *dieroll){
+struct selected *_select(int seltype, int scount, struct roll *dieroll){
   struct selected *retsel = NULL, *sel = NULL; /* set to null so outside it can be seen if nothing was selected */
   struct value *t = NULL; /* traversal variable */
 

@@ -106,7 +106,7 @@ void funccount(struct selected *sel, struct value **out);
 /* Create a new selector. 'seltype' is the type of select and 'count' is the number of selections */
 /*struct selector *newSelector(int seltype, int count);*/
 /* Returns selected roll results according to input selection data */
-struct selected *select(int seltype, int scount, struct roll *dieroll);
+struct selected *_select(int seltype, int scount, struct roll *dieroll);
 
 
 /* free result variable, AND contained data - SETS ARGS TO NULL */
