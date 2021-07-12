@@ -8,6 +8,7 @@ dei.lex.*
 dei.tab.*
 dei.dSYM/**/*
 deid.dSYM/**/*
+*.h.gch
 *.o
 
 # Debug Files
