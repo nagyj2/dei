@@ -22,6 +22,14 @@ struct selected *newSelected(struct value *elem, struct selected *prev){
   return a;
 }
 
+/* Return the final element of the selected chain */
+struct selected *backSelected(struct selected *base){
+  struct selected *t = NULL;
+  for (t = base; t->next; t = t->next){ /* find back */ }
+  assert(t && !t->next);
+  return t;
+}
+
 /* count values in a chain */
 int countSelected(struct selected *sel){
   struct selected *t;

@@ -21,6 +21,14 @@ struct value *newValue(int elem, struct value *prev){
   return a;
 }
 
+/* Return the final element of the selected chain */
+struct value *backValue(struct value *base){
+  struct value *t = NULL;
+  for (t = base; t->next; t = t->next){ /* find back */ }
+  assert(t && !t->next);
+  return t;
+}
+
 /* count values in a chain */
 int countValue(struct value *val){
   struct value *t;

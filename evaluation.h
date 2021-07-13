@@ -62,6 +62,8 @@ struct selected {       /* a chain of pointers to assorted value nodes */
 
 /* Created a new selected struct. If 'prev' != NULL, it will occupy the 'next' attr of the new var */
 struct selected *newSelected(struct value *elem, struct selected *prev);
+/* Return the last element in a selected chain */
+struct selected *backSelected(struct selected *base);
 /* Iterate over a selected chain and count the number of elements */
 int countSelected(struct selected *sel);
 /* Iterate over a selected chain and sum the contents of the values at each node */

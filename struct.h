@@ -133,6 +133,8 @@ struct symasgn {      /* A: assign an ast to a symbol  */
 
 /* Create a new value struct. If 'prev' != NULL, it will occupy 'next' attr of new var */
 struct value *newValue(int elem, struct value *prev);
+/* Return the last element in a value chain */
+struct value *backValue(struct value *base);
 /* Iterate over a value chain and count the number of elements */
 int countValue(struct value *val);
 /* Iterate over a value chain and sum up their values */
