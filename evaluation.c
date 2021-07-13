@@ -391,6 +391,7 @@ struct result *callbuiltin(int functype, int fcount, int seltype, int scount, st
           break; /* End of drop */
         case B_append:{
           // printf("warning: append is not fully implemented\n");
+          /* TODO: wipe faces */
           funcappend(sel, &(*r)->r->out);
           break; /* End of append */
           }
@@ -414,7 +415,7 @@ struct result *callbuiltin(int functype, int fcount, int seltype, int scount, st
       printValue((*r)->r->out);
       #endif
 
-      //freeSelected( &sel );
+      freeSelected( &sel );
 
     }else{ /* Default returns */
       switch (functype){
@@ -596,16 +597,17 @@ void funcdrop(struct selected *sel, struct value **out){
 
 /* Append selected point from 'sel' onto 'out' */
 void funcappend(struct selected *sel, struct value **out){
-  struct value *back = backValue(*out);
   struct selected *t = NULL;
 
   for (t = sel; t; t = t->next){
-    back->next = newValue(t->val->v, NULL);
-    back = back->next;
+    *out = newValue(t->val->v, *out);
   }
 
+  #ifdef DEBUG
   printf("after append: ");
   printValue(*out);
+  #endif
+  // [2,3,4] append lowest
 }
 
 /* Return elements of 'sel' -> must deal with 'out' specially b/c I can't just clear the chain  */
@@ -667,15 +669,15 @@ void freeResultSafe(struct result **a){
     break;
 
   case R_roll:
-    if ( (*a)->r->out )
-      freeValue( &(*a)->r->out );
+    /*if ( (*a)->r->out )
+      freeValue( &(*a)->r->out );*/
 
-    assert(! (*a)->r->out );
+    // assert(! (*a)->r->out );
     break;
 
   case R_die:
 
-    assert(!(*a)->d->faces);
+    assert(! (*a)->d->faces );
     break;
 
   default:
@@ -694,10 +696,10 @@ void freeSelected(struct selected **a){
     struct value *t = (*a)->val;
 
     free(*a);   /* free node */
-    assert(t);  /* ensure held value is untouched */
+    *a = NULL;
+    assert(! *a );
 
+    assert(t);  /* ensure held value is untouched */
     *a = na;
   }
-  *a = NULL;
-  assert(! *a );
 }

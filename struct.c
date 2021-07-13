@@ -16,8 +16,9 @@ struct value *newValue(int elem, struct value *prev){
   }
 
   a->v = elem;
-  if (prev) a->next = prev;
-  else      a->next = NULL;
+  // if (prev) a->next = prev;
+  // else
+  a->next = prev;
   return a;
 }
 
@@ -222,9 +223,9 @@ void freeValue(struct value **a){
   while(*a && (*a)->v != 0){
     na = (*a)->next;
     free(*a);
+    *a = NULL;
     *a = na;
   }
-  *a = NULL;
 }
 
 void freeAst(struct ast **a){
