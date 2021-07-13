@@ -220,7 +220,7 @@ struct ast *newasgn(struct symbol *s, struct ast *defn){
 /* sequentially free chain of values */
 void freeValue(struct value **a){
   struct value *na;
-  while(*a && (*a)->v != 0){
+  while(*a){
     na = (*a)->next;
     free(*a);
     *a = NULL;
