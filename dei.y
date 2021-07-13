@@ -3,12 +3,17 @@
 #include <stdlib.h>
 
 #include "dei.tab.h"
-#include "dei.h"
 
-int yylex(void);
+#include "deimain.h"
+#include "defines.h"
+#include "struct.h"
+#include "symboltable.h"
+#include "evaluation.h"
+#include "util.h"
+
+
 %}
 
-/* TODO fix union types */
 /* since result is a union, lexer must set yylval.<> accordind
  * to the rules (i.e.) if a ast is returned, yylval.a must be set
  */
@@ -21,10 +26,9 @@ int yylex(void);
 }
 
 /* declare tokens */
-/* TODO declare tokens and types */
-%token <d> NUM DNUM QUANT
+%token <d> NUM DNUM TQUANT SQUANT
 %token <s> IDENT
-%token <fn> FUNC SELECT CMP
+%token <fn> FUNC SSELECT PSELECT CMP
 %token UNION INTER DIV RANGE
 %token XQUANT
 %token EXIT EOL
@@ -39,8 +43,7 @@ int yylex(void);
 %left '+' '-'
 %left '*' DIV '%'
 %right '^'
-%left UNION INTER
-%left '&' '|'
+%left UNION INTER '&' '|' /* same lvl b/c there are no paren */
 %nonassoc UMINUS
 %nonassoc PAREN
 
@@ -74,16 +77,33 @@ dice: dice '&' dice											{ $$ = newast('&', $1, $3); }
 
   /* performs math on a single die rolls */
   /* REPRESENT: set of rolls -> if IDENT is a number, convert to a 1 time die roll */
-func: ndie															{ $$ = newast('R', $1, NULL); }
-  |   sdie                              { $$ = newast('r', $1, NULL); }
-  |   '[' list ']'											{ $$ = newsetres($2); }
-  |		func FUNC SELECT									{ $$ = newfunc($2, $3, 1, $1); }
-  |   func FUNC SELECT QUANT						{ $$ = newfunc($2, $3, $4, $1); }
-  |   func FUNC SELECT NUM XQUANT	  		{ $$ = newfunc($2, $3, $4, $1); }
-  |   func FUNC NUM									    { $$ = newfunc($2, $3, 1, $1); }
-  |   func FUNC NUM QUANT							  { $$ = newfunc($2, $3, $4, $1); }
-  |   func FUNC NUM NUM XQUANT				  { $$ = newfunc($2, $3, $4, $1); }
-  ;
+func: ndie															   { $$ = newast('R', $1, NULL); }
+  |   sdie                                 { $$ = newast('r', $1, NULL); }
+  |   '[' list ']'											   { $$ = newsetres($2); }
+  |		func FUNC SSELECT                    { $$ = newfunc($2,  1, $3,  1, $1); }
+  |		func FUNC SSELECT TQUANT             { $$ = newfunc($2, $4, $3,  1, $1); }
+  |		func FUNC SSELECT NUM XQUANT         { $$ = newfunc($2, $4, $3,  1, $1); }
+  |		func FUNC SSELECT NUM                { $$ = newfunc($2,  1, $3,  1, $1); } /* same as 'reroll lowest 3' */
+  |		func FUNC NUM SSELECT                { $$ = newfunc($2,  1, $4, $3, $1); }
+  |		func FUNC NUM SSELECT TQUANT         { $$ = newfunc($2, $5, $4, $3, $1); }
+  |		func FUNC NUM SSELECT NUM XQUANT     { $$ = newfunc($2, $5, $4, $3, $1); }
+  |		func FUNC SQUANT SSELECT             { $$ = newfunc($2,  1, $3, $3, $1); }
+  |		func FUNC SQUANT SSELECT TQUANT      { $$ = newfunc($2, $5, $3, $3, $1); }
+  |		func FUNC SQUANT SSELECT NUM XQUANT  { $$ = newfunc($2, $5, $3, $3, $1); }
+  |		func FUNC NUM                        { $$ = newfunc($2,  1, $3,  1, $1); }
+  |		func FUNC NUM TQUANT                 { $$ = newfunc($2, $4, $3,  1, $1); }
+  |		func FUNC NUM NUM XQUANT             { $$ = newfunc($2, $4, $4, $3, $1); }
+  |		func FUNC NUM NUM                    { $$ = newfunc($2,  1, $4, $3, $1); }
+  |		func FUNC NUM NUM TQUANT             { $$ = newfunc($2, $5, $4, $3, $1); }
+  |		func FUNC NUM NUM NUM XQUANT         { $$ = newfunc($2, $5, $4, $3, $1); }
+  |		func FUNC SQUANT NUM                 { $$ = newfunc($2,  1, $4, $3, $1); }
+  |		func FUNC SQUANT NUM TQUANT          { $$ = newfunc($2, $5, $4, $3, $1); }
+  |		func FUNC SQUANT NUM NUM XQUANT      { $$ = newfunc($2, $5, $4, $3, $1); }
+  |		func FUNC PSELECT                    { $$ = newfunc($2,  1, $3,  1, $1); }
+  |		func FUNC PSELECT TQUANT             { $$ = newfunc($2, $4, $3,  1, $1); }
+  |		func FUNC PSELECT NUM XQUANT         { $$ = newfunc($2, $4, $3,  1, $1); }
+  ;   /* newfunc ( FUNC TYPE, FUNC TIMES, SELECT TYPE, SELECT TIMES, BODY ) */
+
 
   /* performs a die roll */
   /* REPRESENT: dice -> faces, no. of rolls */
@@ -97,23 +117,24 @@ sdie: DNUM 'd' '{' list '}'							{ $$ = newsetdie($1, $4); }
   |   'd' '{' list '}'									{ $$ = newsetdie(1, $3); }
 
   /* creates a list of values */
-list: NUM                               { $$ = newvalue($1, NULL); }
-  |		NUM ',' list                      { $$ = newvalue($1, $3); }
+list: NUM                               { $$ = newValue($1, NULL); }
+  |		NUM ',' list                      { $$ = newValue($1, $3); }
   ;
 
   /* performs top-level actions */
 start:start math EOL										{
         struct result *r = eval($2);
-        //printf("out <- "); /*printtree($2);*/
-        printf(" = %d",r->i);
-        resultfree(r);
-        treefree($2);
+        #ifdef DEBUG
+        //printf("out <- "); printAst($2);
+        #endif
+        printf(" = %d", r->i);
+        //freeAst( &($2) ); /* free main chain first */
+        /* freeResultSafe( &r ); */ /* free secondary chain */
         printf("\n> ");
   }
   |   start IDENT ':' math EOL					{
-        /*printtree($4);*/
-        setsym($2,$4);
-        //treefree($4); /* CANNOT FREE */
+        printAst($4);
+        setsym($2, $4);
         printf("\n> ");
   }
   |   start error EOL										{ printf("error!\n> "); }
@@ -123,5 +144,3 @@ start:start math EOL										{
   ;
 
 %%
-
-/* die: '['  ']' {  } */

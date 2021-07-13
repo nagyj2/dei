@@ -1,7 +1,7 @@
 %option noyywrap nodefault yylineno
 %{
 #include "dei.tab.h"
-#include "dei.h"
+#include "symboltable.h"
 %}
 
 /*
@@ -59,20 +59,38 @@
 "choose"  { yylval.fn = B_choose; return FUNC; }
 "reroll"  { yylval.fn = B_reroll; return FUNC; }
 "count"   { yylval.fn = B_count; return FUNC; }
-    /* selectors */
-"highest" { yylval.fn = S_high; return SELECT; }
-"lowest"  { yylval.fn = S_low; return SELECT; }
-"random"  { yylval.fn = S_rand; return SELECT; }
-"unique"  { yylval.fn = S_unique; return SELECT; }
+    /* selectors -> singular */
+"highest" { yylval.fn = S_high; return SSELECT; }
+"lowest"  { yylval.fn = S_low; return SSELECT; }
+"random"  { yylval.fn = S_rand; return SSELECT; }
 
-    /* quantifiers */
-"once"    { yylval.d = 1; return QUANT; }
-"twice"   { yylval.d = 2; return QUANT; }
-"thrice"  { yylval.d = 3; return QUANT; }
-"always"  { yylval.d = 50; return QUANT; } /* TODO: use always as default, dependant on functype in dei.y */
+  /* selectors -> plural */
+"unique"  { yylval.fn = S_unique; return PSELECT; }
+  /* Normal number selectors are plural */
 
+    /* temporal quantifiers */
+"once"    { yylval.d = 1; return TQUANT; }
+"twice"   { yylval.d = 2; return TQUANT; }
+"thrice"  { yylval.d = 3; return TQUANT; }
+"always"  { yylval.d = 50; return TQUANT; } /* TODO: use always as default, dependant on functype in dei.y */
+
+    /* arbitrary temporal quantifier */
 "times"   { return XQUANT; }
 "time"    { return XQUANT; }
+
+    /* singular quantifiers */
+"one"   { yylval.d =  1; return SQUANT; }
+"two"   { yylval.d =  2; return SQUANT; }
+"three" { yylval.d =  3; return SQUANT; }
+"four"  { yylval.d =  4; return SQUANT; }
+"five"  { yylval.d =  5; return SQUANT; }
+"six"   { yylval.d =  6; return SQUANT; }
+"seven" { yylval.d =  7; return SQUANT; }
+"eight" { yylval.d =  8; return SQUANT; }
+"nine"  { yylval.d =  9; return SQUANT; }
+"ten"   { yylval.d = 10; return SQUANT; }
+"all"   { yylval.d = -1; return SQUANT; }
+
 
 "quit"    |
 "q"       { return EXIT;}

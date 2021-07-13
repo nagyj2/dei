@@ -1,20 +1,25 @@
-dei_old.l
-
+# Executables
 dei
 deid
+
+# Generated Files
 dei.c
-dei.dSYM/**/*
-deid.dSYM/**/*
 dei.lex.*
 dei.tab.*
-dei.output
-dei.log
-R
+dei.dSYM/**/*
+deid.dSYM/**/*
+*.h.gch
+*.o
 
+# Debug Files
+dei.log
+dei.output
+R
 lldebug
 
-save*/**/*
-storage*/**/*
-test*/**/*
 
+# MacOS Files
 .DS_STORE
+
+# Scratch Files
+storage/**/*

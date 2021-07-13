@@ -1,27 +1,47 @@
 
-BISONFLAGS = -t -v
+CC = gcc-11
+CFLAGS := -Wall -g -std=c11
+
+#OS Specific flags
+UNAME := $(shell uname)
+ifeq ($(UNAME), Linux)
+OSS := -lfl -D LINUX
+else #($(UNAME), Darwin)
+OSS := -ll -D OSX
+endif
+
+BISONFLAGS := -t -v
 
 FLEXOUT = dei.lex.c
 
-DEIFUNC = dei.lib.c
+OBJS = deimain.o struct.o symboltable.o evaluation.o util.o
 
-CFLAGS = -Wall -g -std=c11 -ll
+EXEC = dei
+DEXEC = dei
 
-all: clean dei_bison dei_flex dei deid
+exec: parser lexer release_exec
+debug: CFLAGS += -D DEBUG
+debug: BISONFLAGS += -v
+debug:	parser lexer debug_exec
 
-dei_bison: dei.y
+parser: dei.y
 	bison $(BISONFLAGS) -d $^
 
-dei_flex: dei.l
+lexer: dei.l
 	flex -o $(FLEXOUT) $<
 
-# release
-dei: dei.tab.c $(FLEXOUT) $(DEIFUNC)
-	gcc $(CFLAGS) -O2 -o $@ $^
 
-# debug
-deid: dei.tab.c $(FLEXOUT) $(DEIFUNC)
-	@gcc $(CFLAGS) -D DEBUG -g -o $@ $^
+# Release
+release_exec: dei.tab.c $(FLEXOUT) $(OBJS)
+	$(CC) $(CFLAGS) $(OSS) -O2 -o $(EXEC) $?
+
+# Debug Options
+debug_exec: dei.tab.c $(FLEXOUT) $(MAIN) $(OBJS)
+	@$(CC) $(CFLAGS) $(OSS) -o $(DEXEC) $?
+
+# Create object files
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $^
 
 clean:
-	rm -rf dei deid dei.dSYM deid.dSYM dei.tab.* $(FLEXOUT)
+	rm -rf $(EXEC) $(DEXEC) dei.output $(EXEC).dSYM $(DEXEC).dSYM dei.tab.c $(FLEXOUT) $(OBJS) *.h.gch
