@@ -596,7 +596,16 @@ void funcdrop(struct selected *sel, struct value **out){
 
 /* Append selected point from 'sel' onto 'out' */
 void funcappend(struct selected *sel, struct value **out){
+  struct value *back = backValue(*out);
+  struct selected *t = NULL;
 
+  for (t = sel; t; t = t->next){
+    back->next = newValue(t->val->v, NULL);
+    back = back->next;
+  }
+
+  printf("after append: ");
+  printValue(*out);
 }
 
 /* Return elements of 'sel' -> must deal with 'out' specially b/c I can't just clear the chain  */
