@@ -391,14 +391,21 @@ struct result *callbuiltin(int functype, int fcount, int seltype, int scount, st
           break; /* End of drop */
         case B_append:{
           // printf("warning: append is not fully implemented\n");
-          /* TODO: wipe faces */
+          if (countSelected(sel) < scount && seltype >= 0){
+            int c;  /* fill sel with selected element until full size */
+            for (c = 0; countSelected(sel) < scount; c++)
+              sel = newSelected( newValue(seltype, NULL), sel);
+          }
           funcappend(sel, &(*r)->r->out);
+          /* TODO: Free faces? */
+          //(*r)->r->faces = NULL;
           break; /* End of append */
           }
         case B_choose:
           printf("warning: choose is not fully implemented\n");
+          funcchoose(sel, &(*r)->r->out);
           break; /* End of choose */
-          case B_reroll:
+        case B_reroll:
           if (!(*r)->r->faces) { yyerror("reroll requires unaltered die\n"); break; };
           funcreroll(sel, (*r)->r->faces);
           break; /* End of reroll */
@@ -591,8 +598,6 @@ void funcdrop(struct selected *sel, struct value **out){
       last = curr; /* update last node */
     }
   }
-
-
 }
 
 /* Append selected point from 'sel' onto 'out' */
@@ -612,7 +617,21 @@ void funcappend(struct selected *sel, struct value **out){
 
 /* Return elements of 'sel' -> must deal with 'out' specially b/c I can't just clear the chain  */
 void funcchoose(struct selected *sel, struct value **out){
+  struct selected *st = NULL;
+  struct value *curr = NULL, *chain = NULL;
 
+  for (st = sel; st; st = st->next){
+    for (curr = *out; curr; curr = curr->next){
+
+      if (st->val == curr){ /* found match */
+        chain = newValue(st->val->v, chain);
+        continue;
+      }
+    }
+  }
+
+  // freeValue(out);
+  *out = chain;
 }
 
 /* Count the number of elements in 'sel' and place it in 'out' */

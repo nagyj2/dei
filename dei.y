@@ -125,11 +125,11 @@ list: NUM                               { $$ = newValue($1, NULL); }
 start:start math EOL										{
         struct result *r = eval($2);
         #ifdef DEBUG
-        printf("out <- "); printAst($2);
+        //printf("out <- "); printAst($2);
         #endif
         printf(" = %d", r->i);
-        freeAst( &($2) ); /* free main chain first */
-        freeResultSafe( &r ); /* free secondary chain */
+        //freeAst( &($2) ); /* free main chain first */
+        /* freeResultSafe( &r ); */ /* free secondary chain */
         printf("\n> ");
   }
   |   start IDENT ':' math EOL					{
