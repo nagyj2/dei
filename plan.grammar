@@ -117,27 +117,27 @@ SQUANT:		one
 	|				four
 	|				five
 
-operators 	: '+' # add roll result
-						| '-' # subtract roll result
-						| '*' # multiply roll result
+OPERATORS 	: + # add roll result
+						| - # subtract roll result
+						| * # multiply roll result
 						| '//' # integer divide roll result
-						| '%' # modulo roll result
-						| '^' # exponentiate result
-						| '&' # element-wise intersection of dice set (eliminate duplicates)
-						| '|' # element-wise union of dice set (eliminate duplicates)
-						| '&&' # set-wise intersection of dice set (factor duplicates)
-						| '||' # set-wise union of dice set (keep duplicates)
-						| '='  # equality check roll result ([0] or [1] result)
-						| '!=' # inequality check roll result ([0] or [1] result)
-						| '>'  # greater than check roll result ([0] or [1] result)
-						| '<'  # lesser than check roll result ([0] or [1] result)
-						| '>=' # greater than or equal to check roll result ([0] or [1] result)
-						| '<=' # lesser than or equal to roll result ([0] or [1] result)
+						| % # modulo roll result
+						| ^ # exponentiate result
+						| & # element-wise intersection of dice set (eliminate duplicates)
+						| | # element-wise union of dice set (eliminate duplicates)
+						| && # set-wise intersection of dice set (factor duplicates)
+						| || # set-wise union of dice set (keep duplicates)
+						| =  # equality check roll result ([0] or [1] result)
+						| != # inequality check roll result ([0] or [1] result)
+						| >  # greater than check roll result ([0] or [1] result)
+						| <  # lesser than check roll result ([0] or [1] result)
+						| >= # greater than or equal to check roll result ([0] or [1] result)
+						| <= # lesser than or equal to roll result ([0] or [1] result)
 
-precidence:
+PRECIDENCE:
 	lo	=, !=, >, <, >=, <=
 			+, -
-			*, //, %
+			*, '//', %
 			^
 			&&, ||
 	hi	&, |
