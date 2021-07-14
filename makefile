@@ -2,12 +2,11 @@
 
 #Compiler and Linker
 CC          := gcc-11
+SHELL				:= /bin/zsh
 
 #The Target Binary Program
-TARGET      := program
-
-TARGET      := program
-TARGET      := program
+TARGET      := dei
+TESTMAIN		:= deid
 
 #The Directories, Source, Includes, Objects, Binary and Resources
 SRCDIR      := ./src
@@ -29,6 +28,8 @@ INCDEP      := -I$(INCDIR)
 BISONFLAGS 	:= -t
 FLEXFLAGS 	:=
 
+CHECKFLAGS	:= -lcheck
+
 #OS Specific flags
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
@@ -41,8 +42,11 @@ endif
 #DO NOT EDIT BELOW THIS LINE
 #---------------------------------------------------------------------------------
 DEPEXT      := d
-SOURCES     := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
-OBJECTS     := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
+SOURCES     := $(shell find $(SRCDIR) -type f ! \( -name "*.l" -o -name "*.y" -o -name "check_*" \) )
+OBJECTS     := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
+
+TEST_SOURCES:= $(shell find $(SRCDIR) -type f -name check_*.$(SRCEXT))
+TEST_OBJECTS:= $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(TEST_SOURCES:.$(SRCEXT)=.$(OBJEXT)))
 
 BISON_H			:= $(addprefix $(INCDIR)/, $(BISON:y=tab.h))
 BISON_C			:= $(addprefix $(SRCDIR)/, $(basename $(BISON)))
@@ -57,6 +61,8 @@ bison: $(addprefix $(SRCDIR)/, $(BISON))
 
 flex: $(addprefix $(SRCDIR)/, $(FLEX))
 	flex $(FLEXFLAGS) -o $(FLEX_C) $^
+
+tests: $(TESTMAIN)
 
 #Remake
 remake: cleaner all
@@ -76,6 +82,9 @@ cleaner: clean
 $(TARGET): $(OBJECTS)
 	$(CC) -o $(TARGETDIR)/$(TARGET) $^ $(LIB)
 
+$(TESTMAIN): $(TEST_OBJECTS)
+	$(CC) $(CHECKFLAGS) -o $(TARGETDIR)/$(TESTMAIN) $^ $(LIB)
+
 #Compile
 $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(dir $@)
@@ -87,7 +96,7 @@ $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
 	@rm -f $(BUILDDIR)/$*.$(DEPEXT).tmp
 
 #Non-File Targets
-.PHONY: all remake clean cleaner resources
+.PHONY: all remake clean cleaner resources test
 
 #
 # CC = gcc-11
