@@ -1,0 +1,141 @@
+Grammar
+
+	/* performs math on integers */
+math: 	math '+' math											<< $$ = $1 + $3 >>
+	|   	math '-' math											<< $$ = $1 - $3 >>
+	|   	math '*' math											<< $$ = $1 * $3 >>
+	|   	math '//' math										<< $$ = (int) ($1 / $3) >>
+	|   	math '%' math											<< $$ = $1 % $3 >>
+	|   	math '^' math											<< $$ = (int) ($1 ** $3) >>
+	|   	math '==' math										<< $$ = ($1 == $3) ? 1 : 0 >>
+	|   	math '!=' math										<< $$ = ($1 != $3) ? 1 : 0 >>
+	|   	math '>' math											<< $$ = ($1  > $3) ? 1 : 0 >>
+	|   	math '<' math											<< $$ = ($1  < $3) ? 1 : 0 >>
+	|   	math '>=' math										<< $$ = ($1 >= $3) ? 1 : 0 >>
+	|   	math '<=' math										<< $$ = ($1 <= $3) ? 1 : 0 >>
+	|   	'-' math       		%prec UMINUS		<< $$ = - $1 >>
+	|   	NUM       												<< $$ = $1 >>
+	|   	IDENT															<< $$ = lookup($1) >>
+	|   	sum                            		<< $$ = $1 >>
+
+  /* converts a roll result to an integer */
+sum:  	set																<< $$ = ∑ $1 >>
+
+  /* performs set math on roll results */
+set:  	set '&' set												<< $$ = set($1 ∩ $3) >>
+	|   	set '|' set												<< $$ = set($1 ∪ $3) >>
+	|   	set '&&' set											<< $$ = $1 ∩ $3 >>
+	|   	set '||' set											<< $$ = $1 ∪ $3 >>
+	|   	strip															<< $$ = $1 >>
+
+	/* removes extra information used by functions */
+strip:	func															<< strip($1) >>
+
+	/* performs functions on roll sets */
+func: 	roll															<< $$ = $1 >>
+	|   	'{' list '}'											<< $$ = setres($1) >>
+	|			func F_ADD selector fquant				<< $$ = addFunc($2, $4, $3, $1) >>
+	|			func F_SUB selector								<< $$ = subFunc($2,  1, $3,	$1) >>
+	|			func F_MOD selector fquant				<< $$ = modFunc($2, $4, $3, $1, NULL) >>
+	|			func F_MOD selector 'if' COND fquant
+																					<< $$ = modFunc($2, $6, $3, $1, $6) >>
+
+selector:
+	|			squant SSELECT										<< select($2, $1) >>
+	|			SSELECT														<< select($1,  1) >>
+	|			squant NUM												<< select($2, $1) >>
+	|			NUM																<< select($1,  1) >>
+	|			PSELECT														<< select($1, NULL) >>
+	|			NUM 's'														<< select($1, NULL) >>
+
+squant: NUM																<< $$ = find($2, $1) >> /* only singulars */
+	|			SQUANT 														<< $$ = find($2, $1) >> /* only singulars */
+	|			SSELECT														<< $$ = find($1,  1) >>
+
+fquant:	NUM 'times'												<< $$ = $1 >>
+	|			FQUANT														<< $$ = $1 >>
+	|																				<< $$ =  1 >>
+
+	/* converts a die roll into */
+roll: 	ndie															<< natroll($1) >>
+	|			sdie															<< setroll($1) >>
+
+	/* definition of a die with standard faces */
+ndie: 	DNUM 'd' NUM											<< natdie($1,  1, $3) >>
+	|   	DNUM 'd' '[' nnum RANGE nnum ']'	<< natdie($1, $4, $6) >>
+	|   	'd' NUM														<< natdie( 1,  1, $2) >>
+	|   	'd' '[' nnum RANGE nnum ']'				<< natdie( 1, $3, $5) >>
+
+	/* definition of a die with enumerated faces */
+sdie: 	DNUM 'd' '{' list '}'							<< setdie($1, $4) >>
+	|   	'd' '{' list '}'									<< setdie( 1, $3) >>
+
+	/* create a list of integers */
+list: 	nnum															<< $$ = val($1, NULL) >>
+	|			nnum ',' list											<< $$ = val($1, $3) >>
+
+	/* optionally negative number */
+nnum:		NUM																<< $$ = $1 >>
+	|			'-' NUM														<< $$ = - $1 >>
+
+	/* performs top-level actions */
+stmt:		stmt math EOL											<<  >>
+	|   	stmt IDENT ':' math EOL						<<  >>
+	|   	stmt error EOL										<<  >>
+	|   	stmt EOL													<<  >>
+	|																				<<  >>
+
+	/* Definitions of important terminals */
+F_ADD:		append
+
+F_SUB:		drop
+	|				count
+	|				choose
+
+F_MOD:		reroll
+
+COND:			lower
+	|				higher
+
+SSELECT:	highest
+	| 			lowest
+	| 			random
+
+PSELECT:	unique
+
+FQUANT:		once
+	|				twice
+	|				thrice
+
+SQUANT:		one
+	|				two
+	|				three
+	|				four
+	|				five
+
+operators 	: '+' # add roll result
+						| '-' # subtract roll result
+						| '*' # multiply roll result
+						| '//' # integer divide roll result
+						| '%' # modulo roll result
+						| '^' # exponentiate result
+						| '&' # element-wise intersection of dice set (eliminate duplicates)
+						| '|' # element-wise union of dice set (eliminate duplicates)
+						| '&&' # set-wise intersection of dice set (factor duplicates)
+						| '||' # set-wise union of dice set (keep duplicates)
+						| '='  # equality check roll result ([0] or [1] result)
+						| '!=' # inequality check roll result ([0] or [1] result)
+						| '>'  # greater than check roll result ([0] or [1] result)
+						| '<'  # lesser than check roll result ([0] or [1] result)
+						| '>=' # greater than or equal to check roll result ([0] or [1] result)
+						| '<=' # lesser than or equal to roll result ([0] or [1] result)
+
+precidence:
+	lo	=, !=, >, <, >=, <=
+			+, -
+			*, //, %
+			^
+			&&, ||
+	hi	&, |
+
+comments:		block style with '\'
