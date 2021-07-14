@@ -33,6 +33,7 @@ math:		math '+' math 							{}
 	|			math '^' math								{}
 	|			math CMP math								{}
 	|			'-' math			%prec UMINUS	{}
+	|			'(' math ')'								{}
 	|			NUM													{}
 	|			IDENT												{}
 	|			set													{}
