@@ -1,8 +1,7 @@
 
-
 #include <stdarg.h> /* needed for yyerror */
 
-#include "dei.tab.h"
+#include "parser.tab.h"
 
 #include "deimain.h"
 

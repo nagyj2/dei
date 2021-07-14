@@ -1,22 +1,13 @@
-# Executables
-dei
-deid
 
 # Generated Files
-dei.c
-dei.lex.*
-dei.tab.*
-dei.dSYM/**/*
-deid.dSYM/**/*
-*.h.gch
-*.o
+bin/**/*
+obj/**/*
+src/lexer.lex.c
+src/parser.tab.c
+inc/parser.tab.h
 
 # Debug Files
-dei.log
-dei.output
-R
 lldebug
-
 
 # MacOS Files
 .DS_STORE

@@ -1,3 +1,5 @@
+# Modified from: https://stackoverflow.com/questions/5178125/how-to-place-object-files-in-separate-subdirectory
+
 #Compiler and Linker
 CC          := gcc-11
 
@@ -25,7 +27,7 @@ INC         := -I$(INCDIR)
 INCDEP      := -I$(INCDIR)
 
 BISONFLAGS 	:= -t
-FLEXFLAGS 	:= -t
+FLEXFLAGS 	:=
 
 #OS Specific flags
 UNAME := $(shell uname)
@@ -42,17 +44,19 @@ DEPEXT      := d
 SOURCES     := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS     := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
 
-BISON_H			:= $(addprefix $(INCDIR), $($(BISON):y=tab.h))
-BISON_C			:= $(addprefix $(SRCDIR), $($(BISON):y=tab.c))
+BISON_H			:= $(addprefix $(INCDIR)/, $(BISON:y=tab.h))
+BISON_C			:= $(addprefix $(SRCDIR)/, $(basename $(BISON)))
+
+FLEX_C			:= $(addprefix $(SRCDIR)/, $(FLEX:l=lex.c))
 
 #Defauilt Make
-all: bison #flex $(TARGET)
+all: bison flex $(TARGET)
 
 bison: $(addprefix $(SRCDIR)/, $(BISON))
 	bison $(BISONFLAGS) -b $(BISON_C) --defines=$(BISON_H) $^
-	@mv $(addprefix $(INCDIR), $(BISON))
 
-
+flex: $(addprefix $(SRCDIR)/, $(FLEX))
+	flex $(FLEXFLAGS) -o $(FLEX_C) $^
 
 #Remake
 remake: cleaner all

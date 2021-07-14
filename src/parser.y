@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#include "dei.tab.h"
+#include "parser.tab.h"
 
 #include "deimain.h"
 
