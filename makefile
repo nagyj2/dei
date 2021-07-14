@@ -10,33 +10,34 @@ else #($(UNAME), Darwin)
 OSS := -ll -D OSX
 endif
 
-BISONFLAGS := -t -v
+BISONFLAGS := -t
 
+BISONOUT = dei # prefix
 FLEXOUT = dei.lex.c
 
-OBJS = deimain.o struct.o symboltable.o evaluation.o util.o
+OBJS = #deimain.o struct.o symboltable.o evaluation.o util.o
 
 EXEC = dei
 DEXEC = dei
 
-exec: parser lexer release_exec
+exec: bison flex release_exec
+
 debug: CFLAGS += -D DEBUG
 debug: BISONFLAGS += -v
-debug:	parser lexer debug_exec
+debug: bison flex debug_exec
 
-parser: dei.y
-	bison $(BISONFLAGS) -d $^
+bison: parser.y
+	bison $(BISONFLAGS) -b $(BISONOUT) -d $^
 
-lexer: dei.l
+flex: lexer.l
 	flex -o $(FLEXOUT) $<
 
-
 # Release
-release_exec: dei.tab.c $(FLEXOUT) $(OBJS)
+release_exec: dei.tab.c $(FLEXOUT)
 	$(CC) $(CFLAGS) $(OSS) -O2 -o $(EXEC) $?
 
 # Debug Options
-debug_exec: dei.tab.c $(FLEXOUT) $(MAIN) $(OBJS)
+debug_exec: dei.tab.c $(FLEXOUT)
 	@$(CC) $(CFLAGS) $(OSS) -o $(DEXEC) $?
 
 # Create object files
