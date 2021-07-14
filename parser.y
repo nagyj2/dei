@@ -1,16 +1,12 @@
+
 %{
+
 #include <stdlib.h>
-#include <stdio.h> /* needed for FILE */
-#include <stdarg.h> /* needed for yyerror */
 
 #include "dei.tab.h"
 
-extern int yydebug;         /* debug flag */
-extern FILE *yyin;          /* input stream */
-extern int yylineno; /* current lexer line */
-extern void yyerror(char *s, ...);
-extern int yyparse(void);
-extern int yylex(void);
+#include "deimain.h"
+
 %}
 
 %token /*int*/ NUM DNUM FQUANT SQUANT
@@ -105,26 +101,3 @@ stmt:		stmt math EOL								{ printf("parsed!\n> "); }
 	;
 
 %%
-
-int main(int argc, char **argv){
-
-  if (argc > 1){
-    if (!(yyin = fopen(argv[1], "r"))){
-      perror(argv[1]);
-      return 1;
-    }
-  }else{
-    printf("> ");
-  }
-
-  return yyparse();
-}
-
-void yyerror(char *s, ...){
-  va_list ap;
-  va_start(ap, s);
-
-  fprintf(stderr, "%d: error : ", yylineno);
-  vfprintf(stderr, s, ap);
-  fprintf(stderr, "\n");
-}

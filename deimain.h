@@ -1,28 +1,22 @@
-/* dei MAIN */
-/* This file contains:
- * - Main function
- * - Lexer utility functions
- * - Logging capabilities
- * - essential lexer functions
- */
 
 #ifndef DEIMAIN_H_INCLUDED
 #define DEIMAIN_H_INCLUDED
 
 #include <stdlib.h>
 #include <stdio.h> /* needed for FILE */
-#include <assert.h> /* for assert */
-#include <time.h> /* needed for time() */
 
-#include "defines.h"
-//#include "symboltable.h"
-//#include "util.h"
+extern int yydebug;         /* debug flag */
+extern FILE *yyin;          /* input stream */
+extern int yylineno; /* current lexer line */
+extern void yyrestart(FILE*);
 
-/* start the parsing process */
-int yyparse(void);
-int yylex(void);
+void yyerror(char *s, ...);
+int yyparse();
+int yylex();
 
-/* main function */
+/* entry function */
 int main(int argc, char **argv);
+/* lexer and parser error function */
+void yyerror(char *s, ...);
 
 #endif /* DEIMAIN_H_INCLUDED */

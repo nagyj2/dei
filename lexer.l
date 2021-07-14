@@ -1,13 +1,10 @@
 %option noyywrap nodefault yylineno
 %{
+
 #include "dei.tab.h"
 
-extern int yydebug;         /* debug flag */
-//extern FILE *yyin;          /* input stream */
-extern int yylineno; /* current lexer line */
-extern void yyerror(char *s, ...);
-extern int yyparse(void);
-extern int yylex(void);
+#include "deimain.h"
+
 %}
 
 	/* consume until an end is met */
@@ -108,6 +105,7 @@ extern int yylex(void);
 
 [ \t]     { /* ignore whitespace */ }
 "\n"      { return EOL; }
+<<EOF>>		{ return 0; }
 
 .         { yyerror("unknown token: %c\n", *yytext); }
 
