@@ -83,6 +83,10 @@ stmt:		stmt math EOL											<<  >>
 	|   	stmt IDENT ':' math EOL						<<  >>
 	|   	stmt error EOL										<<  >>
 	|   	stmt EOL													<<  >>
+	|			'@' stmt math EOL									<<  >>
+	|   	'@' stmt IDENT ':' math EOL				<<  >>
+	|   	'@' stmt error EOL								<<  >>
+	|   	'@' stmt EOL											<<  >>
 	|																				<<  >>
 
 	/* Definitions of important terminals */

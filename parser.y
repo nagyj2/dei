@@ -94,7 +94,13 @@ nnum:		NUM													{}
 stmt:		stmt math EOL								{ printf("parsed!\n> "); }
 	|			stmt IDENT ':' math EOL			{ printf("saved!\n> "); }
 	|			stmt error EOL							{ printf("error!\n> "); }
-	|			stmt EXIT EOL								{ printf("closing!\n"); exit(0) }
+	|			stmt EXIT EOL								{ printf("closing!\n"); exit(0); }
+	|			stmt EOL										{ printf("> "); }
+	|			stmt '@' math EOL						{ /*printf(".");*/ }
+	|			stmt '@' IDENT ':' math EOL	{ /*printf(":");*/ }
+	|			stmt '@' error EOL					{ printf("silent error!\n") }
+	|			stmt '@' EXIT EOL						{ exit(0); }
+	|			stmt '@' EOL								{  }
 	|																	{  }
 	;
 

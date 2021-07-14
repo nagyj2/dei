@@ -40,6 +40,7 @@ extern int yylex(void);
 "d"       |
 "s"       |
 ";"				|
+"@"				| /* mute */
 ":"       { return yytext[0]; }
 
 	/* special value matches */
