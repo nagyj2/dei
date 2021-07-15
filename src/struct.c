@@ -7,6 +7,9 @@
 
 #include "struct.h"
 
+/* ===== DATAS ===== */
+
+struct symbol symtab[NHASH];		/* symbol table itself */
 
 /* === FUNCTIONS === */
 
@@ -34,12 +37,15 @@ struct value *dupValue(struct value *base){
 		head = newValue(t->i, head);
 	}
 
+	reverseValue( &head );
+
 	#ifdef DEBUG
 	struct value *h = NULL;
 	for(t = base, h = head; t || h; t = t->next, h = h->next){
-		assert(t == h);
+		assert(t->i == h->i);
 	}
 	#endif
+
 	return head;
 }
 
@@ -47,7 +53,7 @@ struct value *dupValue(struct value *base){
 struct value *backValue(struct value *base){
 	struct value *t = NULL;
 
-	for(t = base; t; t = t->next){
+	for(t = base; t->next; t = t->next){
 	}
 
 	#ifdef DEBUG
@@ -74,7 +80,7 @@ struct value *popValue(int key, struct value **base){
 	struct value *t = NULL, *prev = NULL;
 
 	#ifdef DEBUG
-	int size = countValue(base);
+	int size = countValue(*base);
 	#endif
 
 	for(t = *base; t; t = t->next){
@@ -82,9 +88,10 @@ struct value *popValue(int key, struct value **base){
 			if (prev)	prev->next 	= t->next; /* skip over current */
 			else			*base 			= t->next; /* set front to next */
 
+			t->next = NULL; /* erase link */
 			#ifdef DEBUG
 			assert(!hasValueExact(t, *base));
-			assert(size == countValue(base) - 1);
+			assert(size - 1 == countValue(*base));
 			#endif
 			return t;
 		}
@@ -93,8 +100,8 @@ struct value *popValue(int key, struct value **base){
 	}
 
 	#ifdef DEBUG
-	assert(!hasValue(key, base));
-	assert(size == countValue(base));
+	assert(!hasValue(key, *base));
+	assert(size == countValue(*base));
 	#endif
 	return NULL;
 }
@@ -104,7 +111,7 @@ struct value *removeValue(struct value *key, struct value **base){
 	struct value *t = NULL, *prev = NULL;
 
 	#ifdef DEBUG
-	int size = countValue(base);
+	int size = countValue(*base);
 	assert(countValue(key) == 1);
 	#endif
 
@@ -113,9 +120,10 @@ struct value *removeValue(struct value *key, struct value **base){
 			if (prev)	prev->next 	= t->next; /* skip over current */
 			else			*base 			= t->next; /* set front to next */
 
+			t->next = NULL; /* erase link */
 			#ifdef DEBUG
 			assert(!hasValueExact(t, *base));
-			assert(size == countValue(base) - 1);
+			assert(size - 1 == countValue(*base));
 			#endif
 			return t;
 		}
@@ -124,10 +132,24 @@ struct value *removeValue(struct value *key, struct value **base){
 	}
 
 	#ifdef DEBUG
-	assert(!hasValueExact(key, base));
-	assert(size == countValue(base));
+	assert(!hasValueExact(key, *base));
+	assert(size == countValue(*base));
 	#endif
 	return NULL;
+}
+
+/* invert the order of a value chain */
+void reverseValue(struct value **base){
+	struct value *prev = NULL, *curr = *base, *next = NULL;
+
+	while(curr){
+		next = curr->next;
+		curr->next = prev;
+		prev = curr;
+		curr = next;
+	}
+	*base = prev;
+
 }
 
 
@@ -136,23 +158,27 @@ struct value *copyValue(struct value *base){
 	return newValue(base->i, NULL);
 }
 
+/* create a value chain from min and max */
+struct value *newValueChain(int min, int max){
+	if (min > max) printf("warning: min > max. empty value\n");
+	struct value *val1 = NULL;
+	for (int i = max; i >= min; i--)
+		val1 = newValue(i, val1);
+	return val1;
+}
+
 
 /* return number of elements in base */
 int countValue(struct value *base){
-		struct value *t = NULL;
-		int c = 0;
+	struct value *t = NULL;
+	int c = 0;
 
-		#ifdef DEBUG
-		int size = countValue(base);
-		#endif
+	for(t = base; t; t = t->next)	c++;
 
-		for(t = base; t; t = t->next)	c++;
-
-		#ifdef DEBUG
-		assert(size == countValue(base));
-		assert(c >= 0);
-		#endif
-		return c;
+	#ifdef DEBUG
+	assert(c >= 0);
+	#endif
+	return c;
 }
 
 /* return sum elements of base  */
@@ -177,7 +203,7 @@ bool hasValueExact(struct value *key, struct value *base){
 		struct value *t = NULL;
 
 		#ifdef DEBUG
-		assert(countValue(key) == 1);
+		//assert(countValue(key) == 1); /* disallow chains */
 		#endif
 
 		for(t = base; t; t = t->next){
@@ -260,4 +286,15 @@ void freeValue( struct value **val ){
   }
 
 	assert(!*val);
+}
+
+
+/* ======= DEBUGGING ======= */
+
+/* iteratively print a value chain */
+void printValue(struct value *base){
+	struct value *t;
+	for (t = base; t; t = t->next)
+		printf("%d ",t->i);
+	printf("\n");
 }

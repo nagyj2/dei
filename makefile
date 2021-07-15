@@ -13,6 +13,7 @@ SRCDIR      := ./src
 INCDIR      := ./inc
 BUILDDIR    := ./obj
 TARGETDIR   := ./bin
+GCHDIR			:= ./gch
 SRCEXT      := c
 OBJEXT      := o
 
@@ -22,7 +23,7 @@ BISON				:= parser.y
 #Flags, Libraries and Includes
 CFLAGS      := -Wall -g -std=c11
 LIB         := -L/usr/local/Cellar/check/0.15.2/lib
-INC         := -I$(INCDIR)
+INC         := -I$(INCDIR) -I$(GCHDIR)
 INCDEP      := -I$(INCDIR)
 
 BISONFLAGS 	:= -t
@@ -54,10 +55,10 @@ BISON_C			:= $(addprefix $(SRCDIR)/, $(basename $(BISON)))
 FLEX_C			:= $(addprefix $(SRCDIR)/, $(FLEX:l=lex.c))
 
 #Defauilt Make
-all: bison flex $(TARGET)
-
 debug: CFLAGS += -D DEBUG
 debug: all
+
+all: bison flex $(TARGET)
 
 bison: $(addprefix $(SRCDIR)/, $(BISON))
 	bison $(BISONFLAGS) -b $(BISON_C) --defines=$(BISON_H) $^
@@ -73,6 +74,7 @@ remake: cleaner all
 #Clean only Objecst
 clean:
 	@$(RM) -rf $(BUILDDIR)
+	@$(RM) -rf $(GCHDIR)
 
 #Full Clean, Objects and Binaries
 cleaner: clean
@@ -99,4 +101,4 @@ $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
 	@rm -f $(BUILDDIR)/$*.$(DEPEXT).tmp
 
 #Non-File Targets
-.PHONY: all remake clean cleaner resources test
+.PHONY: all remake clean cleaner test

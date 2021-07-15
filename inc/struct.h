@@ -24,9 +24,6 @@ struct symbol {       					/*  */
  struct ast *func;    					/*  */
 };
 
-struct symbol symtab[NHASH];		/* symbol table itself */
-
-
 /* === FUNCTIONS === */
 
 /* = Value = */
@@ -39,13 +36,17 @@ struct value *dupValue(struct value *base);
 struct value *backValue(struct value *base);
 /* return the first struct containing key  */
 struct value *findValue(int key, struct value *base);
-/* remove key IF it is in base and return it */
+/* remove first instance of value key and return it */
 struct value *popValue(int key, struct value **base);
 /* remove key IF it is in base and return it */
 struct value *removeValue(struct value *key, struct value **base);
+/* invert the order of a value chain */
+void reverseValue(struct value **base);
 
 /* copy a single value */
 struct value *copyValue(struct value *base);
+/* create a value chain from min and max */
+struct value *newValueChain(int min, int max);
 
 /* return number of elements in base */
 int countValue(struct value *base);
@@ -71,5 +72,11 @@ void freeValue( struct value **val );
 
 /* free the entire symbol table */
 //void freeTable( struct symbol *table[] );
+
+
+/* ======= DEBUGGING ======= */
+
+/* iteratively print a value chain */
+void printValue(struct value *base);
 
 #endif /* STRUCT_H_INCLUDED */
