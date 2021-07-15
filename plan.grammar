@@ -34,24 +34,33 @@ strip:	func															<< strip($1) >>
 	/* performs functions on roll sets */
 func: 	roll															<< $$ = $1 >>
 	|   	'{' list '}'											<< $$ = setres($1) >>
-	|			func F_ADD selector fquant				<< $$ = addFunc($2, $4, $3, $1) >>
-	|			func F_SUB selector								<< $$ = subFunc($2,  1, $3,	$1) >>
-	|			func F_MOD selector fquant				<< $$ = modFunc($2, $4, $3, $1, NULL) >>
-	|			func F_MOD selector 'if' COND fquant
-																					<< $$ = modFunc($2, $6, $3, $1, $6) >>
+	|			func F_ADD a_args									<< $$ = ast($2, $1, $2) >>
+	|			func F_SUB s_args									<< $$ = ast($2, $1, $2) >>
+	|			func F_MOD m_args									<< $$ = ast($2, $1, $2) >>
 
-selector:
-	|			squant SSELECT										<< select($2, $1) >>
-	|			SSELECT														<< select($1,  1) >>
-	|			squant NUM												<< select($2, $1) >>
-	|			NUM																<< select($1,  1) >>
-	|			PSELECT														<< select($1, NULL) >>
-	|			NUM 's'														<< select($1, NULL) >>
+a_args:	squant ssel fquant 								<< $$ = fargs($3, $2, $1, NULL) >>
+	|			psel fquant												<< $$ = fargs($2, $1,  1, NULL) >>
 
-squant: NUM																<< $$ = find($2, $1) >> /* only singulars */
-	|			SQUANT 														<< $$ = find($2, $1) >> /* only singulars */
-	|			SSELECT														<< $$ = find($1,  1) >>
+s_args:	squant ssel 											<< $$ = fargs( 1, $2, $1, NULL) >>
+	|			psel 															<< $$ = fargs( 1, $1,  1, NULL) >>
 
+m_args:	squant select fquant							<< $$ = fargs($3, $2, $1, NULL) >>
+	|			squant select 'if' COND fquant		<< $$ = fargs($5, $2, $1, $4) >>
+
+	/* single select */
+ssel:		SSELECT														<< $$ = $1 >>
+	|			NUM																<< $$ = $1 >>
+
+	/* multi select */
+psel:		PSELECT														<< $$ = $1 >>
+	|			NUM 's'														<< $$ = $1 >>
+
+	/* selection quantifier */
+squant: NUM																<< $$ = $1 >>
+	|			SQUANT 														<< $$ = $1 >>
+	|																				<< $$ =  1 >>
+
+	/* function quantifier */
 fquant:	NUM 'times'												<< $$ = $1 >>
 	|			FQUANT														<< $$ = $1 >>
 	|																				<< $$ =  1 >>
