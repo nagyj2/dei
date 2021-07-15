@@ -58,6 +58,9 @@ FLEX_C			:= $(addprefix $(SRCDIR)/, $(FLEX:l=lex.c))
 debug: CFLAGS += -D DEBUG
 debug: all
 
+tests: CFLAGS += -D DEBUG -D TESTS
+tests: clean all
+
 all: bison flex $(TARGET)
 
 bison: $(addprefix $(SRCDIR)/, $(BISON))
@@ -65,8 +68,6 @@ bison: $(addprefix $(SRCDIR)/, $(BISON))
 
 flex: $(addprefix $(SRCDIR)/, $(FLEX))
 	flex $(FLEXFLAGS) -o $(FLEX_C) $^
-
-tests: $(TESTMAIN)
 
 #Remake
 remake: cleaner all
