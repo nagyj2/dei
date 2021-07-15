@@ -14,14 +14,14 @@
 
 /* === DATA === */
 
-struct value {									/*  */
-	int i;												/*  */
-	struct value *next;						/*  */
+struct value {									/* An integer value chain */
+	int i;												/* The value stored at the current node */
+	struct value *next;						/* The next element in the chain */
 };
 
-struct symbol {       					/*  */
- char *name;          					/*  */
- struct ast *func;    					/*  */
+struct symbol {       					/* A symbol reference */
+ char *name;          					/* The name of the symbol */
+ struct ast *func;    					/* The meaning of the symbol */
 };
 
 /* === FUNCTIONS === */
