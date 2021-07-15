@@ -21,7 +21,7 @@ BISON				:= parser.y
 
 #Flags, Libraries and Includes
 CFLAGS      := -Wall -g -std=c11
-LIB         :=
+LIB         := -L/usr/local/Cellar/check/0.15.2/lib
 INC         := -I$(INCDIR)
 INCDEP      := -I$(INCDIR)
 
@@ -45,7 +45,7 @@ DEPEXT      := d
 SOURCES     := $(shell find $(SRCDIR) -type f ! \( -name "*.l" -o -name "*.y" -o -name "check_*" \) )
 OBJECTS     := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
 
-TEST_SOURCES:= $(shell find $(SRCDIR) -type f -name check_*.$(SRCEXT))
+TEST_SOURCES:= $(shell find $(SRCDIR) -type f ! \( -name "*.l" -o -name "*.y" -o -name "deimain.c" \))
 TEST_OBJECTS:= $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(TEST_SOURCES:.$(SRCEXT)=.$(OBJEXT)))
 
 BISON_H			:= $(addprefix $(INCDIR)/, $(BISON:y=tab.h))
@@ -55,6 +55,9 @@ FLEX_C			:= $(addprefix $(SRCDIR)/, $(FLEX:l=lex.c))
 
 #Defauilt Make
 all: bison flex $(TARGET)
+
+debug: CFLAGS += -D DEBUG
+debug: all
 
 bison: $(addprefix $(SRCDIR)/, $(BISON))
 	bison $(BISONFLAGS) -b $(BISON_C) --defines=$(BISON_H) $^
@@ -97,73 +100,3 @@ $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
 
 #Non-File Targets
 .PHONY: all remake clean cleaner resources test
-
-#
-# CC = gcc-11
-# CFLAGS := -Wall -g -std=c11
-#
-# #OS Specific flags
-# UNAME := $(shell uname)
-# ifeq ($(UNAME), Linux)
-# OSS := -lfl -D LINUX
-# else #($(UNAME), Darwin)
-# OSS := -ll -D OSX
-# endif
-#
-# DIR_OBJ += ./bin/
-#
-# DIR_SRC += ./src/
-#
-# DIR_INC += -I./inc/
-# DIR_INC += $(addprefix -I, $(DIR_SRC))
-#
-# # Find all .c files in DIR_SRC
-# SRC_C += $(wildcard $(addsuffix /*.c, $(DIR_SRC)))
-# # Require .o from all .c
-# OBJS += $(patsubst %.c, %.c, $(SRC_C))
-#
-# BISONFLAGS := -t
-# BISONOUT = dei # prefix
-#
-# FLEXFLAGS :=
-# FLEXOUT = dei.lex.c
-#
-#
-#
-# OBJS = deimain.o struct.o #symboltable.o evaluation.o util.o
-#
-# NAME = dei
-#
-#
-# all: print $(OBJS)
-#
-# print:
-# 	#echo $(OBJS)
-#
-# #exec: bison flex debug_exec
-#
-# #debug: CFLAGS += -D DEBUG
-# #debug: BISONFLAGS += -v
-# #debug: FLEXFLAGS += -d
-# #debug: bison flex debug_exec
-#
-# #bison: parser.y
-# #	bison $(BISONFLAGS) -b $(BISONOUT) -d $^
-#
-# #flex: lexer.l
-# #	flex $(FLEXFLAGS) -o $(FLEXOUT) $<
-#
-# # Release
-# #release_exec: dei.tab.c $(FLEXOUT) $(OBJS)
-# #	$(CC) $(CFLAGS) $(OSS) -O2 -o $(EXEC) $?
-#
-# # Debug Options
-# #debug_exec: dei.tab.c $(FLEXOUT) $(OBJS)
-# #	@$(CC) $(CFLAGS) $(OSS) -o $(DEXEC) $?
-#
-# # Create object files
-# $(DIR_OBJ)/%.o: $(DIR_SRC)%.c
-# 	$(CC) $(CFLAG) $(DIR_INC) -c -o $@ $<
-#
-# clean:
-# 	rm -rf $(EXEC) $(DEXEC) dei.output $(EXEC).dSYM $(DEXEC).dSYM dei.tab.c $(FLEXOUT) $(OBJS) *.h.gch
