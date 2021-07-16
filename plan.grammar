@@ -14,38 +14,36 @@ math: 	math '+' math											<< $$ = $1 + $3 >>
 	|   	math '>=' math										<< $$ = ($1 >= $3) ? 1 : 0 >>
 	|   	math '<=' math										<< $$ = ($1 <= $3) ? 1 : 0 >>
 	|   	'-' math       		%prec UMINUS		<< $$ = - $1 >>
+	|			'(' math ')'											<< $$ = $2 >>
 	|   	NUM       												<< $$ = $1 >>
 	|   	IDENT															<< $$ = lookup($1) >>
-	|   	sum                            		<< $$ = $1 >>
-
-  /* converts a roll result to an integer */
-sum:  	set																<< $$ = ∑ $1 >>
+	|   	set                            		<< $$ = S($1) >>
 
   /* performs set math on roll results */
 set:  	set '&' set												<< $$ = set($1 ∩ $3) >>
 	|   	set '|' set												<< $$ = set($1 ∪ $3) >>
 	|   	set '&&' set											<< $$ = $1 ∩ $3 >>
 	|   	set '||' set											<< $$ = $1 ∪ $3 >>
-	|   	strip															<< $$ = $1 >>
-
-	/* removes extra information used by functions */
-strip:	func															<< strip($1) >>
+	|   	'[' set ']'												<< $$ = $2 >>
+	|   	func															<< $$ = Z($1) >>
 
 	/* performs functions on roll sets */
-func: 	roll															<< $$ = $1 >>
-	|   	'{' list '}'											<< $$ = setres($1) >>
-	|			func F_ADD a_args									<< $$ = ast($2, $1, $2) >>
-	|			func F_SUB s_args									<< $$ = ast($2, $1, $2) >>
-	|			func F_MOD m_args									<< $$ = ast($2, $1, $2) >>
+func: 	die																<< $$ = R($1) >>
+	|   	'{' list '}'											<< $$ = Q($1) >>
+	|			func F_ADD a_args									<< $$ = F($2, $1, $2) >>
+	|			func F_SUB s_args									<< $$ = F($2, $1, $2) >>
+	|			func F_MOD m_args									<< $$ = F($2, $1, $2) >>
 
-a_args:	squant ssel fquant 								<< $$ = fargs($3, $2, $1, NULL) >>
-	|			psel fquant												<< $$ = fargs($2, $1,  1, NULL) >>
+a_args:	squant ssel fquant 								<< $$ = C($3, $2, $1, NULL) >>
+	|			psel fquant												<< $$ = C($2, $1,  1, NULL) >>
 
-s_args:	squant ssel 											<< $$ = fargs( 1, $2, $1, NULL) >>
-	|			psel 															<< $$ = fargs( 1, $1,  1, NULL) >>
+s_args:	squant ssel 											<< $$ = C( 1, $2, $1, NULL) >>
+	|			psel 															<< $$ = C( 1, $1,  1, NULL) >>
 
-m_args:	squant select fquant							<< $$ = fargs($3, $2, $1, NULL) >>
-	|			squant select 'if' COND fquant		<< $$ = fargs($5, $2, $1, $4) >>
+m_args:	squant ssel fquant								<< $$ = C($3, $2, $1, NULL) >>
+	|			squant ssel 'if' COND fquant			<< $$ = C($5, $2, $1, $4) >>
+	|			psel fquant												<< $$ = C($3, $2, $1, NULL) >>
+	|			psel 'if' COND fquant							<< $$ = C($5, $2, $1, $4) >>
 
 	/* single select */
 ssel:		SSELECT														<< $$ = $1 >>
@@ -65,27 +63,21 @@ fquant:	NUM 'times'												<< $$ = $1 >>
 	|			FQUANT														<< $$ = $1 >>
 	|																				<< $$ =  1 >>
 
-	/* converts a die roll into */
-roll: 	ndie															<< natroll($1) >>
-	|			sdie															<< setroll($1) >>
-
 	/* definition of a die with standard faces */
-ndie: 	DNUM 'd' NUM											<< natdie($1,  1, $3) >>
-	|   	DNUM 'd' '[' nnum RANGE nnum ']'	<< natdie($1, $4, $6) >>
-	|   	'd' NUM														<< natdie( 1,  1, $2) >>
-	|   	'd' '[' nnum RANGE nnum ']'				<< natdie( 1, $3, $5) >>
-
-	/* definition of a die with enumerated faces */
-sdie: 	DNUM 'd' '{' list '}'							<< setdie($1, $4) >>
-	|   	'd' '{' list '}'									<< setdie( 1, $3) >>
+die: 		DNUM 'd' NUM											<< D($1,  1, $3) >>
+	|   	DNUM 'd' '{' nnum RANGE nnum '}'	<< D($1, $4, $6) >>
+	|   	'd' NUM														<< D( 1,  1, $2) >>
+	|   	'd' '{' nnum RANGE nnum '}'				<< D( 1, $3, $5) >>
+ 	|			DNUM 'd' '{' list '}'							<< d($1, $4) >>
+	|   	'd' '{' list '}'									<< d( 1, $3) >>
 
 	/* create a list of integers */
 list: 	nnum															<< $$ = val($1, NULL) >>
 	|			nnum ',' list											<< $$ = val($1, $3) >>
 
 	/* optionally negative number */
-nnum:		NUM																<< $$ = $1 >>
-	|			'-' NUM														<< $$ = - $1 >>
+nnum:		NUM																<< $$ = I($1) >>
+	|			'-' NUM														<< $$ = M($1,NULL) >>
 
 	/* performs top-level actions */
 stmt:		stmt math EOL											<<  >>

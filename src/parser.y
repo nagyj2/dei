@@ -6,15 +6,29 @@
 #include "parser.tab.h"
 
 #include "deimain.h"
+#include "struct.h"
+#include "ast.h"
 
 %}
 
-%token /*int*/ NUM DNUM FQUANT SQUANT
-%token /*fn*/ COND SSELECT PSELECT F_ADD F_SUB F_MOD CMP
-%token /*str*/ IDENT
+%union {
+	struct ast *a;		/* AST nodes */
+	struct symbol *s;	/* identifier names */
+	struct value *v;	/* value chain building */
+	int i;						/* straight number */
+	int fn;						/* enum function */
+}
+
+%token <i> NUM DNUM FQUANT SQUANT SSELECT PSELECT
+%token <fn> COND F_ADD F_SUB F_MOD CMP
+%token <s> IDENT
 %token UNION INTER DIV RANGE IF XQUANT EXIT EOL
 
-%start stmt
+%type <i> nnum fquant ssel
+%type <a> stmt math set func die a_args s_args m_args
+%type <v> list
+
+%start line
 
 %nonassoc CMP
 %left '+' '-'
@@ -25,80 +39,124 @@
 
 %%
 
-math:		math '+' math 							{}
-	|			math '-' math								{}
-	|			math '*' math								{}
-	|			math DIV math								{}
-	|			math '%' math								{}
-	|			math '^' math								{}
-	|			math CMP math								{}
-	|			'-' math			%prec UMINUS	{}
-	|			'(' math ')'								{}
-	|			NUM													{}
-	|			IDENT												{}
-	|			set													{}
+math:		math '+' math 							{ $$ = newAst('+', $1, $3); }
+	|			math '-' math								{ $$ = newAst('-', $1, $3); }
+	|			math '*' math								{ $$ = newAst('*', $1, $3); }
+	|			math DIV math								{ $$ = newAst(DIV, $1, $3); }
+	|			math '%' math								{ $$ = newAst('%', $1, $3); }
+	|			math '^' math								{ $$ = newAst('^', $1, $3); }
+	|			math CMP math								{ $$ = newCmp($2, $1, $3); }
+	|			'-' math			%prec UMINUS	{ $$ = newAst('M', $2, NULL); }
+	|			'(' math ')'								{ $$ = $2; }
+	|			NUM													{ $$ = newNatint($1); }
+	|			IDENT												{ $$ = newSymcall($1); }
+	|			set													{ $$ = newAst('S', $1, NULL); }
 	;
 
-set:		set '&' set									{}
-	|			set '|' set									{}
-	|			set INTER set								{}
-	|			set UNION set								{}
-	|			func												{}
+set:		set '&' set									{ $$ = newAst('&', $1, $3); }
+	|			set '|' set									{ $$ = newAst('|', $1, $3); }
+	|			set INTER set								{ $$ = newAst(INTER, $1, $3); }
+	|			set UNION set								{ $$ = newAst(UNION, $1, $3); }
+	|			'[' set ']'									{ $$ = $2 }
+	|			func												{ $$ = newAst('Z', $1, NULL); }
 	;
 
-func:		ndie												{}
-	|			sdie												{}
-	|			'{' list '}'								{}
-	|			func F_ADD selector fquant	{}
-	|			func F_SUB selector					{}
-	|			func F_MOD selector fquant	{}
-	|			func F_MOD selector IF COND fquant	{}
+func:		die													{ $$ = newAst('R', $1, NULL); }
+	|			'{' list '}'								{ $$ = newSetres($2); }
+	|			func F_ADD a_args						{ $$ = newFunc($2, $1, $3); }
+	|			func F_SUB s_args						{ $$ = newFunc($2, $1, $3); }
+	|			func F_MOD m_args						{ $$ = newFunc($2, $1, $3); }
 	;
 
-selector:	NUM SSELECT								{}
-	|				NUM NUM										{}
-	|				SQUANT SSELECT						{}
-	|				SQUANT NUM								{}
-	|				SSELECT										{} /* SQUANT = 1 for this and below */
-	|				NUM												{}
-	|				PSELECT										{}
-	|				NUM 's'										{}
+a_args:		SQUANT ssel fquant				{ $$ = newFargs($3, $2, $1, C_none); }
+	|				NUM ssel fquant						{ $$ = newFargs($3, $2, $1, C_none); }
+	|				ssel fquant								{ $$ = newFargs($2, $1,  1, C_none); }
+	|				PSELECT fquant						{ $$ = newFargs($2, $1,  1, C_none); }
+	|				NUM 's' fquant						{ $$ = newFargs($3, $1,  1, C_none); }
 	;
 
-fquant:		NUM	XQUANT								{}
-	|				FQUANT										{}
-	|				      										{}
+s_args:		SQUANT ssel								{ $$ = newFargs( 1, $2, $1, C_none); }
+	|				NUM ssel									{ $$ = newFargs( 1, $2, $1, C_none); }
+	|				ssel											{ $$ = newFargs( 1, $1,  1, C_none); }
+	|				PSELECT										{ $$ = newFargs( 1, $1,  1, C_none); }
+	|				NUM 's'										{ $$ = newFargs( 1, $1,  1, C_none); }
 	;
 
-ndie:		DNUM 'd' NUM								{}
-	|			DNUM 'd' '[' nnum RANGE nnum']'	{}
-	|			'd' NUM											{}
-	|			'd' '[' nnum RANGE nnum']'	{}
+m_args:		SQUANT ssel fquant 					{ $$ = newFargs($3, $2, $1, C_none); }
+	|				NUM ssel fquant 						{ $$ = newFargs($3, $2, $1, C_none); }
+	|				ssel fquant 								{ $$ = newFargs($2, $1,  1, C_none); }
+	|				SQUANT ssel IF COND fquant	{ $$ = newFargs($5, $2, $1, $4); }
+	|				NUM ssel IF COND fquant			{ $$ = newFargs($5, $2, $1, $4); }
+	|				ssel IF COND fquant					{ $$ = newFargs($4, $1,  1, $3); }
+	|				PSELECT fquant 							{ $$ = newFargs($2, $1,  1, C_none); }
+	|				NUM 's' fquant 							{ $$ = newFargs($3, $1,  1, C_none); }
+	|				PSELECT IF COND fquant 			{ $$ = newFargs($4, $1,  1, $3); }
+	|				NUM 's' IF COND fquant 			{ $$ = newFargs($5, $1,  1, $4); }
 	;
 
-sdie:		DNUM 'd' '{' list '}'				{}
-	|			'd' '{' list '}'						{}
+ssel: 		SSELECT 									{ $$ = $1; }
+	| 			NUM 											{ $$ = $1; }
 	;
 
-list:		nnum												{}
-	| 		nnum ',' list								{}
+fquant: 	FQUANT 										{ $$ = $1; }
+	| 			NUM XQUANT 								{ $$ = $1; }
+	| 																{ $$ =  1; }
 	;
 
-nnum:		NUM													{}
-	|			'-'	NUM											{}
+die:		DNUM 'd' NUM								{ $$ = newNatdie($1,  1, $3); }
+	|			DNUM 'd' '[' nnum RANGE nnum']'	{ $$ = newNatdie($1, $4, $6); }
+	|			'd' NUM											{ $$ = newNatdie( 1,  1, $2); }
+	|			'd' '[' nnum RANGE nnum']'	{ $$ = newNatdie( 1, $3, $5); }
+	|			DNUM 'd' '{' list '}'				{ $$ = newSetdie($1, $4); }
+	|			'd' '{' list '}'						{ $$ = newSetdie( 1, $3); }
 	;
 
-stmt:		stmt math EOL								{ printf("parsed!\n> "); }
-	|			stmt IDENT ':' math EOL			{ printf("saved!\n> "); }
-	|			stmt error EOL							{ printf("error!\n> "); }
-	|			stmt EXIT EOL								{ printf("closing!\n"); exit(0); }
-	|			stmt EOL										{ printf("> "); }
-	|			stmt '@' math EOL						{ /*printf(".");*/ }
-	|			stmt '@' IDENT ':' math EOL	{ /*printf(":");*/ }
-	|			stmt '@' error EOL					{ printf("silent error!\n") }
-	|			stmt '@' EXIT EOL						{ exit(0); }
-	|			stmt '@' EOL								{  }
+list:		nnum												{ $$ = newValue($1, NULL); }
+	| 		nnum ',' list								{ $$ = newValue($1, $3); }
+	;
+
+nnum:		NUM													{ $$ = $1; }
+	|			'-'	NUM											{ $$ = -$2; }
+	;
+
+stmt:		math 												{ $$ = $1; }
+	| 		IDENT ':' math							{ $$ = newAsgn($1, $3); }
+	;
+
+line: 	line stmt EOL 							{ printAst($2); freeAst(&$2); printf("\nparsed!\n> "); }
+	|			line '@' stmt EOL						{ freeAst(&$3); }
+	|			line error EOL							{ printf("error!\n> "); }
+	|			line '@' error EOL					{  }
+	|			line EOL										{  }
+	| 		line EXIT EOL								{ printf("closing!\n"); exit(0); }
+	| 		line '@' EXIT EOL						{ exit(0); }
+	|			line '@' EOL								{  }
 	|																	{  }
 	;
 
 %%
+
+/*
+line:		line math EOL								{ printAst($2); freeAst(&$2); printf("\nparsed!\n> "); }
+	|			line IDENT ':' math EOL			{ printf("saved!\n> "); }
+	|			line error EOL							{ printf("error!\n> "); }
+	|			line EXIT EOL								{ printf("closing!\n"); exit(0); }
+	|			line EOL										{ printf("> "); }
+	|			line '@' math EOL						{  }
+	|			line '@' IDENT ':' math EOL	{  }
+	|			line '@' error EOL					{ printf("silent error!\n") }
+	|			line '@' EXIT EOL						{ exit(0); }
+	|			line '@' EOL								{  }
+	|																	{  }
+	;
+
+psel: 		PSELECT 									{ $$ = $1; }
+	| 			NUM 's' 									{ $$ = $1; }
+	;
+
+squant: 	SQUANT 										{ $$ = $1; }
+	| 			NUM 											{ $$ = $1; }
+	| 																{ $$ =  1; }
+	;
+
+*/
