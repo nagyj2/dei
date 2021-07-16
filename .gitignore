@@ -6,6 +6,7 @@ src/lexer.lex.c
 src/parser.tab.c
 inc/parser.tab.h
 inc/*.h.gch
+parser.output
 
 # Debug Files
 lldebug

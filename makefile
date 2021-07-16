@@ -43,14 +43,12 @@ endif
 #DO NOT EDIT BELOW THIS LINE
 #---------------------------------------------------------------------------------
 DEPEXT      := d
-SOURCES     := $(shell find $(SRCDIR) -type f ! \( -name "*.l" -o -name "*.y" -o -name "check_*" \) )
+SOURCES     := $(shell find $(SRCDIR) -type f ! \( -name "*.output" -o -name "*.l" -o -name "*.y" \) )
 OBJECTS     := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
-
-TEST_SOURCES:= $(shell find $(SRCDIR) -type f ! \( -name "*.l" -o -name "*.y" -o -name "deimain.c" \))
-TEST_OBJECTS:= $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(TEST_SOURCES:.$(SRCEXT)=.$(OBJEXT)))
 
 BISON_H			:= $(addprefix $(INCDIR)/, $(BISON:y=tab.h))
 BISON_C			:= $(addprefix $(SRCDIR)/, $(basename $(BISON)))
+BISON_OUT		:= $(addsuffix .output, $(addprefix $(BUILDDIR)/,$(basename $(BISON))))
 
 FLEX_C			:= $(addprefix $(SRCDIR)/, $(FLEX:l=lex.c))
 
@@ -59,6 +57,7 @@ debug: CFLAGS += -D DEBUG
 debug: all
 
 tests: CFLAGS += -D DEBUG -D TESTS
+tests: BISONFLAGS += -v
 tests: clean all
 
 all: bison flex $(TARGET)
@@ -102,4 +101,4 @@ $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
 	@rm -f $(BUILDDIR)/$*.$(DEPEXT).tmp
 
 #Non-File Targets
-.PHONY: all remake clean cleaner test
+.PHONY: all remake clean cleaner tests debug
