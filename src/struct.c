@@ -9,7 +9,7 @@
 
 /* ===== DATAS ===== */
 
-struct symbol symtab[NHASH];		/* symbol table itself */
+struct symbol symtab[NHASH];    /* symbol table itself */
 
 /* === FUNCTIONS === */
 
@@ -228,9 +228,8 @@ bool hasValue(int key, struct value *base){
 
 
 /* create a new symbol table */
-void newSymtab(struct symbol result[]){
-
-}
+/*void newSymtab(struct symbol *result[]){
+}*/
 
 /* hash a symbol to produce an index to place in symbol table at */
 static unsigned symhash(char *sym){
@@ -243,7 +242,7 @@ static unsigned symhash(char *sym){
 }
 
 /* return spot in symtab */
-struct symbol *lookup(struct symbol table[], char * sym){
+struct symbol *lookup(char *sym){
 
   struct symbol *sp = &symtab[symhash(sym)%NHASH]; /* symtab position's contents */
   int scount = NHASH; /* how many slots we have yet to look at */
@@ -253,6 +252,9 @@ struct symbol *lookup(struct symbol table[], char * sym){
     if (sp->name && !strcmp(sp->name, sym)) {
 
       //DEBUG_REPORT("found %s at %p\n", sp->name, sp);
+      #ifdef DEBUG
+      printf("found %s at %p\n",sp->name,sp);
+			#endif
       return sp;
     }
 
@@ -260,6 +262,9 @@ struct symbol *lookup(struct symbol table[], char * sym){
     if (!sp->name){
       sp->name = strdup(sym);
       //DEBUG_REPORT("new %s at %p(%p)\n", sp->name, sp, sp->func);
+			#ifdef DEBUG
+			printf("new %s at %p\n",sp->name,sp);
+			#endif
       return sp;
     }
 
@@ -296,5 +301,5 @@ void printValue(struct value *base){
 	struct value *t;
 	for (t = base; t; t = t->next)
 		printf("%d ",t->i);
-	printf("\n");
+	//printf("\n");
 }

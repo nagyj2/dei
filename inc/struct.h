@@ -60,10 +60,10 @@ bool hasValue(int key, struct value *base);
 /* = Symtab = */
 
 /* create a new symbol table */
-void newSymtab(struct symbol result[]);
+// void newSymtab(struct symbol *result[] );
+extern struct symbol symtab[NHASH];
 /* return spot in symtab : NOTE only initializes name! */
-struct symbol *lookup(struct symbol table[], char *s);
-
+struct symbol *lookup(char *s);
 
 /* === MEMORY MANAGEMENT === */
 
