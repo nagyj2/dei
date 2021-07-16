@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h> /* needed for FILE */
+#include "struct.h"
 
 extern int yydebug;         /* debug flag */
 extern FILE *yyin;          /* input stream */

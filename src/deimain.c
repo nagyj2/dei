@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include "deimain.h"
+#include "struct.h"
 
 #ifdef TESTS
 #include "tests.h"
@@ -55,7 +56,7 @@ void yyerror(char *s, ...){
   va_list ap;
   va_start(ap, s);
 
-  fprintf(stderr, "%d: error : ", yylineno);
+  fprintf(stderr, "%d: yy error : ", yylineno);
   vfprintf(stderr, s, ap);
   fprintf(stderr, "\n");
 }
