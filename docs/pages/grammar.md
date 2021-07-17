@@ -1,5 +1,9 @@
 @page Grammar
 
+### Description
+
+Dei uses a grammar which is as close to natural language as possible to create natural sounding expressions.
+
 ```
 math:
 	|  math '+' math
