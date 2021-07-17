@@ -63,7 +63,7 @@ tests: CFLAGS += -D DEBUG -D TESTS
 tests: BISONFLAGS += -v
 tests: clean all
 
-all: bison flex $(TARGET)
+all: bison flex $(TARGET) docs
 
 #Parser
 bison: $(addprefix $(SRCDIR)/, $(BISON))
