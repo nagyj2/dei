@@ -1,12 +1,12 @@
 @page Abstract Syntax Tree
 
-## Description
+### Description
 
 During parsing, an AST is maintained for future evaluation. Each node can have a type and zero to
 two children. The node type will determine how many and what type of children the node will have.
 For more information, see @ref inc/ast.h "ash.h".
 
-### Structure
+#### Structure
 
 The possible AST node types are as follows:
 * ast: Contains up to 2 children, the left and right.
