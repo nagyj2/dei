@@ -11,23 +11,27 @@
 #ifndef STRUCT_H_INCLUDED
 #define STRUCT_H_INCLUDED
 
-#define NHASH 9997
+#define NHASH 9997 /**< Size of the symbol table. */
 
 #include <stdbool.h> /* bool */
 
 
 /* === DATA === */
 
-/** An chain of integer values. */
+/** An chain of integer values.
+ * Stores an integer value and a link to the next one in the chain.
+ */
 struct value {
-	int i;												/* The value stored at the current node. */
-	struct value *next;						/* The next element in the chain. */
+	int i;												/**< The value stored at the current node. */
+	struct value *next;						/**< The next element in the chain. Can be NULL. */
 };
 
-/** A reference to a stored symbol. */
+/** Symbol reference.
+ * A symbol which stores an ast which is inserted into any expressions which reference the value.
+ */
 struct symbol {
- char *name;          					/** The name of the symbol. */
- struct ast *func;    					/** The meaning of the symbol. */
+ char *name;          					/**< The name of the symbol. */
+ struct ast *func;    					/**< The meaning of the symbol. */
 };
 
 /* === FUNCTIONS === */
