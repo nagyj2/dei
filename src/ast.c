@@ -38,7 +38,7 @@ struct ast *newCmp(int cmptype, struct ast *l, struct ast *r){
 }
 
 /* Create a new function node */
-struct ast *newFunc(int functype, struct ast *l, struct ast *r){
+struct ast *newFunc(int functype, struct ast *body, struct ast *args){
 	struct ast *a = malloc(sizeof(struct ast));
 
 	if (!a){
@@ -47,8 +47,8 @@ struct ast *newFunc(int functype, struct ast *l, struct ast *r){
 	}
 
 	a->nodetype = 'd' + functype;
-	a->l = l;
-	a->r = r;
+	a->l = body;
+	a->r = args;
 	return a;
 }
 
