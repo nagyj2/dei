@@ -38,24 +38,65 @@ struct symbol {
 
 /* = Value = */
 
-/* create new single value or append a chain */
+/** Create a new value.
+ * If @ref prev is NULL, a new chain will be created. Otherwise, a new value struct will be created with @ref prev as the next element.
+ * @param  i    Integer value to assign to the new value element.
+ * @param  prev Previous head element. Can be NULL.
+ * @return      A head element of a chain of value structs.
+ */
 struct value *newValue(int i, struct value *prev);
-/* copy a value chain */
+/** Copies an entire value chain.
+ * Goes through the input chain to create a new chain containing the same values. The new elements are not aliased.
+ * to the old chain; they are completely separate.
+ * @param  base The head element of the value chain to duplicate.
+ * @return      The head of the newly created chain.
+ */
 struct value *dupValue(struct value *base);
-/* return the back of a chain */
+/** Returns the last element in a chain.
+ * @param  base The chain to find the last value of.
+ * @return      The last element in the input chain.
+ */
 struct value *backValue(struct value *base);
-/* return the first struct containing key  */
+/** Return the first element containing a specific value.
+ * Goes through the elements of the chain and looks for an element which has a specific value.
+ * @param  key  The element value to look for.
+ * @param  base The value chain to search in.
+ * @return      Returns the first instance of a value element holding key or NULL if the key was not found.
+ */
 struct value *findValue(int key, struct value *base);
-/* remove first instance of value key and return it */
+/** Remove first instance of value key and return it.
+ * Looks for a specific value of the chain elements and removed it from the chain if found.
+ * @param  key  The integer value to search for.
+ * @param  base The address of a chain pointer to search through.
+ * @return      If key is found, the removed element is returned. If the element couldn't be found, NULL is returned.
+ * @sideeffect	base will no longer contain the return value in its chain if it is non-NULL.
+ */
 struct value *popValue(int key, struct value **base);
-/* remove key IF it is in base and return it */
+/** Remove an exact value struct instance from a chain and return it.
+ * Looks for a specific value pointer within the input chain and removes and returns it if found.
+ * @param  key  A pointer to the value to remove.
+ * @param  base The address of a chain pointer to search through.
+ * @return      If key is found, the element is returned. If the element couldn't be found, NULL is returned.
+ * @sideeffect	base will no longer contain the return value in its chain if it is non-NULL.
+ */
 struct value *removeValue(struct value *key, struct value **base);
-/* invert the order of a value chain */
+/** Reverse the order of a value chain.
+ * @param base The address of a chain pointer to reverse.
+ */
 void reverseValue(struct value **base);
 
-/* copy a single value */
+/** Copies a single value from a value chain.
+ * A utility function to return a copy of the value of base. The two struct instances are separate and are not aliased.
+ * @param  base The exact value struct to copy.
+ * @return      A copy of the input.
+ */
 struct value *copyValue(struct value *base);
-/* create a value chain from min and max */
+/** Creates a new value chain from a start and end point.
+ * A utility function to create a brand new value chain from integer min to integer max, inclusive.
+ * @param  min The lower end of the new chain.
+ * @param  max The higher end of the new chain. Must be greater than or equal to min.
+ * @return     A value pointer to a new value chain.
+ */
 struct value *newValueChain(int min, int max);
 
 /* return number of elements in base */
