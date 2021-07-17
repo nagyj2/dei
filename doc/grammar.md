@@ -1,7 +1,5 @@
 @page Grammar
 
-### Grammar
-
 ```
 math:
 	|  math '+' math
@@ -62,12 +60,12 @@ psel:
 squant:
 	|  NUM
 	|  SQUANT
-	|  ε
+	|  ''
 
 fquant:
 	|  NUM 'times'
 	|  FQUANT
-	|  ε
+	|  ''
 
 die: 		
 	|  DNUM 'd' NUM
@@ -94,7 +92,7 @@ stmt:
 	|  '@' stmt IDENT ':' math EOL
 	|  '@' stmt error EOL
 	|  '@' stmt EOL
-	|  ε
+	|  ''
 
 F_ADD:		
 	|  'append'
