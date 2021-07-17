@@ -1,11 +1,6 @@
-/**
+/** Structs and functions to create and operate on ASTs.
+ * Includes AST elements and support functions for creation, destruction and debugging.
  * @file ast.h
- */
-
-/* Dei AST Structures and Functions
- * Contents:
- * AST Structs
- * Functions to manipulate AST Structs
  */
 
 #ifndef AST_H_INCLUDED

@@ -1,11 +1,6 @@
-/**
+/** Basic structures which support Dei.
+ * Contains common elements to all other modules of Dei along with functions to work with the structs.
  * @file struct.h
- */
-
-/* Dei Support Structures and Functions
- * Contents:
- * General Structs
- * Functions to manipulate Structs
  */
 
 #ifndef STRUCT_H_INCLUDED
