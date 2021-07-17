@@ -126,8 +126,8 @@ struct astAsgn {
 struct ast *newAst(int nodetype, struct ast *l, struct ast *r);
 /** Create a comparison AST node.
  * @param  cmptype The comparison subtype.
- * @param  l       The left operand subtree.
- * @param  r       The right operand subtree.
+ * @param  body    The left operand subtree.
+ * @param  args    The right operand subtree.
  * @return         An AST node representing the operation. Cannot be NULL.
  */
 struct ast *newCmp(int cmptype, struct ast *body, struct ast *args);
@@ -176,8 +176,7 @@ struct ast *newFargs(int fcount, int seltype, int scount, int cond);
  * @return     An AST node representing a fake roll. Cannot be NULL.
  */
 struct ast *newSetres(struct value *out);
-/**
- * Create a symbol (variable) call leaf.
+/** Create a symbol (variable) call leaf.
  * @param  sym The symbol to reference. Cannot be NULL.
  * @return     An AST node representing a symbol call. Cannot be NULL.
  */
