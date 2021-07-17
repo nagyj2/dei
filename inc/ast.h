@@ -16,7 +16,9 @@
 
 /* === DATA === */
 
-/** Builtin functions. */
+/** Builtin functions.
+ * The operations which can be performed on a dice roll before standard arithmetic operations.
+ */
 enum bifs {
 	B_append = 1,						/**< Add values to a roll result */
 	B_drop,									/**< Drop values from a roll result */
@@ -25,7 +27,9 @@ enum bifs {
 	B_reroll								/**< Modify the value the selected items */
 };
 
-/** Function selectors. */
+/** Function selectors.
+ * Decides how one or more elements from a roll will be chosen for a function.
+ */
 enum sifs {
 	S_high = 1,							/**< Single - Select the highest value */
 	S_low,									/**< Single - Select the lowest value */
@@ -33,14 +37,18 @@ enum sifs {
 	S_unique								/**< Plural - Select ALL unique values in the roll */
 };
 
-/** Function conditionals. */
+/** Function conditionals.
+ * If the function result evaluates to true, the old value is replaced.
+ */
 enum cifs {
-	C_none = 1,							/**< Perform the function unconditionally */
-	C_high,									/**< Perform the function if result is higher */
-	C_low										/**< Perform the function if result is lower */
+	C_none = 1,							/**< Perform the function unconditionally. Always true. */
+	C_high,									/**< True if the new result is higher. False otherwise */
+	C_low										/**< True if the new result is lower. False otherwise */
 };
 
-/** LEAF: A natural die definition. */
+/** A natural die definition.
+ * A natural die contains all numbers between two bounds, inclusive. Also tracks the number of times to roll.
+ */
 struct natdie {
 	int nodetype;						/**< D */
 	int count;							/**< Number of times to perform dice rolls */
@@ -48,48 +56,63 @@ struct natdie {
 	int max;								/**< Maximum face on the natural die */
 };
 
-/** LEAF: An artificial die definition. */
+/** An artificial die definition.
+ * An artificial die has enumerated faces by the user which will be rolled. Also tracks the number of times to roll.
+ */
 struct setdie {
 	int nodetype;						/**< d */
 	int count;							/**< Number of times to perform dice rolls */
 	struct value *faces;		/**< Faces on the die */
 };
 
-/** LEAF: A natural integer. */
+/** A natural integer.
+ * A number constant to perform arithmetic with once all dice have been operated on and summed.
+ */
 struct natint {
 	int nodetype;						/**< I */
 	int integer;						/**< The integer value being represented */
 };
 
-/** LEAF: Function arguments. */
+/** Function arguments.
+ * Stores the required arguments for a function.
+ */
 struct fargs {
 	int nodetype;						/**< C */
 	int fcount;							/**< Times to perform function */
-	int seltype;						/**< Type of select */
+	int seltype;						/**< Type of select. Must be from enum @ref sifs. */
 	int scount;							/**< Times to perform selection algorithm */
-	int cond;								/**< conditional to do operation */
+	int cond;								/**< conditional to do operation. Must be from enum @ref cifs */
 };
 
-/** LEAF: A set result. */
+/** A set result.
+ * Used for 'faked' rolls. Treated as if the enumerated numbers had been rolled by a die.
+ * A die result generated through this manner will have no data on the faces included.
+ */
 struct setres {
 	int nodetype;						/**< Q */
 	struct value *out;			/**< Output to set roll to */
 };
 
-/** LEAF: A symbol reference. */
+/** A symbol reference.
+ * A symbol (variable) reference. The referenced symbol is guarenteed present in the symbol table, but it may not be initialized.
+ */
 struct symcall {
 	int nodetype;						/**< E */
 	struct symbol *sym;			/**< Called symbol */
 };
 
-/** NODE: Generic AST Node. */
+/** Generic AST Node.
+ * A node which can have up to 2 children. Used for operations which only require operator and operand information.
+ */
 struct ast {
 	int nodetype;						/**< Math operations, functions, comparisons, M, R, S, Z */
 	struct ast *l;					/**< Left operand */
 	struct ast *r;					/**< Right operand */
 };
 
-/** NODE: Symbol assignment. */
+/** Symbol assignment.
+ * A node which will assign an ast value to a symbol. The ast value is not evaluated when saving it.
+ */
 struct astAsgn {
 	int nodetype;						/**< A */
 	struct symbol *s;				/**< Symbol to assign value to */
