@@ -9,11 +9,11 @@ TARGET      := dei
 TESTMAIN		:= deid
 
 #The Directories, Source, Includes, Objects, Binary and Resources
-SRCDIR      := ./src
-INCDIR      := ./inc
-BUILDDIR    := ./obj
-TARGETDIR   := ./bin
-GCHDIR			:= ./gch
+SRCDIR      := ./src		# Input
+INCDIR      := ./inc		# Input
+BUILDDIR    := ./obj		# Output
+TARGETDIR   := ./bin		# Output
+DOCDIR			:= ./docs		# Output
 SRCEXT      := c
 OBJEXT      := o
 
@@ -63,10 +63,10 @@ tests: clean all
 all: bison flex $(TARGET)
 
 bison: $(addprefix $(SRCDIR)/, $(BISON))
-	bison $(BISONFLAGS) -b $(BISON_C) --defines=$(BISON_H) $^
+	bison $(BISONFLAGS) -b $(BISON_C) --defines=$(BISON_H) $?
 
 flex: $(addprefix $(SRCDIR)/, $(FLEX))
-	flex $(FLEXFLAGS) -o $(FLEX_C) $^
+	flex $(FLEXFLAGS) -o $(FLEX_C) $?
 
 #Remake
 remake: cleaner all
@@ -76,9 +76,14 @@ clean:
 	@$(RM) -rf $(BUILDDIR)
 	@$(RM) -rf $(GCHDIR)
 
-#Full Clean, Objects and Binaries
+#Full Clean, Objects, Binaries and Docs
 cleaner: clean
 	@$(RM) -rf $(TARGETDIR)
+	@$(RM) -rf $(DOCDIR)
+
+#Doxygen documentation
+docs:
+	doxygen Doxyfile
 
 #Pull in dependency info for *existing* .o files
 -include $(OBJECTS:.$(OBJEXT)=.$(DEPEXT))
@@ -101,4 +106,4 @@ $(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
 	@rm -f $(BUILDDIR)/$*.$(DEPEXT).tmp
 
 #Non-File Targets
-.PHONY: all remake clean cleaner tests debug
+.PHONY: all remake clean cleaner tests debug docs

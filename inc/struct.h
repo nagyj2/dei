@@ -1,3 +1,7 @@
+/**
+ * @file struct.h
+ */
+
 /* Dei Support Structures and Functions
  * Contents:
  * General Structs
@@ -14,14 +18,16 @@
 
 /* === DATA === */
 
-struct value {									/* An integer value chain */
-	int i;												/* The value stored at the current node */
-	struct value *next;						/* The next element in the chain */
+/** An chain of integer values. */
+struct value {
+	int i;												/* The value stored at the current node. */
+	struct value *next;						/* The next element in the chain. */
 };
 
-struct symbol {       					/* A symbol reference */
- char *name;          					/* The name of the symbol */
- struct ast *func;    					/* The meaning of the symbol */
+/** A reference to a stored symbol. */
+struct symbol {
+ char *name;          					/** The name of the symbol. */
+ struct ast *func;    					/** The meaning of the symbol. */
 };
 
 /* === FUNCTIONS === */
