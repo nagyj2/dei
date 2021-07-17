@@ -99,26 +99,47 @@ struct value *copyValue(struct value *base);
  */
 struct value *newValueChain(int min, int max);
 
-/* return number of elements in base */
+/** Find the number of elements in a value chain.
+ * @param  base The chain to count the elements of.
+ * @return      Returns the integer number of elements in base. If base is NULL, 0 is returned.
+ */
 int countValue(struct value *base);
-/* return sum elements of base  */
+/** Sum all the values contained in a value chain.
+ * @param  base The value chain to sum the values of.
+ * @return      Returns the integer sum of elements in base. If base is NULL, 0 is returned.
+ */
 int sumValue(struct value *base);
-/* return whether exact value is in base */
+/** Determine whether exact value struct is in a value chain.
+ * @param  key  The struct to search for.
+ * @param  base The value chain to search through.
+ * @return      True if key is within base. Otherwise false.
+ */
 bool hasValueExact(struct value *key, struct value *base);
 /* return whether int value is in base */
+/** Determine whether a specific integer value is in a value chain.
+ * @param  key  The integer value to search for.
+ * @param  base The value chain to search through.
+ * @return      True if key is within base. Otherwise false.
+ */
 bool hasValue(int key, struct value *base);
 
 /* = Symtab = */
 
-/* create a new symbol table */
-// void newSymtab(struct symbol *result[] );
+/** The symbol table which stores variables. */
 extern struct symbol symtab[NHASH];
-/* return spot in symtab : NOTE only initializes name! */
+/** Searches the symbol table for a name and returns its location.
+ * If the symbol table cannot find an already created version of the symbol, it will create a new entry and return it.
+ * @param  s The name of the symbol to search for.
+ * @return   A pointer to the storage location of the symbol within the symbol table.
+ */
 struct symbol *lookup(char *s);
 
 /* === MEMORY MANAGEMENT === */
 
-/* free a value chain */
+/** Frees an entire value chain.
+ * @param val The address to a value chain which will be freed.
+ * @sideeffect After the fucntion finished evaluation, all pointers to released data will equal to NULL.
+ */
 void freeValue( struct value **val );
 
 /* free the entire symbol table */
@@ -128,6 +149,10 @@ void freeValue( struct value **val );
 /* ======= DEBUGGING ======= */
 
 /* iteratively print a value chain */
+/** Outputs a representation of a value chain.
+ * @param base The value chain to output.
+ * @sideeffect base's contents will be sent to stdout.
+ */
 void printValue(struct value *base);
 
 #endif /* STRUCT_H_INCLUDED */
