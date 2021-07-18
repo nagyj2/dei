@@ -13,7 +13,12 @@ struct symbol symtab[NHASH];    /* symbol table itself */
 
 /* === FUNCTIONS === */
 
-/* create new single value or append a chain */
+/** Create new single value or append a chain.
+ * Allocates new memory for the struct and then populates its values.
+ * Assigns prev to next without checking because it is either NULL, meaning a new chain or it
+ * is a new head, so it becomes the next element.
+ * Returns NULL if the memory could not be allocated.
+ */
 struct value *newValue(int i, struct value *prev){
 	struct value *a = malloc(sizeof(struct value));
 	if (!a){
@@ -29,7 +34,9 @@ struct value *newValue(int i, struct value *prev){
 	return a;
 }
 
-/* copy a value chain */
+/** Copy a value chain.
+ * Iteratively creates new value elements connected to one another. Finally, the chain is reversed.
+ */
 struct value *dupValue(struct value *base){
 	struct value *head = NULL, *t = NULL;
 
@@ -49,7 +56,9 @@ struct value *dupValue(struct value *base){
 	return head;
 }
 
-/* return the back of a chain */
+/** Return the back element of a chain.
+ * Iteratively work through the chain until the next element is null. That indicates the chain end.
+ */
 struct value *backValue(struct value *base){
 	struct value *t = NULL;
 
@@ -62,8 +71,12 @@ struct value *backValue(struct value *base){
 	return t;
 }
 
-/* return the first struct containing key  */
+/** Return the first struct containing the key.
+ * Iteratively search for the key and return the first match. Will return NULL
+ * if the key is not in base or base itself is NULL.
+ */
 struct value *findValue(int key, struct value *base){
+	if (!base) return NULL;
 	struct value *t = NULL;
 
 	for(t = base; t; t = t->next){
@@ -75,8 +88,12 @@ struct value *findValue(int key, struct value *base){
 	return NULL;
 }
 
-/* remove key IF it is in base and return it */
+/** Remove and return an integer value.
+ * When found, the value is extracted by modifying the previous element's next attribute.
+ * The pointer attached to the new value is then returned.
+ */
 struct value *popValue(int key, struct value **base){
+	if (!*base) return NULL;
 	struct value *t = NULL, *prev = NULL;
 
 	#ifdef DEBUG
@@ -85,10 +102,10 @@ struct value *popValue(int key, struct value **base){
 
 	for(t = *base; t; t = t->next){
 		if (t->i == key){
-			if (prev)	prev->next 	= t->next; /* skip over current */
-			else			*base 			= t->next; /* set front to next */
+			if (prev)	prev->next 	= t->next; 	/* skip over current */
+			else			*base 			= t->next; 	/* set front to next */
+			t->next = NULL; 									/* erase link */
 
-			t->next = NULL; /* erase link */
 			#ifdef DEBUG
 			assert(!hasValueExact(t, *base));
 			assert(size - 1 == countValue(*base));
@@ -106,8 +123,12 @@ struct value *popValue(int key, struct value **base){
 	return NULL;
 }
 
-/* remove key IF it is in base and return it */
+/** Remove and return an exact value.
+ * When found, the element is removed from the chain and modified to completely separate it.
+ * It is then returned.
+ */
 struct value *removeValue(struct value *key, struct value **base){
+	if (!*base || !key) return NULL;
 	struct value *t = NULL, *prev = NULL;
 
 	#ifdef DEBUG
@@ -119,8 +140,8 @@ struct value *removeValue(struct value *key, struct value **base){
 		if (t == key){
 			if (prev)	prev->next 	= t->next; /* skip over current */
 			else			*base 			= t->next; /* set front to next */
-
 			t->next = NULL; /* erase link */
+
 			#ifdef DEBUG
 			assert(!hasValueExact(t, *base));
 			assert(size - 1 == countValue(*base));
@@ -138,7 +159,10 @@ struct value *removeValue(struct value *key, struct value **base){
 	return NULL;
 }
 
-/* invert the order of a value chain */
+/** Reverses the order in a chain of values
+ * Iteratively performs a reversal algorithm on the elements until the terminal element is reached.
+ * The new head is then set to the input pointer.
+ */
 void reverseValue(struct value **base){
 	struct value *prev = NULL, *curr = *base, *next = NULL;
 
@@ -153,12 +177,16 @@ void reverseValue(struct value **base){
 }
 
 
-/* copy a single value */
+/** Returns a copy of a single value.
+ * Uses the ability to start a new chain from @ref newValue to create a chain with the value of input.
+ */
 struct value *copyValue(struct value *base){
 	return newValue(base->i, NULL);
 }
 
-/* create a value chain from min and max */
+/** Creates an entire chain of continuous values from input.
+ * Displays a warning if the minimum is greater than the maximum.
+ */
 struct value *newValueChain(int min, int max){
 	if (min > max) printf("warning: min > max. empty value\n");
 	struct value *val1 = NULL;
@@ -168,7 +196,9 @@ struct value *newValueChain(int min, int max){
 }
 
 
-/* return number of elements in base */
+/** Returns the number of elements in a chain.
+ * Iteratively increments a counter.
+ */
 int countValue(struct value *base){
 	struct value *t = NULL;
 	int c = 0;
@@ -181,7 +211,9 @@ int countValue(struct value *base){
 	return c;
 }
 
-/* return sum elements of base  */
+/** Returns the sum of element's values in a chain.
+ * Iteratively accumulates the individual element's values.
+ */
 int sumValue(struct value *base){
 		struct value *t = NULL;
 		int s = 0;
@@ -198,7 +230,9 @@ int sumValue(struct value *base){
 		return s;
 }
 
-/* return whether exact value is in base */
+/** Searches a value chain for an exact struct.
+ * Checks for an exact struct instance by comparing memory addresses of the pointers.
+ */
 bool hasValueExact(struct value *key, struct value *base){
 		struct value *t = NULL;
 
@@ -215,7 +249,9 @@ bool hasValueExact(struct value *key, struct value *base){
 		return false;
 	}
 
-/* return whether int value is in base */
+/** Searches a value chain for an exact struct.
+ * Checks for an exact struct instance by comparing values.
+ */
 bool hasValue(int key, struct value *base){
 	struct value *t = NULL;
 
@@ -231,7 +267,10 @@ bool hasValue(int key, struct value *base){
 /*void newSymtab(struct symbol *result[]){
 }*/
 
-/* hash a symbol to produce an index to place in symbol table at */
+/** Perform a hash algorithm to determine positioning in the symbol table.
+ * @param  sym The symbol to hash upon.
+ * @return     The index to start looking in the symbol table.
+ */
 static unsigned symhash(char *sym){
 
   unsigned int hash = 0;
@@ -241,7 +280,12 @@ static unsigned symhash(char *sym){
   return hash;
 }
 
-/* return spot in symtab */
+/** Finds the location in memory of a symbol.
+ * Initial position is determined by hashing it and then iteratively looking for either
+ * an existing entry or a free space top place it. If the entry already exists, it will always
+ * be found before an empty slot, assuming no entries are deleted.
+ * Causes a crash if the symbol table is filled.
+ */
 struct symbol *lookup(char *sym){
 
   struct symbol *sp = &symtab[symhash(sym)%NHASH]; /* symtab position's contents */
@@ -280,7 +324,10 @@ struct symbol *lookup(char *sym){
 
 /* === MEMORY MANAGEMENT === */
 
-/* free a value chain */
+/** Free memory allocated to an entire value chain.
+ * Iteratively frees elements within a value chain.
+ * Each element's location data is also set to NULL.
+ */
 void freeValue( struct value **val ){
 	struct value *nval = NULL;
   while(*val){
@@ -297,6 +344,9 @@ void freeValue( struct value **val ){
 /* ======= DEBUGGING ======= */
 
 /* iteratively print a value chain */
+/** Print a value chain to stdout.
+ * Iteratively outputs the values of a chain.
+ */
 void printValue(struct value *base){
 	struct value *t;
 	for (t = base; t; t = t->next)
