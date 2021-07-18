@@ -9,7 +9,11 @@
 
 #include "ast.h"
 
-/* Create a new AST node */
+
+/** Creates a new AST node.
+ * Allocates new memory for the node and returns the pointer. If there is no space,
+ * a message is shown and an crash occurs. Cannot return NULL.
+ */
 struct ast *newAst(int nodetype, struct ast *l, struct ast *r){
 	struct ast *a = malloc(sizeof(struct ast));
 
@@ -21,10 +25,16 @@ struct ast *newAst(int nodetype, struct ast *l, struct ast *r){
 	a->nodetype = nodetype;
 	a->l = l;
 	a->r = r;
+	#ifdef DEBUG
+	assert(a);
+	#endif
 	return a;
 }
 
-/* Create a new compare node */
+/** Creates a new comparison AST node.
+ * Allocates new memory for the node and returns the pointer. If there is no space,
+ * a message is shown and an crash occurs. Cannot return NULL.
+ */
 struct ast *newCmp(int cmptype, struct ast *l, struct ast *r){
 	struct ast *a = malloc(sizeof(struct ast));
 
@@ -36,10 +46,16 @@ struct ast *newCmp(int cmptype, struct ast *l, struct ast *r){
 	a->nodetype = '0' + cmptype;
 	a->l = l;
 	a->r = r;
+	#ifdef DEBUG
+	assert(a);
+	#endif
 	return a;
 }
 
-/* Create a new function node */
+/** Creates a new function AST node.
+ * Allocates new memory for the node and returns the pointer. If there is no space,
+ * a message is shown and an crash occurs. Cannot return NULL.
+ */
 struct ast *newFunc(int functype, struct ast *body, struct ast *args){
 	struct ast *a = malloc(sizeof(struct ast));
 
@@ -51,10 +67,16 @@ struct ast *newFunc(int functype, struct ast *body, struct ast *args){
 	a->nodetype = 'd' + functype;
 	a->l = body;
 	a->r = args;
+	#ifdef DEBUG
+	assert(a);
+	#endif
 	return a;
 }
 
-/* Create a new assignment node */
+/** Creates a new assignment node.
+ * Allocates new memory for the node and returns the pointer. If there is no space,
+ * a message is shown and an crash occurs. Cannot return NULL.
+ */
 struct ast *newAsgn(struct symbol *sym, struct ast *def){
 	struct astAsgn *a = malloc(sizeof(struct astAsgn));
 
@@ -66,10 +88,15 @@ struct ast *newAsgn(struct symbol *sym, struct ast *def){
 	a->nodetype = 'A';
 	a->s = sym;
 	a->l = def;
+	#ifdef DEBUG
+	assert(a);
+	#endif
 	return (struct ast *)a;
 }
 
-/* create a natural die definition leaf */
+/** Allocates memory for a new die node and fills it in.
+ * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ */
 struct ast *newNatdie(int count, int min, int max){
 		struct natdie *a = malloc(sizeof(struct natdie));
 
@@ -82,10 +109,15 @@ struct ast *newNatdie(int count, int min, int max){
 		a->count = count;
 		a->min = min;
 		a->max = max;
+		#ifdef DEBUG
+		assert(a);
+		#endif
 		return (struct ast *)a;
 }
 
-/* create an artificial die definition leaf */
+/** Allocates memory for a artificial die node and fills it in.
+ * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ */
 struct ast *newSetdie(int count, struct value *faces){
 		struct setdie *a = malloc(sizeof(struct setdie));
 
@@ -97,10 +129,15 @@ struct ast *newSetdie(int count, struct value *faces){
 		a->nodetype = 'd';
 		a->count = count;
 		a->faces = faces;
+		#ifdef DEBUG
+		assert(a);
+		#endif
 		return (struct ast *)a;
 }
 
-/* create a natural integer leaf */
+/** Allocates memory for a new integer node and fills it in.
+ * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ */
 struct ast *newNatint(int integer){
 		struct natint *a = malloc(sizeof(struct natint));
 
@@ -111,10 +148,15 @@ struct ast *newNatint(int integer){
 
 		a->nodetype = 'I';
 		a->integer = integer;
+		#ifdef DEBUG
+		assert(a);
+		#endif
 		return (struct ast *)a;
 }
 
-/* create function arguments leaf */
+/** Allocates memory for function arguments.
+ * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ */
 struct ast *newFargs(int fcount, int seltype, int scount, int cond){
 		struct fargs *a = malloc(sizeof(struct fargs));
 
@@ -128,10 +170,15 @@ struct ast *newFargs(int fcount, int seltype, int scount, int cond){
 		a->seltype = seltype;
 		a->scount = scount;
 		a->cond = cond;
+		#ifdef DEBUG
+		assert(a);
+		#endif
 		return (struct ast *)a;
 }
 
-/* create a artificial roll leaf */
+/** Allocates memory for an artificial die roll and fills it in.
+ * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ */
 struct ast *newSetres(struct value *out){
 	struct setres *a = malloc(sizeof(struct setres));
 
@@ -142,10 +189,15 @@ struct ast *newSetres(struct value *out){
 
 	a->nodetype = 'Q';
 	a->out = out;
+	#ifdef DEBUG
+	assert(a);
+	#endif
 	return (struct ast *)a;
 }
 
-/* create a symbol call leaf */
+/** Allocates memory for a new symbol call and fills it in.
+ * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ */
 struct ast *newSymcall(struct symbol *sym){
 	struct symcall *a = malloc(sizeof(struct symcall));
 
@@ -156,11 +208,18 @@ struct ast *newSymcall(struct symbol *sym){
 
 	a->nodetype = 'E';
 	a->sym = sym;
+	#ifdef DEBUG
+	assert(a);
+	#endif
 	return (struct ast *)a;
 }
 
 
-/* enter a symbol and definition into the table */
+/** Assigns a definition to a symbol.
+ * All symbol references contain the function definition of the variable because they are
+ * all pointers to the same location, so the definition pointer is simply freed if present
+ * and then re-set.
+ */
 void setsym(struct symbol *name, struct ast *def){
 	//DEBUG_REPORT("place at %p", name);
   if (name->func){ /* NOTE allocated in lookup, so this will always run*/
@@ -174,7 +233,10 @@ void setsym(struct symbol *name, struct ast *def){
 
 /* === MEMORY MANAGEMENT === */
 
-/* Recursively free memory from an AST tree */
+/** Free the memory allocated to an AST tree.
+ * Recursively frees allocated memory according to DFS.
+ * Also sets each pointer to NULL as it completes.
+ */
 void freeAst( struct ast **root ){
 
 	switch ((*root)->nodetype){
@@ -222,7 +284,9 @@ void freeAst( struct ast **root ){
 
 /* ======= DEBUGGING ======= */
 
-/* Recursively print the contents of an AST tree */
+/** Outputs an entire AST tree.
+ * Logs an entire AST tree to stdout.
+ */
 void printAst(struct ast *root){
 	switch (root->nodetype){
 		/* 2 subtrees */
