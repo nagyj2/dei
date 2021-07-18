@@ -26,10 +26,11 @@ enum bifs {
  * Decides how one or more elements from a roll will be chosen for a function.
  */
 enum sifs {
+	S_all = -1,							/**< Plural - Select ALL possible values */
 	S_high = 1,							/**< Single - Select the highest value */
-	S_low,									/**< Single - Select the lowest value */
-	S_rand,									/**< Single - Select a random value */
-	S_unique								/**< Plural - Select ALL unique values in the roll */
+	S_low = 2,							/**< Single - Select the lowest value */
+	S_rand = 3,							/**< Single - Select a random value */
+	S_unique = 4						/**< Plural - Select ALL unique values in the roll */
 };
 
 /** Function conditionals.

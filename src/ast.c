@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef DEBUG
+#include <assert.h>
+#endif
+
 #include "parser.tab.h"
 
 #include "ast.h"
