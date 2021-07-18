@@ -10,7 +10,7 @@
 #include "ast.h"
 
 
-/** Creates a new AST node.
+/**
  * Allocates new memory for the node and returns the pointer. If there is no space,
  * a message is shown and an crash occurs. Cannot return NULL.
  */
@@ -31,7 +31,7 @@ struct ast *newAst(int nodetype, struct ast *l, struct ast *r){
 	return a;
 }
 
-/** Creates a new comparison AST node.
+/**
  * Allocates new memory for the node and returns the pointer. If there is no space,
  * a message is shown and an crash occurs. Cannot return NULL.
  */
@@ -52,7 +52,7 @@ struct ast *newCmp(int cmptype, struct ast *l, struct ast *r){
 	return a;
 }
 
-/** Creates a new function AST node.
+/**
  * Allocates new memory for the node and returns the pointer. If there is no space,
  * a message is shown and an crash occurs. Cannot return NULL.
  */
@@ -73,7 +73,7 @@ struct ast *newFunc(int functype, struct ast *body, struct ast *args){
 	return a;
 }
 
-/** Creates a new assignment node.
+/**
  * Allocates new memory for the node and returns the pointer. If there is no space,
  * a message is shown and an crash occurs. Cannot return NULL.
  */
@@ -94,7 +94,7 @@ struct ast *newAsgn(struct symbol *sym, struct ast *def){
 	return (struct ast *)a;
 }
 
-/** Allocates memory for a new die node and fills it in.
+/**
  * If memory cannot be allocated, a crash occurs. Cannot be NULL.
  */
 struct ast *newNatdie(int count, int min, int max){
@@ -115,7 +115,8 @@ struct ast *newNatdie(int count, int min, int max){
 		return (struct ast *)a;
 }
 
-/** Allocates memory for a artificial die node and fills it in.
+/**
+ * Allocates memory for a artificial die node and fills it in.
  * If memory cannot be allocated, a crash occurs. Cannot be NULL.
  */
 struct ast *newSetdie(int count, struct value *faces){
@@ -135,7 +136,8 @@ struct ast *newSetdie(int count, struct value *faces){
 		return (struct ast *)a;
 }
 
-/** Allocates memory for a new integer node and fills it in.
+/**
+ * Allocates memory for a new integer node and fills it in.
  * If memory cannot be allocated, a crash occurs. Cannot be NULL.
  */
 struct ast *newNatint(int integer){
@@ -154,7 +156,8 @@ struct ast *newNatint(int integer){
 		return (struct ast *)a;
 }
 
-/** Allocates memory for function arguments.
+/**
+ * Allocates memory for function arguments.
  * If memory cannot be allocated, a crash occurs. Cannot be NULL.
  */
 struct ast *newFargs(int fcount, int seltype, int scount, int cond){
@@ -176,7 +179,8 @@ struct ast *newFargs(int fcount, int seltype, int scount, int cond){
 		return (struct ast *)a;
 }
 
-/** Allocates memory for an artificial die roll and fills it in.
+/**
+ * Allocates memory for an artificial die roll and fills it in.
  * If memory cannot be allocated, a crash occurs. Cannot be NULL.
  */
 struct ast *newSetres(struct value *out){
@@ -195,7 +199,8 @@ struct ast *newSetres(struct value *out){
 	return (struct ast *)a;
 }
 
-/** Allocates memory for a new symbol call and fills it in.
+/**
+ * Allocates memory for a new symbol call and fills it in.
  * If memory cannot be allocated, a crash occurs. Cannot be NULL.
  */
 struct ast *newSymcall(struct symbol *sym){
@@ -215,7 +220,7 @@ struct ast *newSymcall(struct symbol *sym){
 }
 
 
-/** Assigns a definition to a symbol.
+/**
  * All symbol references contain the function definition of the variable because they are
  * all pointers to the same location, so the definition pointer is simply freed if present
  * and then re-set.
@@ -233,7 +238,7 @@ void setsym(struct symbol *name, struct ast *def){
 
 /* === MEMORY MANAGEMENT === */
 
-/** Free the memory allocated to an AST tree.
+/**
  * Recursively frees allocated memory according to DFS.
  * Also sets each pointer to NULL as it completes.
  */
@@ -284,7 +289,7 @@ void freeAst( struct ast **root ){
 
 /* ======= DEBUGGING ======= */
 
-/** Outputs an entire AST tree.
+/**
  * Logs an entire AST tree to stdout.
  */
 void printAst(struct ast *root){

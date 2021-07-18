@@ -13,7 +13,7 @@ struct symbol symtab[NHASH];    /* symbol table itself */
 
 /* === FUNCTIONS === */
 
-/** Create new single value or append a chain.
+/**
  * Allocates new memory for the struct and then populates its values.
  * Assigns prev to next without checking because it is either NULL, meaning a new chain or it
  * is a new head, so it becomes the next element.
@@ -34,7 +34,7 @@ struct value *newValue(int i, struct value *prev){
 	return a;
 }
 
-/** Copy a value chain.
+/**
  * Iteratively creates new value elements connected to one another. Finally, the chain is reversed.
  */
 struct value *dupValue(struct value *base){
@@ -56,7 +56,7 @@ struct value *dupValue(struct value *base){
 	return head;
 }
 
-/** Return the back element of a chain.
+/**
  * Iteratively work through the chain until the next element is null. That indicates the chain end.
  */
 struct value *backValue(struct value *base){
@@ -71,7 +71,7 @@ struct value *backValue(struct value *base){
 	return t;
 }
 
-/** Return the first struct containing the key.
+/**
  * Iteratively search for the key and return the first match. Will return NULL
  * if the key is not in base or base itself is NULL.
  */
@@ -88,7 +88,7 @@ struct value *findValue(int key, struct value *base){
 	return NULL;
 }
 
-/** Remove and return an integer value.
+/**
  * When found, the value is extracted by modifying the previous element's next attribute.
  * The pointer attached to the new value is then returned.
  */
@@ -123,7 +123,7 @@ struct value *popValue(int key, struct value **base){
 	return NULL;
 }
 
-/** Remove and return an exact value.
+/**
  * When found, the element is removed from the chain and modified to completely separate it.
  * It is then returned.
  */
@@ -159,7 +159,7 @@ struct value *removeValue(struct value *key, struct value **base){
 	return NULL;
 }
 
-/** Reverses the order in a chain of values
+/**
  * Iteratively performs a reversal algorithm on the elements until the terminal element is reached.
  * The new head is then set to the input pointer.
  */
@@ -177,14 +177,14 @@ void reverseValue(struct value **base){
 }
 
 
-/** Returns a copy of a single value.
+/**
  * Uses the ability to start a new chain from @ref newValue to create a chain with the value of input.
  */
 struct value *copyValue(struct value *base){
 	return newValue(base->i, NULL);
 }
 
-/** Creates an entire chain of continuous values from input.
+/**
  * Displays a warning if the minimum is greater than the maximum.
  */
 struct value *newValueChain(int min, int max){
@@ -196,7 +196,7 @@ struct value *newValueChain(int min, int max){
 }
 
 
-/** Returns the number of elements in a chain.
+/**
  * Iteratively increments a counter.
  */
 int countValue(struct value *base){
@@ -211,7 +211,7 @@ int countValue(struct value *base){
 	return c;
 }
 
-/** Returns the sum of element's values in a chain.
+/**
  * Iteratively accumulates the individual element's values.
  */
 int sumValue(struct value *base){
@@ -230,7 +230,7 @@ int sumValue(struct value *base){
 		return s;
 }
 
-/** Searches a value chain for an exact struct.
+/**
  * Checks for an exact struct instance by comparing memory addresses of the pointers.
  */
 bool hasValueExact(struct value *key, struct value *base){
@@ -249,8 +249,8 @@ bool hasValueExact(struct value *key, struct value *base){
 		return false;
 	}
 
-/** Searches a value chain for an exact struct.
- * Checks for an exact struct instance by comparing values.
+/**
+ * Checks for an exact struct instance by comparing values of each element.
  */
 bool hasValue(int key, struct value *base){
 	struct value *t = NULL;
@@ -280,7 +280,7 @@ static unsigned symhash(char *sym){
   return hash;
 }
 
-/** Finds the location in memory of a symbol.
+/**
  * Initial position is determined by hashing it and then iteratively looking for either
  * an existing entry or a free space top place it. If the entry already exists, it will always
  * be found before an empty slot, assuming no entries are deleted.
@@ -324,7 +324,7 @@ struct symbol *lookup(char *sym){
 
 /* === MEMORY MANAGEMENT === */
 
-/** Free memory allocated to an entire value chain.
+/**
  * Iteratively frees elements within a value chain.
  * Each element's location data is also set to NULL.
  */
@@ -343,8 +343,7 @@ void freeValue( struct value **val ){
 
 /* ======= DEBUGGING ======= */
 
-/* iteratively print a value chain */
-/** Print a value chain to stdout.
+/**
  * Iteratively outputs the values of a chain.
  */
 void printValue(struct value *base){
