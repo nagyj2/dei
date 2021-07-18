@@ -57,7 +57,7 @@ FLEX_C			:= $(addprefix $(SRCDIR)/, $(FLEX:l=lex.c))
 
 #Defauilt Make
 debug: CFLAGS += -D DEBUG
-debug: all
+debug: bison flex $(TARGET)
 
 tests: CFLAGS += -D DEBUG -D TESTS
 tests: BISONFLAGS += -v
