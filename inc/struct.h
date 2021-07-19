@@ -67,7 +67,7 @@ struct value *findValue(int key, struct value *base);
  * @return      If key is found, the removed element is returned. Otherwise NULL.
  * @sideeffect	base will no longer contain the return value in its chain if it is non-NULL.
  */
-struct value *popValue(int key, struct value **base);
+struct value *removeValue(int key, struct value **base);
 /** Remove an exact value struct instance from a chain and return it.
  * Looks for a specific value pointer within the input chain and removes and returns it if found.
  * Returns NULL if key cannot be found, key is NULL or *base is NULL.
@@ -76,7 +76,7 @@ struct value *popValue(int key, struct value **base);
  * @return      If key is found, the element is returned. Otherwise NULL.
  * @sideeffect	base will no longer contain the return value in its chain if it is non-NULL.
  */
-struct value *removeValue(struct value *key, struct value **base);
+struct value *removeValueExact(struct value *key, struct value **base);
 /** Reverse the order of a value chain.
  * @param[in,out] base The address of a chain pointer to reverse.
  */
