@@ -392,8 +392,12 @@ struct result *eval(struct ast *base){
 		r->type = R_int;
 		r->integer = ((struct natint *)base)->integer;
 		break;
+	case 'Q': /* artificial roll */ {
+		r->type = R_roll;
+		r->out = dupValue(((struct setres *)base)->out);
+		break;
+	}
 	case 'C': /* function arguments */
-	case 'Q': /* artificial roll */
 	case 'E': /* sym call */
 	case 'A': /* sym definition */
 	default:
