@@ -296,7 +296,9 @@ struct result *eval(struct ast *base){
 	}
 
 	switch (base->nodetype){
-	case '+': case '-': case '*': case DIV: case '%': case '^': {
+	case '+': case '-': case '*': case DIV: case '%': case '^':
+	case '1': /* > */ case '2': /* < */ case '3': /* != */
+	case '4': /* == */ case '5': /* >= */ case '6': /* <= */{
 		r->type = R_int;
 		struct result *larg = eval(base->l);
 		struct result *rarg = eval(base->r);
@@ -307,19 +309,25 @@ struct result *eval(struct ast *base){
 		case DIV: r->integer = larg->integer / rarg->integer; break;
 		case '%': r->integer = larg->integer % rarg->integer; break;
 		case '^': r->integer = pow(larg->integer, rarg->integer); break;
+		case '1': r->integer = larg->integer > rarg->integer; break;
+		case '2': r->integer = larg->integer < rarg->integer; break;
+		case '3': r->integer = larg->integer != rarg->integer; break;
+		case '4': r->integer = larg->integer == rarg->integer; break;
+		case '5': r->integer = larg->integer >= rarg->integer; break;
+		case '6': r->integer = larg->integer <= rarg->integer; break;
 		}
 		freeResult( &larg );
 		freeResult( &rarg );
 		break;
 	}
 
-	case '1': /* > */
-	case '2': /* < */
-	case '3': /* != */
-	case '4': /* == */
-	case '5': /* >= */
-	case '6': /* <= */
-	case 'M':
+	case 'M': {
+		r->type = R_int;
+		struct result *larg = eval(base->l);
+		r->integer = -(larg->integer);
+		freeResult( &larg );
+		break;
+	}
 
 	case '&':
 	case '|':
