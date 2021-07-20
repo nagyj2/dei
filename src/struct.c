@@ -3,7 +3,9 @@
 #include <stdio.h> /* printf */
 #include <string.h> /* strdup */
 
+#ifdef DEBUG
 #include <assert.h> /* assert */
+#endif
 
 #include "struct.h"
 
@@ -339,7 +341,9 @@ void freeValue( struct value **val ){
     *val = nval;
   }
 
+	#ifdef DEBUG
 	assert(!*val);
+	#endif
 }
 
 
