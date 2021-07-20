@@ -7,9 +7,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-#ifdef DEBUG
-#include <assert.h>
-#endif
+
 
 #include "struct.h"
 #include "ast.h"

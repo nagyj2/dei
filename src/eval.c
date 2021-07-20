@@ -3,15 +3,17 @@
  */
 #include <stdio.h> /* printf */
 
+#ifdef DEBUG
+#include <assert.h> /* assert */
+#endif
+
 #include "eval.h"
 
 
-#ifdef DEBUG
 /** Tests a result struct to ensure relevant fields are filled and others are not.
  * @param[in] res The result struct to be tested.
  */
 void ensureType(struct result *res);
-#endif
 
 /**
  * Allocates memory for a new struct.
