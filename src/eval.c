@@ -32,7 +32,7 @@ struct selection *newSelection(struct value *val, struct selection *prev){
 	a->val = val;
 	a->next = prev;
 	#ifdef DEBUG
-	assert(a && a->val == val && a->next = prev);
+	assert(a && a->val == val && a->next == prev);
 	#endif
 	return a;
 }
@@ -60,9 +60,9 @@ struct selection *findSelection(int key, struct selection *base){
 	for(t = base; t; t = t->next){
 		if ( t->val->i == key ) return t;
 	}
-	#ifdef DEBUG
+	/*#ifdef DEBUG
 	assert(!hasSelection(key,base));
-	#endif
+	#endif*/
 	return NULL;
 }
 
@@ -77,85 +77,225 @@ struct selection *findSelectionExact(struct value *key, struct selection *base){
 		if ( t->val == key ) return t;
 	}
 	#ifdef DEBUG
-	assert(!hasSelectionExact(key,base));
+	assert(!hasSelection(key,base));
 	#endif
 	return NULL;
 }
 
-/** Remove the first selection element which has a matching key and return it.
- * Can return NULL if key is not matched.
- * @param[in]  key  The integer value to look for.
- * @param[in,out]  base The selection to search in.
- * @return      The removed selection element.
+/**
+ * Removes the first selected element with the value key from base and returns the removed element.
+ * base is modified, so a pointer pointer is required.
  */
-struct selection *removeSelection(int key, struct selection **base);
+struct selection *removeSelection(int key, struct selection **base){
+	if (!*base) return NULL;
+	struct selection *t = NULL, *prev = NULL;
 
-/** Remove the element which has a matching value address and return it.
- * Can return NULL if key is not matched.
- * @param[in]  key  The value struct value to look for.
- * @param[in,out]  base The selection to search in.
- * @return      The removed selection element.
+	#ifdef DEBUG
+	int size = countSelection(*base);
+	#endif
+
+	for(t = *base; t; t = t->next){
+		if (t->val->i == key){
+			if (prev)	prev->next 	= t->next; /* skip over current */
+			else 			*base 			= t->next; /* move head to next */
+			t->next = NULL; /* Erase link */
+
+			#ifdef DEBUG
+			assert(!hasSelectionExact(t, *base));
+			assert(size - 1 == countSelection(*base));
+			#endif
+			return t;
+		}
+		prev = t;
+	}
+
+	#ifdef DEBUG
+	/* assert(!hasSelection(key, *base)); */
+	assert(size == countSelection(*base));
+	#endif
+	return NULL;
+}
+
+/**
+ * Removes the exact element key from base.
+ * base is modified, so a pointer pointer is required.
  */
-struct selection *removeSelectionValue(struct value *key, struct selection **base);
+struct selection *removeSelectionValue(struct value *key, struct selection **base){
+	if (!*base) return NULL;
+	struct selection *t = NULL, *prev = NULL;
 
-/** Remove the selection which matches the input key.
- * Can return NULL if key is not matched.
- * @param[in]  key  The selection to look for.
- * @param[in,out]  base The selection to search in.
- * @return      The removed selection element.
+	#ifdef DEBUG
+	int size = countSelection(*base);
+	#endif
+
+	for(t = *base; t; t = t->next){
+		if (t->val == key){
+			if (prev)	prev->next 	= t->next; /* skip over current */
+			else 			*base 			= t->next; /* move head to next */
+			t->next = NULL; /* Erase link */
+
+			#ifdef DEBUG
+			assert(!hasSelectionExact(t, *base));
+			assert(size - 1 == countSelection(*base));
+			#endif
+			return t;
+		}
+		prev = t;
+	}
+
+	#ifdef DEBUG
+	/* assert(!hasSelection(key, *base)); */
+	assert(size == countSelection(*base));
+	#endif
+	return NULL;
+}
+
+/**
+ * Removes an exact selection struct from a chain.
+ * base is modified, so a pointer pointer is required.
  */
-struct selection *removeSelectionExact(struct selection *key, struct selection **base);
+struct selection *removeSelectionExact(struct selection *key, struct selection **base){
+	if (!*base) return NULL;
+	struct selection *t = NULL, *prev = NULL;
+
+	#ifdef DEBUG
+	int size = countSelection(*base);
+	#endif
+
+	for(t = *base; t; t = t->next){
+		if (t == key){
+			if (prev)	prev->next 	= t->next; /* skip over current */
+			else 			*base 			= t->next; /* move head to next */
+			t->next = NULL; /* Erase link */
+
+			#ifdef DEBUG
+			assert(!hasSelectionExact(t, *base));
+			assert(size - 1 == countSelection(*base));
+			#endif
+			return t;
+		}
+		prev = t;
+	}
+
+	#ifdef DEBUG
+	/* assert(!hasSelection(key, *base)); */
+	assert(size == countSelection(*base));
+	#endif
+	return NULL;
+}
 
 
-/** Duplicates a selection and its contents WITHOUT aliasing it.
- * @param[in]  base The selection to copy.
- * @return      A copied, non-aliased version of base.
+/**
+ *
  */
-struct selection *copySelection(struct selection *base);
+struct selection *copySelection(struct selection *base){
+	return newSelection(newValue(base->val->i, NULL), NULL);
+}
 
 
-/** Counts the length of a selection.
- * If base is NULL, a length of 0 is returned.
- * @param[in]  base The selection to count the size of. Can be NULL.
- * @return      An integer representing the length of the selection.
+/**
+ * Iteratively increments a counter for each element.
  */
-int countSelection(struct selection *base);
+int countSelection(struct selection *base){
+	struct selection *t = NULL;
+	int c = 0;
+	for (t = base; t; t = t->next) c++;
 
-/** Searches a selection to determine if a selection contains another exact selection struct.
- * @param[in]  base The selection to count the size of. Can be NULL.
- * @return      True if key is within base. False otherwise.
+	#ifdef DEBUG
+	assert(c >= 0);
+	#endif
+	return c;
+}
+
+/**
+ * Iteratively checks for the input key.
  */
-bool hasSelectionExact(struct selection *key, struct selection *base);
+bool hasSelectionExact(struct selection *key, struct selection *base){
+	if (!base) return false;
+	struct selection *t = NULL;
 
-/** Searches a selection to determine if a selection contains an exact value struct.
- * @param[in]  base The selection to count the size of. Can be NULL.
- * @return     True if key is within base. False otherwise.
+	for(t = base; t; t = t->next){
+		if (t == key){
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Iteratively checks for the input key.
  */
-bool hasSelection(struct value *key, struct selection *base);
+bool hasSelection(struct value *key, struct selection *base){
+	if (!base) return false;
+	struct selection *t = NULL;
 
-/** Assign an AST structure to a symbol.
- * @param[in,out] name The symbol reference to assign a meaning to. Cannot be NULL.
- * @param[in] val  The definition to be assigned to name
- * @sideeffect
+	for(t = base; t; t = t->next){
+		if (t->val == key){
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * The old value is freed.
  */
-void setsym(struct symbol *name, struct ast *val);
+void setsym(struct symbol *name, struct ast *val){
+	if (name->func){
+		freeAst( &name->func );
+		#ifdef DEBUG
+		assert(!name->func);
+		#endif
+		name->func = malloc(sizeof(struct ast));
+	}
+	name->func = val;
+}
 
 
-/** Evaluates an AST to produce an output.
- * Evaluation does not modify the input nodes, allowing for better memory management.
- * @param[in]  base The current AST node to evaluate.
- * @return      The result of the base node's operation.
+/**
+ * Frees all contained values within a result variable.
+ * Result values should only be aliased within functions and never passed between, reducing risk of memory problems.
  */
-struct result *eval(struct ast *base);
+void freeResult(struct result **res){
+	switch ((*res)->type){
+	case R_roll:	freeValue(&(*res)->faces);
+	case R_set:		freeValue(&(*res)->out); break;
+	case R_die:		freeValue(&(*res)->faces); break;
+	case R_int:
+	}
 
+	#ifdef DEBUG
+	assert(!(*res)->faces && !(*res)->out);
+	#endif
 
-/** Frees memory allocated to input res according to its inout type.
- * @param[in,out] res The result node to free.
- */
-void freeResult(struct result **res);
+	free(*res);
+	*res = NULL;
+
+	#ifdef DEBUG
+	assert(!*res);
+	#endif
+}
 
 /** Frees memory allocated to a selection chain.
  * Since selection values are aliased, this function only frees the selection nodes, not their values.
  * @param[in,out] res The node to free.
  */
-void freeSelection(struct selection **sel);
+void freeSelection(struct selection **sel){
+struct selection *nsel = NULL;
+while(*sel){
+	nsel = (*sel)->next;
+	free(*sel);
+	*sel = NULL;
+	*sel = nsel;
+}
+
+#ifdef DEBUG
+assert(!*sel);
+#endif
+}
+
+
+/**
+ * 
+ */
+struct result *eval(struct ast *base);
