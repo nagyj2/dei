@@ -1,6 +1,7 @@
 
 #include <stdarg.h> /* needed for yyerror */
 #include <assert.h>
+#include <time.h> /* time */
 
 #include "deimain.h"
 #include "struct.h"
@@ -10,6 +11,9 @@
 #endif
 
 int main(int argc, char **argv){
+
+	/* seed random number generator */
+	srand(time(NULL));
 
 	#ifdef TESTS
 	test_value();

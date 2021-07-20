@@ -6,7 +6,7 @@
 #ifndef DEIMAIN_H_INCLUDED
 #define DEIMAIN_H_INCLUDED
 
-#include <stdlib.h>
+#include <stdlib.h> /* srand */
 #include <stdio.h> /* needed for FILE */
 #include "struct.h"
 

@@ -5,8 +5,8 @@
 #ifndef EVAL_H_INCLUDED
 #define EVAL_H_INCLUDED
 
-#include <stdlib.h>
-#include <stdbool.h>
+#include <stdlib.h> /* rand */
+#include <stdbool.h> /* bool */
 
 
 #include "struct.h"

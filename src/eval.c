@@ -18,6 +18,22 @@
  */
 void ensureType(struct result *res);
 
+
+int randint(int min, int max){
+	return (rand() % (max + 1 - min)) + min;
+}
+
+struct value *rollSet(int times, struct value *faces){
+	struct value *r = NULL, *t = NULL;
+	int len = countValue(faces);
+	for (int i = 0; i < times; i++){
+		int j = randint(0, len-1); /* index by element */
+		for (t = faces; j > 0; t = t->next, j--) { /* skip */ }
+		r = newValue(t->i, r); /* use the element */
+	}
+	return r;
+}
+
 /**
  * Allocates memory for a new struct.
  * If memory cannot be allocated, an error is thrown.
@@ -297,8 +313,8 @@ struct result *eval(struct ast *base){
 
 	switch (base->nodetype){
 	case '+': case '-': case '*': case DIV: case '%': case '^':
-	case '1': /* > */ case '2': /* < */ case '3': /* != */
-	case '4': /* == */ case '5': /* >= */ case '6': /* <= */{
+	case '1': /* > */ 	case '2': /* < */ 	case '3': /* != */
+	case '4': /* == */ 	case '5': /* >= */ 	case '6': /* <= */ {
 		r->type = R_int;
 		struct result *larg = eval(base->l);
 		struct result *rarg = eval(base->r);
@@ -340,13 +356,38 @@ struct result *eval(struct ast *base){
 	case 'h': /* choose */
 	case 'i': /* reroll */
 
-	case 'R': /* roll nat die */
-	case 'r': /* roll artificial die */
-	case 'Z': /* strip faces */
-	case 'S': /* sum roll values */
-
+	case 'R': /* roll nat die */ case 'r': /* roll artificial die */ {
+		r->type = R_roll;
+		struct result *die = eval(base->l);
+		r->faces = dupValue(die->faces);
+		r->out = rollSet(die->integer, r->faces);
+		freeResult( &die );
+		break;
+	}
+	case 'Z': /* strip faces */ {
+		r->type = R_set;
+		struct result *roll = eval(base->l);
+		r->out = dupValue(roll->out);
+		freeResult( &roll );
+		break;
+	}
+	case 'S': /* sum roll values */{
+		r->type = R_int;
+		struct result *set = eval(base->l);
+		r->integer = sumValue(set->out);
+		freeResult( &set );
+		break;
+	}
 	case 'D': /* natural die definition */
+		r->type = R_die;
+		r->faces = newValueChain(((struct natdie *)base)->min, ((struct natdie *)base)->max);
+		r->integer = ((struct natdie *)base)->count;
+		break;
 	case 'd': /* artificial die def. */
+		r->type = R_die;
+		r->faces = dupValue(((struct setdie *)base)->faces);
+		r->integer = ((struct natdie *)base)->count;
+		break;
 	case 'I': /* natural integer */
 		r->type = R_int;
 		r->integer = ((struct natint *)base)->integer;
@@ -355,6 +396,9 @@ struct result *eval(struct ast *base){
 	case 'Q': /* artificial roll */
 	case 'E': /* sym call */
 	case 'A': /* sym definition */
+	default:
+		printf("unknwon eval type, got %d",base->nodetype);
+		exit(3);
 	}
 
 	return r;
