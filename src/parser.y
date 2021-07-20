@@ -71,15 +71,15 @@ func:		die													{ $$ = newAst('R', $1, NULL); }
 a_args:		SQUANT ssel fquant				{ $$ = newFargs($3, $2, $1, C_none); }
 	|				NUM ssel fquant						{ $$ = newFargs($3, $2, $1, C_none); }
 	|				ssel fquant								{ $$ = newFargs($2, $1,  1, C_none); }
-	|				PSELECT fquant						{ $$ = newFargs($2, $1, S_all 1, C_none); }
-	|				NUM 's' fquant						{ $$ = newFargs($3, $1, S_all 1, C_none); }
+	|				PSELECT fquant						{ $$ = newFargs($2, $1, S_all, C_none); }
+	|				NUM 's' fquant						{ $$ = newFargs($3, $1, S_all, C_none); }
 	;
 
 s_args:		SQUANT ssel								{ $$ = newFargs( 1, $2, $1, C_none); }
 	|				NUM ssel									{ $$ = newFargs( 1, $2, $1, C_none); }
 	|				ssel											{ $$ = newFargs( 1, $1,  1, C_none); }
-	|				PSELECT										{ $$ = newFargs( 1, $1, S_all 1, C_none); }
-	|				NUM 's'										{ $$ = newFargs( 1, $1, S_all 1, C_none); }
+	|				PSELECT										{ $$ = newFargs( 1, $1, S_all, C_none); }
+	|				NUM 's'										{ $$ = newFargs( 1, $1, S_all, C_none); }
 	;
 
 m_args:		SQUANT ssel fquant 					{ $$ = newFargs($3, $2, $1, C_none); }
@@ -88,10 +88,10 @@ m_args:		SQUANT ssel fquant 					{ $$ = newFargs($3, $2, $1, C_none); }
 	|				SQUANT ssel IF COND fquant	{ $$ = newFargs($5, $2, $1, $4); }
 	|				NUM ssel IF COND fquant			{ $$ = newFargs($5, $2, $1, $4); }
 	|				ssel IF COND fquant					{ $$ = newFargs($4, $1,  1, $3); }
-	|				PSELECT fquant 							{ $$ = newFargs($2, $1, S_all 1, C_none); }
-	|				NUM 's' fquant 							{ $$ = newFargs($3, $1, S_all 1, C_none); }
-	|				PSELECT IF COND fquant 			{ $$ = newFargs($4, $1, S_all 1, $3); }
-	|				NUM 's' IF COND fquant 			{ $$ = newFargs($5, $1, S_all 1, $4); }
+	|				PSELECT fquant 							{ $$ = newFargs($2, $1, S_all, C_none); }
+	|				NUM 's' fquant 							{ $$ = newFargs($3, $1, S_all, C_none); }
+	|				PSELECT IF COND fquant 			{ $$ = newFargs($4, $1, S_all, $3); }
+	|				NUM 's' IF COND fquant 			{ $$ = newFargs($5, $1, S_all, $4); }
 	;
 
 ssel: 		SSELECT 									{ $$ = $1; }
