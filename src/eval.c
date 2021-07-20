@@ -305,6 +305,7 @@ assert(!*sel);
 struct result *eval(struct ast *base){
 	struct result *r = malloc(sizeof(struct result));
 	r->faces = NULL; r->out = NULL; /* set unuseds to NULL */
+	r->integer = 0; /* unused ->keep? */
 
 	if (!r){
 		printf("out of space\n");
@@ -359,7 +360,19 @@ struct result *eval(struct ast *base){
 		break;
 	}
 	case '|':
-	case INTER:
+	case INTER: {
+		r->type = R_set;
+		struct result *larg = eval(base->l);
+		struct result *rarg = eval(base->r);
+		struct value *t = NULL;
+		r->out = dupValue(larg->out);
+		for(t = rarg->out; t; t = t->next){
+			if (hasValue(t->i,larg->out)) r->out = newValue(t->i, r->out);
+		}
+		freeResult( &larg );
+		freeResult( &rarg );
+		break;
+	}
 	case UNION:
 
 	case 'e': /* append */
