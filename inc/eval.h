@@ -30,7 +30,7 @@ enum rifs {
  * Never passed between functions.
  */
 struct selection {
-	struct value **val;			/**< A value being 'selected', or points to other result node's values. Cannot be NULL. */
+	struct value *val;			/**< A value being 'selected', or points to other result node's values. Cannot be NULL. */
 	struct selection *next;	/**< The next selected element. Can be NULL. */
 };
 
@@ -45,12 +45,10 @@ struct result {
 	int *integer;						/**< If type is @ref R_int Otherwise it is NULL. */
 };
 
-#ifdef DEBUG
 /** Tests a result struct to ensure relevant fields are filled and others are not.
  * @param[in] res The result struct to be tested.
  */
 void ensureType(struct result *res);
-#endif
 
 /** Creates a selection node which points to the input value pointer.
  * If prev is not NULL, the new selection will point its next field to prev.
@@ -59,7 +57,7 @@ void ensureType(struct result *res);
  * @param[in]  prev The value the new selection's next should point to. Can be NULL.
  * @return      A pointer to a new selection head.
  */
-struct selection *newSelection(struct value **val, struct selection *prev);
+struct selection *newSelection(struct value *val, struct selection *prev);
 
 /** Returns the back of a selection chain.
  * @param[in]  base The head of a selection chain. Can be NULL.
