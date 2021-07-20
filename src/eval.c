@@ -288,6 +288,7 @@ assert(!*sel);
  */
 struct result *eval(struct ast *base){
 	struct result *r = malloc(sizeof(struct result));
+	r->faces = NULL; r->out = NULL; /* set unuseds to NULL */
 
 	if (!r){
 		printf("out of space\n");
