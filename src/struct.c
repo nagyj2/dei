@@ -17,7 +17,7 @@ struct symbol symtab[NHASH];    /* symbol table itself */
  * Allocates new memory for the struct and then populates its values.
  * Assigns prev to next without checking because it is either NULL, meaning a new chain or it
  * is a new head, so it becomes the next element.
- * Returns NULL if the memory could not be allocated.
+ * Returns NULL if memory could not be allocated.
  */
 struct value *newValue(int i, struct value *prev){
 	struct value *a = malloc(sizeof(struct value));
@@ -57,7 +57,8 @@ struct value *dupValue(struct value *base){
 }
 
 /**
- * Iteratively work through the chain until the next element is null. That indicates the chain end.
+ * Iteratively work through the chain until the next element is NULL.
+ * Aliases the final element.
  */
 struct value *backValue(struct value *base){
 	struct value *t = NULL;
@@ -74,6 +75,7 @@ struct value *backValue(struct value *base){
 /**
  * Iteratively search for the key and return the first match. Will return NULL
  * if the key is not in base or base itself is NULL.
+ * Aliases the found element.
  */
 struct value *findValue(int key, struct value *base){
 	if (!base) return NULL;
@@ -92,7 +94,7 @@ struct value *findValue(int key, struct value *base){
  * When found, the value is extracted by modifying the previous element's next attribute.
  * The pointer attached to the new value is then returned.
  */
-struct value *popValue(int key, struct value **base){
+struct value *removeValue(int key, struct value **base){
 	if (!*base) return NULL;
 	struct value *t = NULL, *prev = NULL;
 
@@ -127,7 +129,7 @@ struct value *popValue(int key, struct value **base){
  * When found, the element is removed from the chain and modified to completely separate it.
  * It is then returned.
  */
-struct value *removeValue(struct value *key, struct value **base){
+struct value *removeValueExact(struct value *key, struct value **base){
 	if (!*base || !key) return NULL;
 	struct value *t = NULL, *prev = NULL;
 
