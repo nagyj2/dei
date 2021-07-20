@@ -40,7 +40,7 @@ struct result {
 	int type;								/**< The type of result. Determines which field will be populated. Depends on production being evaluated. Must be from @ref rifs */
 	struct value *faces;		/**< If type is @ref R_die or @ref R_roll, this represents the faces on the die. Can be NULL for R_roll. Otherwise it is NULL.  */
 	struct value *out;			/**< If type is @ref R_roll or @ref R_set, this represents the actual rolled numbers. Otherwise it is NULL. */
-	int *integer;						/**< If type is @ref R_int Otherwise it is NULL. */
+	int integer;						/**< If type is @ref R_int Otherwise it is NULL. */
 };
 
 /** Tests a result struct to ensure relevant fields are filled and others are not.

@@ -8,6 +8,7 @@
 #include "deimain.h"
 #include "struct.h"
 #include "ast.h"
+#include "eval.h"
 
 %}
 
@@ -123,7 +124,7 @@ stmt:		math 												{ $$ = $1; }
 	| 		IDENT ':' math							{ $$ = newAsgn($1, $3); }
 	;
 
-line: 	line stmt EOL 							{ printAst($2); freeAst(&$2); printf("\nparsed!\n> "); }
+line: 	line stmt EOL 							{ printAst($2); struct result *r = eval($2); printf(" = %d\n", r->integer); freeResult(&r); freeAst(&$2); printf("\nparsed!\n> "); }
 	|			line '@' stmt EOL						{ freeAst(&$3); }
 	|			line error EOL							{ printf("error!\n> "); }
 	|			line '@' error EOL					{  }

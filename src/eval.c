@@ -2,11 +2,14 @@
  * @file eval.c
  */
 #include <stdio.h> /* printf */
+#include <math.h> /* pow */
+
 
 #ifdef DEBUG
 #include <assert.h> /* assert */
 #endif
 
+#include "parser.tab.h" /* DIV, INTER, UNION */
 #include "eval.h"
 
 
@@ -238,21 +241,6 @@ bool hasSelection(struct value *key, struct selection *base){
 }
 
 /**
- * The old value is freed.
- */
-void setsym(struct symbol *name, struct ast *val){
-	if (name->func){
-		freeAst( &name->func );
-		#ifdef DEBUG
-		assert(!name->func);
-		#endif
-		name->func = malloc(sizeof(struct ast));
-	}
-	name->func = val;
-}
-
-
-/**
  * Frees all contained values within a result variable.
  * Result values should only be aliased within functions and never passed between, reducing risk of memory problems.
  */
@@ -296,6 +284,69 @@ assert(!*sel);
 
 
 /**
- * 
+ *
  */
-struct result *eval(struct ast *base);
+struct result *eval(struct ast *base){
+	struct result *r = malloc(sizeof(struct result));
+
+	if (!r){
+		printf("out of space\n");
+		exit(1);
+	}
+
+	switch (base->nodetype){
+	case '+': case '-': case '*': case DIV: case '%': case '^': {
+		r->type = R_int;
+		struct result *larg = eval(base->l);
+		struct result *rarg = eval(base->r);
+		switch (base->nodetype){
+		case '+': r->integer = larg->integer + rarg->integer; break;
+		case '-': r->integer = larg->integer - rarg->integer; break;
+		case '*': r->integer = larg->integer * rarg->integer; break;
+		case DIV: r->integer = larg->integer / rarg->integer; break;
+		case '%': r->integer = larg->integer % rarg->integer; break;
+		case '^': r->integer = pow(larg->integer, rarg->integer); break;
+		}
+		freeResult( &larg );
+		freeResult( &rarg );
+		break;
+	}
+
+	case '1': /* > */
+	case '2': /* < */
+	case '3': /* != */
+	case '4': /* == */
+	case '5': /* >= */
+	case '6': /* <= */
+	case 'M':
+
+	case '&':
+	case '|':
+	case INTER:
+	case UNION:
+
+	case 'e': /* append */
+	case 'f': /* drop */
+	case 'g': /* count */
+	case 'h': /* choose */
+	case 'i': /* reroll */
+
+	case 'R': /* roll nat die */
+	case 'r': /* roll artificial die */
+	case 'Z': /* strip faces */
+	case 'S': /* sum roll values */
+
+	case 'D': /* natural die definition */
+	case 'd': /* artificial die def. */
+	case 'I': /* natural integer */
+		r->type = R_int;
+		r->integer = ((struct natint *)base)->integer;
+		break;
+	case 'C': /* function arguments */
+	case 'Q': /* artificial roll */
+	case 'E': /* sym call */
+	case 'A': /* sym definition */
+	}
+
+	return r;
+}
