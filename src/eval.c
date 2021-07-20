@@ -351,7 +351,7 @@ struct result *eval(struct ast *base){
 		struct result *larg = eval(base->l);
 		struct result *rarg = eval(base->r);
 		struct value *t = NULL;
-		if (base->nodetype == INTER) r->out = dupValue(larg->out);
+		if (base->nodetype == INTER) r->out = dupValue(larg->out); /* if '&', start from NULL */
 		for(t = rarg->out; t; t = t->next){
 			if (hasValue(t->i,larg->out)) r->out = newValue(t->i, r->out);
 		}
@@ -359,29 +359,21 @@ struct result *eval(struct ast *base){
 		freeResult( &rarg );
 		break;
 	}
-	case '|': {
+	case '|': case UNION: {
 		r->type = R_set;
 		struct result *larg = eval(base->l);
 		struct result *rarg = eval(base->r);
 		struct value *t = NULL;
 		r->out = dupValue(larg->out);
-		for(t = rarg->out; t; t = t->next){
-			if (!hasValue(t->i, r->out))
+		if (base->nodetype == '|'){
+			for(t = rarg->out; t; t = t->next){
+				if (!hasValue(t->i, r->out))
 				r->out = newValue(t->i, r->out);
-		}
-		freeResult( &larg );
-		freeResult( &rarg );
-		break;
-	}
-
-	case UNION: {
-		r->type = R_set;
-		struct result *larg = eval(base->l);
-		struct result *rarg = eval(base->r);
-		struct value *t = NULL;
-		r->out = dupValue(larg->out);
-		for(t = rarg->out; t; t = t->next){
-			r->out = newValue(t->i, r->out);
+			}
+		}else{
+			for(t = rarg->out; t; t = t->next){
+				r->out = newValue(t->i, r->out);
+			}
 		}
 		freeResult( &larg );
 		freeResult( &rarg );
