@@ -345,7 +345,19 @@ struct result *eval(struct ast *base){
 		break;
 	}
 
-	case '&':
+	case '&':	{
+		r->type = R_set;
+		struct result *larg = eval(base->l);
+		struct result *rarg = eval(base->r);
+		struct value *t = NULL;
+		//r->out = dupValue(larg->out);
+		for(t = rarg->out; t; t = t->next){
+			if (hasValue(t->i,larg->out)) r->out = newValue(t->i, r->out);
+		}
+		freeResult( &larg );
+		freeResult( &rarg );
+		break;
+	}
 	case '|':
 	case INTER:
 	case UNION:
