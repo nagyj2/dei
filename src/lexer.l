@@ -98,6 +98,7 @@
 
 	/* number */
 [0-9]+/"d"  { yylval.i = atoi(yytext); return DNUM; } /* detect die quantifiers different */
+[0-9]+/"s"  { yylval.i = atoi(yytext); return PNUM; } /* detect plural number selector */
 [0-9]+      { yylval.i = atoi(yytext); return NUM; }
 
 	/* go into andf out of states */
