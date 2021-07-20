@@ -9,6 +9,8 @@
 
 #include "struct.h"
 
+extern int yylineno;
+
 /* ===== DATAS ===== */
 
 struct symbol symtab[NHASH];    /* symbol table itself */
@@ -192,7 +194,7 @@ struct value *copyValue(struct value *base){
  * Displays a warning if the minimum is greater than the maximum.
  */
 struct value *newValueChain(int min, int max){
-	if (min > max) printf("warning: min > max. empty value\n");
+	if (min > max) {printf("%d warning: min=%d > max=%d, empty die\n",yylineno,min,max); max = min;}
 	struct value *val1 = NULL;
 	for (int i = max; i >= min; i--)
 		val1 = newValue(i, val1);
