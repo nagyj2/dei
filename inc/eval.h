@@ -132,13 +132,6 @@ bool hasSelectionExact(struct selection *key, struct selection *base);
  */
 bool hasSelection(struct value *key, struct selection *base);
 
-/** Assign an AST structure to a symbol.
- * @param[in,out] name The symbol reference to assign a meaning to. Cannot be NULL.
- * @param[in] val  The definition to be assigned to name
- * @sideeffect
- */
-void setsym(struct symbol *name, struct ast *val);
-
 
 /** Evaluates an AST to produce an output.
  * Evaluation does not modify the input nodes, allowing for better memory management.

@@ -183,9 +183,10 @@ struct ast *newSetres(struct value *out);
  */
 struct ast *newSymcall(struct symbol *sym);
 
-/** Set the definition of name to def.
- * @param name[in,out] Pointer to the symbol to save. Cannot be NULL.
- * @param def[in]  What the symbol will represent. Cannot be NULL.
+/** Assign an AST structure to a symbol.
+ * @param[in,out] name The symbol reference to assign a meaning to. Cannot be NULL.
+ * @param[in] val  The definition to be assigned to name
+ * @sideeffect name will have a new func value
  */
 void setsym(struct symbol *name, struct ast *def);
 

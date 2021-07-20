@@ -229,14 +229,15 @@ struct ast *newSymcall(struct symbol *sym){
  * all pointers to the same location, so the definition pointer is simply freed if present
  * and then re-set.
  */
-void setsym(struct symbol *name, struct ast *def){
-	//DEBUG_REPORT("place at %p", name);
-  if (name->func){ /* NOTE allocated in lookup, so this will always run*/
-    freeAst( &(name->func) );
-    name->func = malloc(sizeof(struct ast));
-  }
-
-  name->func = def;
+void setsym(struct symbol *name, struct ast *val){
+	if (name->func){
+		freeAst( &name->func );
+		#ifdef DEBUG
+		assert(!name->func);
+		#endif
+		name->func = malloc(sizeof(struct ast));
+	}
+	name->func = val;
 }
 
 
