@@ -6,6 +6,7 @@
 #ifndef AST_H_INCLUDED
 #define AST_H_INCLUDED
 
+#include <string.h> /* strdup */
 
 #include "struct.h"
 
@@ -182,6 +183,17 @@ struct ast *newSetres(struct value *out);
  * @return     An AST node representing a symbol call. Cannot be NULL.
  */
 struct ast *newSymcall(struct symbol *sym);
+
+/* = Symtab = */
+
+/** The symbol table which stores variables. */
+extern struct symbol symtab[NHASH];
+/** Searches the symbol table for a name and returns its location.
+ * If the symbol table cannot find an already created version of the symbol, it will create a new entry and return it.
+ * @param[in]  s The name of the symbol to search for.
+ * @return   A pointer to the storage location of the symbol within the symbol table.
+ */
+struct symbol *lookup(char *s);
 
 /** Assign an AST structure to a symbol.
  * @param[in,out] name The symbol reference to assign a meaning to. Cannot be NULL.

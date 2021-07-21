@@ -1,7 +1,6 @@
 
 #include <stdlib.h> /* malloc, exit */
 #include <stdio.h> /* printf */
-#include <string.h> /* strdup */
 
 #ifdef DEBUG
 #include <assert.h> /* assert */
@@ -268,64 +267,6 @@ bool hasValue(int key, struct value *base){
 	return false;
 }
 
-
-/* create a new symbol table */
-/*void newSymtab(struct symbol *result[]){
-}*/
-
-/** Perform a hash algorithm to determine positioning in the symbol table.
- * @param  sym The symbol to hash upon.
- * @return     The index to start looking in the symbol table.
- */
-static unsigned symhash(char *sym){
-
-  unsigned int hash = 0;
-  unsigned c;
-
-  while ((c = *sym++)) hash = hash*9 ^ c;
-  return hash;
-}
-
-/**
- * Initial position is determined by hashing it and then iteratively looking for either
- * an existing entry or a free space top place it. If the entry already exists, it will always
- * be found before an empty slot, assuming no entries are deleted.
- * Causes a crash if the symbol table is filled.
- */
-struct symbol *lookup(char *sym){
-
-  struct symbol *sp = &symtab[symhash(sym)%NHASH]; /* symtab position's contents */
-  int scount = NHASH; /* how many slots we have yet to look at */
-
-  while (--scount >= 0){
-    /* if entry exists, check if it is the same and return if it is */
-    if (sp->name && !strcmp(sp->name, sym)) {
-
-      //DEBUG_REPORT("found %s at %p\n", sp->name, sp);
-      #ifdef DEBUG
-      printf("found %s at %p\n",sp->name,sp);
-			#endif
-      return sp;
-    }
-
-    /* if no entry, make an entry and return it */
-    if (!sp->name){
-      sp->name = strdup(sym);
-      //DEBUG_REPORT("new %s at %p(%p)\n", sp->name, sp, sp->func);
-			#ifdef DEBUG
-			printf("new %s at %p\n",sp->name,sp);
-			#endif
-      return sp;
-    }
-
-    /* if no return, try the next entry */
-    /* increment the pointer and if out of bounds (goto next), loop to start of symtab */
-    if (++sp >= symtab+NHASH) sp = symtab;
-  }
-
-  printf("symbol table overflow\n");
-  exit(2); /* tried all entries, table is full */
-}
 
 
 /* === MEMORY MANAGEMENT === */
