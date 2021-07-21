@@ -34,7 +34,7 @@ struct selection {
 
 /** The result type used for evaluation.
  * The result type used type to determine which other field will be used for tracking the result.
- * All elements, except for the val state variable of sel, are completely separate se
+ * All elements, except for the val state variable of sel, are completely separate
  */
 struct result {
 	int type;								/**< The type of result. Determines which field will be populated. Depends on production being evaluated. Must be from @ref rifs */
@@ -49,8 +49,8 @@ struct result {
 void ensureType(struct result *res);
 
 /** Creates a selection node which points to the input value pointer.
- * If \p prev is not NULL, the new selection will point its next field to \p prev.
- * If \p prev is NULL, an entirely new selection will be created.
+ * If @p prev is not NULL, the new selection will point its next field to @p prev.
+ * If @p prev is NULL, an entirely new selection will be created.
  * @param[in]  val  The value object to 'select'.
  * @param[in]  prev The value the new selection's next should point to. Can be NULL.
  * @return      A pointer to a new selection head.
@@ -63,7 +63,7 @@ struct selection *newSelection(struct value *val, struct selection *prev);
  */
 struct selection *backSelection(struct selection *base);
 
-/** Return the first instance holding the same value as integer \p key.
+/** Return the first instance holding the same value as integer @p key.
 * Returns a selection pointer to a value struct which has the same integer value as the input key.
 * Can return NULL if the key is not in base.
 * @param[in]  key  The integer key to search for.
@@ -74,7 +74,7 @@ struct selection *findSelection(int key, struct selection *base);
 
 /** Search for an exact value struct within a selection.
 * Returns a selection pointer to a value struct which has the exact address as key.
-* Can return NULL if the \p key is not in \p base.
+* Can return NULL if the @p key is not in @p base.
 * @param[in]  key  The value key to search for.
 * @param[in]  base The selection to search in.
 * @return      The selection element which has the same address as the key. Can be NULL.
@@ -82,7 +82,7 @@ struct selection *findSelection(int key, struct selection *base);
 struct selection *findSelectionExact(struct value *key, struct selection *base);
 
 /** Remove the first selection element which has a matching key and return it.
- * Can return NULL if \p key is not matched.
+ * Can return NULL if @p key is not matched.
  * @param[in]  key  The integer value to look for.
  * @param[in,out]  base The selection to search in.
  * @return      The removed selection element.
@@ -90,7 +90,7 @@ struct selection *findSelectionExact(struct value *key, struct selection *base);
 struct selection *removeSelection(int key, struct selection **base);
 
 /** Remove the element which has a matching value address and return it.
- * Can return NULL if \p key is not matched.
+ * Can return NULL if @p key is not matched.
  * @param[in]  key  The value struct value to look for.
  * @param[in,out]  base The selection to search in.
  * @return      The removed selection element.
@@ -98,7 +98,7 @@ struct selection *removeSelection(int key, struct selection **base);
 struct selection *removeSelectionValue(struct value *key, struct selection **base);
 
 /** Remove the selection which matches the input key.
- * Can return NULL if \p key is not matched.
+ * Can return NULL if @p key is not matched.
  * @param[in]  key  The selection to look for.
  * @param[in,out]  base The selection to search in.
  * @return      The removed selection element.
@@ -114,7 +114,7 @@ struct selection *copySelection(struct selection *base);
 
 
 /** Counts the length of a selection.
- * If \p base is NULL, a length of 0 is returned.
+ * If @p base is NULL, a length of 0 is returned.
  * @param[in]  base The selection to count the size of. Can be NULL.
  * @return      An integer representing the length of the selection.
  */
@@ -122,19 +122,19 @@ int countSelection(struct selection *base);
 
 /** Searches a selection to determine if a selection contains another exact selection struct.
  * @param[in]  base The selection to count the size of. Can be NULL.
- * @return      True if \p key is within \p base. False otherwise.
+ * @return      True if @p key is within @p base. False otherwise.
  */
 bool hasSelectionExact(struct selection *key, struct selection *base);
 
 /** Searches a selection to determine if a selection contains an exact value struct.
  * @param[in]  base The selection to count the size of. Can be NULL.
- * @return     True if \p key is within \p base. False otherwise.
+ * @return     True if @p key is within @p base. False otherwise.
  */
 bool hasSelection(struct value *key, struct selection *base);
 
 /** Searches a selection to determine if a integers has been selected.
  * @param[in]  base The selection to count the size of. Can be NULL.
- * @return     True if \p key is within \p base. False otherwise.
+ * @return     True if @p key is within @p base. False otherwise.
  */
 bool hasSelectionInt(int key, struct selection *base);
 
@@ -142,7 +142,7 @@ bool hasSelectionInt(int key, struct selection *base);
 /** Evaluates an AST to produce an output.
  * Evaluation does not modify the input nodes, allowing for better memory management.
  * @param[in]  base The current AST node to evaluate.
- * @return      The result of the \p base node's operation.
+ * @return      The result of the @p base node's operation.
  */
 struct result *eval(struct ast *base);
 
