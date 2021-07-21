@@ -28,10 +28,10 @@ enum bifs {
  */
 enum sifs {
 	S_all = -1,							/**< Plural - Select ALL possible values */
-	S_high = 1,							/**< Single - Select the highest value */
-	S_low = 2,							/**< Single - Select the lowest value */
-	S_rand = 3,							/**< Single - Select a random value */
-	S_unique = 4						/**< Plural - Select ALL unique values in the roll */
+	S_high = -2,						/**< Single - Select the highest value */
+	S_low = -3,							/**< Single - Select the lowest value */
+	S_rand = -4,						/**< Single - Select a random value */
+	S_unique = -5						/**< Plural - Select ALL unique values in the roll */
 };
 
 /** Function conditionals.

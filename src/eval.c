@@ -257,6 +257,21 @@ bool hasSelection(struct value *key, struct selection *base){
 }
 
 /**
+ * Iteratively checks for the input key.
+ */
+bool hasSelectionInt(int key, struct selection *base){
+	if (!base) return false;
+	struct selection *t = NULL;
+
+	for(t = base; t; t = t->next){
+		if (t->val->i == key){
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * Frees all contained values within a result variable.
  * Result values should only be aliased within functions and never passed between, reducing risk of memory problems.
  */
@@ -296,6 +311,118 @@ while(*sel){
 #ifdef DEBUG
 assert(!*sel);
 #endif
+}
+
+/** Frees memory allocated to a selection chain and the pointers contained within
+ * For appending operations, new value structs are created, so they must be cleaned specially.
+ * @param[in,out] res The node to free.
+ */
+void freeSelectionComplete(struct selection **sel){
+struct selection *nsel = NULL;
+while(*sel){
+	nsel = (*sel)->next;
+	if ((*sel)->val) freeValue( &(*sel)->val );
+	(*sel)->val = NULL;
+	#ifdef DEBUG
+	assert(!(*sel)->val);
+	#endif
+	free(*sel);
+	*sel = NULL;
+	*sel = nsel;
+}
+
+#ifdef DEBUG
+assert(!*sel);
+#endif
+}
+
+/** Performs a selection algorithm on rolled according to the options in opts.
+ * rolled is not modified, but the output contains pointers to the elements within.
+ * @param[in]  rolled The options the algorithm can select from.
+ * @param[in]  opts   Selection options, such as times and what to select.
+ * @return        A list of selected elements from rolled.
+ */
+struct selection *select(struct value *rolled, struct fargs *opts){
+	// if scount == -1 at start, set times to iterate to the same size as rolled
+}
+
+/** Generates a selection of value structs that are NOT contained within rolled.
+ * These new elements may be based off of rolled, but the output does not contain pointers to existing elements.
+ * These selected elements will eventually be placed into rolled.
+ * @param[in]  rolled Information the generation algorithm can act on.
+ * @param[in]  opts   Selection options, such as times and what to select.
+ * @return        A list of selected elements NOT from rolled.
+ */
+struct selection *generate(struct value *rolled, struct fargs *opts){
+	struct selection *sel = NULL;
+	int times = opts->scount;
+	int len = 0, prev = 0; /* lengths of selections. Used to detect when there is no length change */
+
+	do {
+		struct value *t = NULL;
+		int index = randint(0, countValue(rolled)-1); /* index to take from for random */
+		switch (opts->seltype){
+		case S_high:
+			for(t = rolled; t; t = t->next){ /* find first unselected and select it */
+				if (!hasSelection(t, sel)){
+					sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
+					break;
+				}
+			}
+			for(t = rolled; t; t = t->next){ /* iteratively find the highest */
+				if (t->i > sel->val->i && !hasSelection(t, sel)){
+					sel->val = copyValue(t); /* DONT ALIAS! */
+				}
+			}
+			#ifdef DEBUG
+			assert(sel->val);
+			#endif
+			break;
+		case S_low:
+			for(t = rolled; t; t = t->next){ /* find first unselected and select it */
+				if (!hasSelection(t, sel)){
+					sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
+					break;
+				}
+			}
+			for(t = rolled; t; t = t->next){ /* iteratively find the highest */
+				if (t->i < sel->val->i && !hasSelection(t, sel)){
+					sel->val = copyValue(t); /* DONT ALIAS! */
+				}
+			}
+			#ifdef DEBUG
+			assert(sel->val);
+			#endif
+			break;
+		case S_rand:
+			for(t = rolled; index-- > 0; t = t->next){ /* reduce index */ }
+			sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
+			#ifdef DEBUG
+			assert(sel->val);
+			#endif
+			break;
+		case S_unique:
+			/* find first unselected and select it */
+			sel = newSelection(copyValue(rolled), sel); /* S_unique has scount = 1 guarenteed */
+
+			for(t = rolled; t; t = t->next){ /* iteratively find uniques */
+				if (!hasSelectionInt(t->i, sel)){
+					sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
+				}
+			}
+			#ifdef DEBUG
+			assert(sel->val);
+			#endif
+			break;
+		default: /* numbers */
+			sel = newSelection(newValue(opts->seltype, NULL), sel);
+		}
+
+		prev = len;
+		len = countSelection(sel);
+		if (prev == len){ return sel; } /* no more changes */
+	} while (--times > 0);
+	return sel;
 }
 
 
@@ -380,7 +507,23 @@ struct result *eval(struct ast *base){
 		break;
 	}
 
-	case 'e': /* append */
+	case 'e': /* append */ {
+		r->type = R_roll;
+		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
+		struct selection *selected = generate(inputs->out, (struct fargs *) base->r), *t = NULL;
+		r->out = dupValue(inputs->out); /* duplicate entire chain */
+
+		for(t = selected; t; t = t->next){
+			switch(base->nodetype){
+			case 'e': /* append */
+				r->out = newValue(t->val->i, r->out);
+			}
+		}
+		freeSelectionComplete( &selected );
+		freeResult( &inputs );
+		break;
+	}
+
 	case 'f': /* drop */
 	case 'g': /* count */
 	case 'h': /* choose */

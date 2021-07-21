@@ -132,6 +132,12 @@ bool hasSelectionExact(struct selection *key, struct selection *base);
  */
 bool hasSelection(struct value *key, struct selection *base);
 
+/** Searches a selection to determine if a integers has been selected.
+ * @param[in]  base The selection to count the size of. Can be NULL.
+ * @return     True if key is within base. False otherwise.
+ */
+bool hasSelectionInt(int key, struct selection *base);
+
 
 /** Evaluates an AST to produce an output.
  * Evaluation does not modify the input nodes, allowing for better memory management.
