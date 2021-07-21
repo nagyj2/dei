@@ -1,3 +1,5 @@
+# Editor Files
+.vscode
 
 # Generated Files
 bin/**/*
