@@ -428,10 +428,18 @@ struct result *eval(struct ast *base){
 		break;
 	}
 	case 'C': /* function arguments */
-	case 'E': /* sym call */
-	case 'A': /* sym definition */
+	case 'E': /* sym call */ {
+		r = eval( ((struct symcall *)base)->sym->func );
+		break;
+	}
+	case 'A': /* sym definition */ {
+		r->type = R_int;
+		setsym(((struct astAsgn *)base)->s, ((struct astAsgn *)base)->l);
+		r->integer = 0; /* signal success */
+		break;
+	}
 	default:
-		printf("unknwon eval type, got %d",base->nodetype);
+		printf("unknown eval type, got %d",base->nodetype);
 		exit(3);
 	}
 
