@@ -35,7 +35,7 @@ func: 	die																<< $$ = R($1) >>
 	|			func F_MOD m_args									<< $$ = F($2, $1, $2) >>
 
 a_args:	squant ssel fquant 								<< $$ = C($3, $2, $1, NULL) >>
-	|			psel fquant												<< $$ = C($2, $1,  1, NULL) >>
+	|			PSELECT fquant										<< $$ = C($2, $1,  1, NULL) >>
 
 s_args:	squant ssel 											<< $$ = C( 1, $2, $1, NULL) >>
 	|			psel 															<< $$ = C( 1, $1,  1, NULL) >>
