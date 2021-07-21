@@ -26,7 +26,7 @@
 %token UNION INTER DIV RANGE IF XQUANT EXIT EOL
 
 %type <i> nnum fquant ssel
-%type <a> stmt math set func die a_args s_args m_args
+%type <a> math set func die a_args s_args m_args
 %type <v> list
 
 %start line
@@ -120,44 +120,17 @@ nnum:		NUM													{ $$ = $1; }
 	|			'-'	NUM											{ $$ = -$2; }
 	;
 
-stmt:		math 												{ $$ = $1; }
-	| 		IDENT ':' math							{ $$ = newAsgn($1, $3); }
-	;
-
-line: 	line stmt EOL 							{ printAst($2); struct result *r = eval($2); printf(" = %d\n", r->integer); freeResult(&r); freeAst(&$2); printf("\nparsed!\n> "); }
-	|			line '@' stmt EOL						{ freeAst(&$3); }
-	|			line error EOL							{ printf("error!\n> "); }
-	|			line '@' error EOL					{  }
-	|			line EOL										{  }
-	| 		line EXIT EOL								{ printf("closing!\n"); exit(0); }
-	| 		line '@' EXIT EOL						{ exit(0); }
-	|			line '@' EOL								{  }
-	|																	{  }
-	;
-
-%%
-
-/*
-line:		line math EOL								{ printAst($2); freeAst(&$2); printf("\nparsed!\n> "); }
-	|			line IDENT ':' math EOL			{ printf("saved!\n> "); }
+line:		line math EOL								{ printAst($2); struct result *r = eval($2); printf(" = %d\n", r->integer); freeResult(&r); freeAst(&$2); printf("\nparsed!\n> "); }
+	|			line IDENT ':' math EOL			{ setsym($2, $4); printf("saved!\n> "); }
 	|			line error EOL							{ printf("error!\n> "); }
 	|			line EXIT EOL								{ printf("closing!\n"); exit(0); }
 	|			line EOL										{ printf("> "); }
-	|			line '@' math EOL						{  }
-	|			line '@' IDENT ':' math EOL	{  }
+	|			line '@' math EOL						{ struct result *r = eval($3); freeResult(&r); freeAst(&$3); }
+	|			line '@' IDENT ':' math EOL	{ setsym($3, $5); }
 	|			line '@' error EOL					{ printf("silent error!\n") }
 	|			line '@' EXIT EOL						{ exit(0); }
 	|			line '@' EOL								{  }
 	|																	{  }
 	;
 
-psel: 		PSELECT 									{ $$ = $1; }
-	| 			NUM 's' 									{ $$ = $1; }
-	;
-
-squant: 	SQUANT 										{ $$ = $1; }
-	| 			NUM 											{ $$ = $1; }
-	| 																{ $$ =  1; }
-	;
-
-*/
+%%
