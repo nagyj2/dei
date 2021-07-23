@@ -327,11 +327,25 @@ void freeSelectionComplete(struct selection **sel){
 struct selection *nsel = NULL;
 while(*sel){
 	nsel = (*sel)->next;
-	if ((*sel)->val) freeValue( &(*sel)->val );
+	if ((*sel)->val) free( (*sel)->val );
 	(*sel)->val = NULL;
 	#ifdef DEBUG
 	assert(!(*sel)->val);
 	#endif
+	free(*sel);
+	*sel = NULL;
+	*sel = nsel;
+}
+
+#ifdef DEBUG
+assert(!*sel);
+#endif
+}
+
+void freeSelectionAliased(struct selection **sel){
+struct selection *nsel = NULL;
+while(*sel){
+	nsel = (*sel)->next;
 	free(*sel);
 	*sel = NULL;
 	*sel = nsel;
