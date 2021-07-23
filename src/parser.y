@@ -73,7 +73,7 @@ a_args:		SQUANT ssel fquant				{ $$ = newFargs($3, $2, $1, C_none); }
 	|				NUM ssel fquant						{ $$ = newFargs($3, $2, $1, C_none); }
 	|				SSELECT fquant						{ $$ = newFargs($2, $1,  1, C_none); }
 	|				NUM fquant								{ $$ = newFargs($2, $1,  1, C_none); }
-	|				PSELECT fquant						{ $$ = newFargs($2, $1, -1, C_none); }
+	|				PSELECT fquant						{ $$ = newFargs($2, $1,  1, C_none); }
 	;
 
 s_args:		SQUANT ssel								{ $$ = newFargs( 1, $2, $1, C_none); }

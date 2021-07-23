@@ -454,7 +454,7 @@ struct selection *generate(struct value *rolled, struct fargs *opts){
 	int len = 0, prev = 0, elem = countValue(rolled) - 1; 
 
 	if (opts->seltype == S_unique && times != 1)
-		printf("warning: unique selector is assumed to have 1 time!\n");
+		printf("warning: unique selector is assumed to have 1 time, got %d!\n", times);
 
 	do {
 		struct value *t = NULL;
