@@ -71,13 +71,15 @@ func:		die													{ $$ = newAst('R', $1, NULL); }
 
 a_args:		SQUANT ssel fquant				{ $$ = newFargs($3, $2, $1, C_none); }
 	|				NUM ssel fquant						{ $$ = newFargs($3, $2, $1, C_none); }
-	|				ssel fquant								{ $$ = newFargs($2, $1,  1, C_none); }
+	|				SSELECT fquant						{ $$ = newFargs($2, $1,  1, C_none); }
+	|				NUM fquant								{ $$ = newFargs($2, $1,  1, C_none); }
 	|				PSELECT fquant						{ $$ = newFargs($2, $1, -1, C_none); }
 	;
 
 s_args:		SQUANT ssel								{ $$ = newFargs( 1, $2, $1, C_none); }
 	|				NUM ssel									{ $$ = newFargs( 1, $2, $1, C_none); }
-	|				ssel											{ $$ = newFargs( 1, $1,  1, C_none); }
+	|				NUM												{ $$ = newFargs( 1, $1,  1, C_none); }
+	|				SSELECT										{ $$ = newFargs( 1, $1,  1, C_none); }
 	|				PSELECT										{ $$ = newFargs( 1, $1, -1, C_none); }
 	|				PNUM 's'									{ $$ = newFargs( 1, $1, -1, C_none); }
 	;

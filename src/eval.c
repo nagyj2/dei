@@ -336,14 +336,88 @@ assert(!*sel);
 #endif
 }
 
-/** Performs a selection algorithm on rolled according to the options in opts.
- * rolled is not modified, but the output contains pointers to the elements within.
+/** Performs a selection algorithm on @p rolled according to the options in @p opts.
+ * @p rolled is not modified, but the output contains pointers to the elements within.
  * @param[in]  rolled The options the algorithm can select from.
  * @param[in]  opts   Selection options, such as times and what to select.
- * @return        A list of selected elements from rolled.
+ * @return        A list of selected elements from @p rolled. Elements are aliased.
  */
 struct selection *select(struct value *rolled, struct fargs *opts){
 	// if scount == -1 at start, set times to iterate to the same size as rolled
+	struct selection *sel = NULL;
+	int elem = countValue(rolled) - 1, times = opts->scount;
+	if (elem == 0) return NULL;
+
+	if (opts->seltype > 0 && opts->scount == -1){
+		times = elem;
+	}
+
+	do {
+		struct value *t = NULL;
+		int index = randint(0, elem);
+
+		switch (opts->seltype) {
+		case S_high: /* find a highest element */
+			for (t = rolled; t; t = t->next) /* find first unselected and select it */
+				if (!hasSelection(t, sel))
+				{
+					sel = newSelection(t, sel); /* ALIAS! */
+					break;
+				}
+			for (t = rolled; t; t = t->next)\
+				if (t->i > sel->val->i && !hasSelection(t, sel))
+					sel->val = t; /* ALIAS! */
+
+			#ifdef DEBUG
+			assert(sel->val);
+			#endif
+			break;
+		case S_low: /* find the lowest element */
+			for (t = rolled; t; t = t->next) /* find first unselected and select it */
+				if (!hasSelection(t, sel))
+				{
+					sel = newSelection(t, sel); /* ALIAS! */
+					break;
+				}
+			for (t = rolled; t; t = t->next)\
+				if (t->i < sel->val->i && !hasSelection(t, sel))
+					sel->val = t; /* ALIAS! */
+
+			#ifdef DEBUG
+			assert(sel->val);
+			#endif
+			break;
+		case S_rand: /* find a random element */
+			for(t = rolled; index-- > 0; t = t->next){ /* reduce index */ }
+			sel = newSelection(t, sel); /* ALIAS! */
+			#ifdef DEBUG
+			assert(sel->val);
+			#endif
+			break;
+		case S_unique: /* find first unselected and select it */
+			sel = newSelection(rolled, sel); /* S_unique has scount = 1 guarenteed */
+
+			for(t = rolled; t; t = t->next){ /* iteratively find uniques */
+				if (!hasSelectionInt(t->i, sel)){
+					sel = newSelection(t, sel); /* ALIAS! */
+				}
+			}
+			#ifdef DEBUG
+			assert(sel->val);
+			#endif
+			break;
+		default:
+			for(t = rolled; t; t = t->next){ /* iteratively find uniques */
+				if (opts->seltype == t->i && !hasSelection(t,sel)){
+					sel = newSelection(t, sel); /* ALIAS! */
+					break;
+				}
+			}
+			break;
+		}
+
+	} while (--times > 0);
+	return sel;
 }
 
 /** Generates a selection of value structs that are NOT contained within rolled.
@@ -356,13 +430,15 @@ struct selection *select(struct value *rolled, struct fargs *opts){
 struct selection *generate(struct value *rolled, struct fargs *opts){
 	struct selection *sel = NULL;
 	int times = opts->scount;
-	int len = 0, prev = 0; /* lengths of selections. Used to detect when there is no length change */
+	/* lengths of current and past selection. Used to detect when there is no length change. length of input chain */
+	int len = 0, prev = 0, elem = countValue(rolled) - 1; 
 
 	do {
 		struct value *t = NULL;
-		int index = randint(0, countValue(rolled)-1); /* index to take from for random */
+		int index = randint(0, elem); /* index to take from for random */
+		
 		switch (opts->seltype){
-		case S_high:
+		case S_high: /* find the highest element */
 			for(t = rolled; t; t = t->next){ /* find first unselected and select it */
 				if (!hasSelection(t, sel)){
 					sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
@@ -378,7 +454,7 @@ struct selection *generate(struct value *rolled, struct fargs *opts){
 			assert(sel->val);
 			#endif
 			break;
-		case S_low:
+		case S_low: /* find the lowest element */
 			for(t = rolled; t; t = t->next){ /* find first unselected and select it */
 				if (!hasSelection(t, sel)){
 					sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
@@ -394,15 +470,14 @@ struct selection *generate(struct value *rolled, struct fargs *opts){
 			assert(sel->val);
 			#endif
 			break;
-		case S_rand:
+		case S_rand: /* select a random element */
 			for(t = rolled; index-- > 0; t = t->next){ /* reduce index */ }
 			sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
 			#ifdef DEBUG
 			assert(sel->val);
 			#endif
 			break;
-		case S_unique:
-			/* find first unselected and select it */
+		case S_unique: /* find first unselected and select it */
 			sel = newSelection(copyValue(rolled), sel); /* S_unique has scount = 1 guarenteed */
 
 			for(t = rolled; t; t = t->next){ /* iteratively find uniques */
@@ -510,8 +585,8 @@ struct result *eval(struct ast *base){
 	case 'e': /* append */ {
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
-		struct selection *selected = generate(inputs->out, (struct fargs *) base->r), *t = NULL;
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
+		struct selection *selected = generate(r->out, (struct fargs *) base->r), *t = NULL;
 
 		for(t = selected; t; t = t->next){
 			switch(base->nodetype){
@@ -526,8 +601,34 @@ struct result *eval(struct ast *base){
 
 	case 'f': /* drop */
 	case 'g': /* count */
-	case 'h': /* choose */
+	case 'h': /* choose */ {
+		r->type = R_roll;
+		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
+		r->out = dupValue(inputs->out); /* duplicate entire chain */
+		struct selection *selected = select(r->out, (struct fargs *) base->r), *t = NULL;
+
+		for(t = selected; t; t = t->next){
+			struct value *a = NULL;
+			switch (base->nodetype)
+			{
+			case 'f': /* drop */
+				a = removeValueExact(t->val, &(r->out));
+				free(a);
+				break;
+			case 'g': /* count */
+			case 'h': /* choose */
+			}
+		}
+
+		// TODO: The individual selection nodes need to be freed!
+		//if(selected) freeSelectionComplete( &selected );
+		freeResult( &inputs );
+		break;
+	}
+
 	case 'i': /* reroll */
+
+		break;
 
 	case 'R': /* roll nat die */ case 'r': /* roll artificial die */ {
 		r->type = R_roll;

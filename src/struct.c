@@ -138,7 +138,6 @@ struct value *removeValueExact(struct value *key, struct value **base){
 
 	#ifdef DEBUG
 	int size = countValue(*base);
-	assert(countValue(key) == 1);
 	#endif
 
 	for(t = *base; t; t = t->next){
