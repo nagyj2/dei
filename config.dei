@@ -135,33 +135,33 @@
 @ 3d6 drop two 1
 @ 3d6 count unique
 @ 3d6 choose 1s
-@ 3d6 reroll lowest
-@ 3d6 reroll two lowest
-@ 3d6 reroll lowest twice
-@ 3d6 reroll two lowest twice
-@ 3d6 reroll 1
-@ 3d6 reroll two 1
-@ 3d6 reroll 1 twice
-@ 3d6 reroll two 1 twice
-@ 3d6 reroll unique
-@ 3d6 reroll unique twice
-@ 3d6 reroll 1s
-@ 3d6 reroll 1s twice
-@ 3d6 reroll lowest if lower
-@ 3d6 reroll two lowest if higher
-@ 3d6 reroll lowest if lower twice
-@ 3d6 reroll two lowest if higher twice
-@ 3d6 reroll 1 if lower
-@ 3d6 reroll two 1 if higher
-@ 3d6 reroll 1 if lower twice
-@ 3d6 reroll two 1 if higher twice
-@ 3d6 reroll unique if lower
-@ 3d6 reroll unique if higher twice
-@ 3d6 reroll 1s if lower
-@ 3d6 reroll 1s if higher twice
+@ \ 3d6 reroll lowest \
+@ \ 3d6 reroll two lowest \
+@ \ 3d6 reroll lowest twice \
+@ \ 3d6 reroll two lowest twice \
+@ \ 3d6 reroll 1 \
+@ \ 3d6 reroll two 1 \
+@ \ 3d6 reroll 1 twice \
+@ \ 3d6 reroll two 1 twice \
+@ \ 3d6 reroll unique \
+@ \ 3d6 reroll unique twice \
+@ \ 3d6 reroll 1s \
+@ \ 3d6 reroll 1s twice \
+@ \ 3d6 reroll lowest if lower \
+@ \ 3d6 reroll two lowest if higher \
+@ \ 3d6 reroll lowest if lower twice \
+@ \ 3d6 reroll two lowest if higher twice \
+@ \ 3d6 reroll 1 if lower \
+@ \ 3d6 reroll two 1 if higher \
+@ \ 3d6 reroll 1 if lower twice \
+@ \ 3d6 reroll two 1 if higher twice \
+@ \ 3d6 reroll unique if lower \
+@ \ 3d6 reroll unique if higher twice \
+@ \ 3d6 reroll 1s if lower \
+@ \ 3d6 reroll 1s if higher twice \
 @ \ Assignments \
 @ a : 5
 @ b : 3d5
 @ b : 3d5 + str
 @ \ Special \
-@ stat : 4d6 reroll 1s once drop lowest
+@ \ stat : 4d6 reroll 1s once drop lowest \

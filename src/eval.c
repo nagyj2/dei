@@ -526,7 +526,9 @@ struct selection *generate(struct value *rolled, struct fargs *opts){
  */
 struct result *eval(struct ast *base){
 	struct result *r = malloc(sizeof(struct result));
-	r->faces = NULL; r->out = NULL; /* set unuseds to NULL */
+	// printf("new result %d @%p ", base->nodetype, r); printAst(base); printf("\n");
+	r->faces = NULL;
+	r->out = NULL;	/* set unuseds to NULL */
 	r->integer = 0; /* unused ->keep? */
 
 	if (!r){
@@ -631,12 +633,20 @@ struct result *eval(struct ast *base){
 				/* removed elements are still pointed to by selected, so we dont care about the output */
 			}
 
-			freeResult(&inputs);
 			freeSelectionComplete( &selected );
+			freeResult(&inputs);
 		}
 		break;
 	}
 	case 'g': /* count */ {
+		r->type = R_roll;
+		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
+		struct selection *selected = select(inputs->out, (struct fargs *)base->r);
+
+		r->out = newValue(countSelection(selected), NULL);
+
+		freeSelectionAliased( &selected );
+		freeResult(&inputs);
 		break;
 	}
 	case 'h': /* choose */ {
@@ -651,7 +661,7 @@ struct result *eval(struct ast *base){
 				/* copy each selected element */
 			}
 
-			//freeSelectionComplete( &selected );
+			freeSelectionAliased( &selected );
 			freeResult(&inputs);
 		}
 		break;
@@ -703,7 +713,11 @@ struct result *eval(struct ast *base){
 		break;
 	}
 	case 'C': /* function arguments */
-	case 'E': /* sym call */ {
+		printf("parsed fargs! should never see this!\n");
+		exit(3);
+		break;
+	case 'E': /* sym call */
+	{
 		free(r);
 		r = eval(((struct symcall *)base)->sym->func);
 		break;
