@@ -20,6 +20,7 @@
  */
 struct ast *newAst(int nodetype, struct ast *l, struct ast *r){
 	struct ast *a = malloc(sizeof(struct ast));
+	// printf("new ast @%p\n", a);
 
 	if (!a){
 		printf("out of space\n");
@@ -41,6 +42,7 @@ struct ast *newAst(int nodetype, struct ast *l, struct ast *r){
  */
 struct ast *newCmp(int cmptype, struct ast *l, struct ast *r){
 	struct ast *a = malloc(sizeof(struct ast));
+	// printf("new cmp @%p\n", a);
 
 	if (!a){
 		printf("out of space\n");
@@ -62,6 +64,7 @@ struct ast *newCmp(int cmptype, struct ast *l, struct ast *r){
  */
 struct ast *newFunc(int functype, struct ast *body, struct ast *args){
 	struct ast *a = malloc(sizeof(struct ast));
+	// printf("new func @%p\n", a);
 
 	if (!a){
 		printf("out of space\n");
@@ -83,6 +86,7 @@ struct ast *newFunc(int functype, struct ast *body, struct ast *args){
  */
 struct ast *newAsgn(struct symbol *sym, struct ast *def){
 	struct astAsgn *a = malloc(sizeof(struct astAsgn));
+	// printf("new asgn @%p\n", a);
 
 	if (!a){
 		printf("out of space\n");
@@ -103,6 +107,7 @@ struct ast *newAsgn(struct symbol *sym, struct ast *def){
  */
 struct ast *newNatdie(int count, int min, int max){
 		struct natdie *a = malloc(sizeof(struct natdie));
+		// printf("new natdie @%p\n", a);
 
 		if (!a){
 			printf("out of space\n");
@@ -125,6 +130,7 @@ struct ast *newNatdie(int count, int min, int max){
  */
 struct ast *newSetdie(int count, struct value *faces){
 		struct setdie *a = malloc(sizeof(struct setdie));
+		// printf("new setdie @%p\n", a);
 
 		if (!a){
 			printf("out of space\n");
@@ -146,6 +152,7 @@ struct ast *newSetdie(int count, struct value *faces){
  */
 struct ast *newNatint(int integer){
 		struct natint *a = malloc(sizeof(struct natint));
+		// printf("new natint @%p\n", a);
 
 		if (!a){
 			printf("out of space\n");
@@ -166,6 +173,7 @@ struct ast *newNatint(int integer){
  */
 struct ast *newFargs(int fcount, int seltype, int scount, int cond){
 		struct fargs *a = malloc(sizeof(struct fargs));
+		// printf("new fargs @%p\n", a);
 
 		if (!a){
 			printf("out of space\n");
@@ -189,6 +197,7 @@ struct ast *newFargs(int fcount, int seltype, int scount, int cond){
  */
 struct ast *newSetres(struct value *out){
 	struct setres *a = malloc(sizeof(struct setres));
+	// printf("new setres @%p\n", a);
 
 	if (!a){
 		printf("out of space\n");
@@ -209,6 +218,7 @@ struct ast *newSetres(struct value *out){
  */
 struct ast *newSymcall(struct symbol *sym){
 	struct symcall *a = malloc(sizeof(struct symcall));
+	// printf("new symcall @%p\n", a);
 
 	if (!a){
 		printf("out of space\n");
@@ -257,9 +267,7 @@ struct symbol *lookup(char *sym){
     if (sp->name && !strcmp(sp->name, sym)) {
 
       //DEBUG_REPORT("found %s at %p\n", sp->name, sp);
-      #ifdef DEBUG
-      printf("found %s at %p\n",sp->name,sp);
-			#endif
+      // printf("found %s at %p\n",sp->name,sp);
       return sp;
     }
 
@@ -268,9 +276,7 @@ struct symbol *lookup(char *sym){
       sp->name = strdup(sym);
 			sp->func = newNatint(0); /* init to zero */
       //DEBUG_REPORT("new %s at %p(%p)\n", sp->name, sp, sp->func);
-			#ifdef DEBUG
-			printf("new %s at %p\n",sp->name,sp);
-			#endif
+			// printf("new %s at %p\n",sp->name,sp);
       return sp;
     }
 
@@ -360,7 +366,7 @@ void freeTable(){
 		struct symbol *sp = &symtab[i];
 		if (sp->name)
 		{
-			printf("found %s at index %d\n", sp->name, i);
+			// printf("found %s at index %d\n", sp->name, i);
 			freeSymbol(&sp);
 		}
 	}
