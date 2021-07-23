@@ -1,5 +1,11 @@
 /**
  * @file eval.c
+ * @author Jason Nagy (jaysun_n@hotmail.com)
+ * @version 0.1
+ * @date 2021-07-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 #include <stdio.h> /* printf */
 #include <math.h> /* pow */
@@ -349,7 +355,7 @@ struct selection *select(struct value *rolled, struct fargs *opts){
 	if (elem == 0) return NULL;
 
 	if (opts->seltype > 0 && opts->scount == -1){
-		times = elem;
+		times = elem; /* if set to find all, set search times equal to length */
 	}
 
 	do {
@@ -607,22 +613,22 @@ struct result *eval(struct ast *base){
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
 		struct selection *selected = select(r->out, (struct fargs *) base->r), *t = NULL;
 
-		for(t = selected; t; t = t->next){
-			struct value *a = NULL;
-			switch (base->nodetype)
-			{
-			case 'f': /* drop */
-				a = removeValueExact(t->val, &(r->out));
-				free(a);
-				break;
-			case 'g': /* count */
-			case 'h': /* choose */
+		if(selected){
+			for(t = selected; t; t = t->next){
+				//struct value *a = NULL;
+				switch (base->nodetype)
+				{
+				case 'f': /* drop */
+					removeValueExact(t->val, &(r->out));
+					break;
+				case 'g': /* count */
+				case 'h': /* choose */
+				}
 			}
-		}
 
-		// TODO: The individual selection nodes need to be freed!
-		//if(selected) freeSelectionComplete( &selected );
-		freeResult( &inputs );
+			freeSelectionComplete( &selected );
+			freeResult(&inputs);
+		}
 		break;
 	}
 
