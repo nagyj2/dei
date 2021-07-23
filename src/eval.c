@@ -453,64 +453,76 @@ struct selection *generate(struct value *rolled, struct fargs *opts){
 	/* lengths of current and past selection. Used to detect when there is no length change. length of input chain */
 	int len = 0, prev = 0, elem = countValue(rolled) - 1; 
 
+	if (opts->seltype == S_unique && times != 1)
+		printf("warning: unique selector is assumed to have 1 time!\n");
+
 	do {
 		struct value *t = NULL;
 		int index = randint(0, elem); /* index to take from for random */
 		
 		switch (opts->seltype){
-		case S_high: /* find the highest element */
-			for(t = rolled; t; t = t->next){ /* find first unselected and select it */
-				if (!hasSelection(t, sel)){
-					sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
-					break;
+			case S_high: /* find the highest element */ {
+				for(t = rolled; t; t = t->next){ /* find first unselected and select it */
+					if (!hasSelection(t, sel)){
+						sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
+						break;
+					}
 				}
-			}
-			for(t = rolled; t; t = t->next){ /* iteratively find the highest */
-				if (t->i > sel->val->i && !hasSelection(t, sel)){
-					sel->val = copyValue(t); /* DONT ALIAS! */
+				for(t = rolled; t; t = t->next){ /* iteratively find the highest */
+					if (t->i > sel->val->i && !hasSelection(t, sel)){
+						freeValue(&sel->val);
+						sel->val = copyValue(t); /* DONT ALIAS! */
+					}
 				}
+				#ifdef DEBUG
+				assert(sel->val);
+				#endif
+				break;
 			}
-			#ifdef DEBUG
-			assert(sel->val);
-			#endif
-			break;
-		case S_low: /* find the lowest element */
-			for(t = rolled; t; t = t->next){ /* find first unselected and select it */
-				if (!hasSelection(t, sel)){
-					sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
-					break;
-				}
-			}
-			for(t = rolled; t; t = t->next){ /* iteratively find the highest */
-				if (t->i < sel->val->i && !hasSelection(t, sel)){
-					sel->val = copyValue(t); /* DONT ALIAS! */
-				}
-			}
-			#ifdef DEBUG
-			assert(sel->val);
-			#endif
-			break;
-		case S_rand: /* select a random element */
-			for(t = rolled; index-- > 0; t = t->next){ /* reduce index */ }
-			sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
-			#ifdef DEBUG
-			assert(sel->val);
-			#endif
-			break;
-		case S_unique: /* find first unselected and select it */
-			sel = newSelection(copyValue(rolled), sel); /* S_unique has scount = 1 guarenteed */
+			case S_low: /* find the lowest element */ {
 
-			for(t = rolled; t; t = t->next){ /* iteratively find uniques */
-				if (!hasSelectionInt(t->i, sel)){
-					sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
+				for(t = rolled; t; t = t->next){ /* find first unselected and select it */
+					if (!hasSelection(t, sel)){
+						sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
+						break;
+					}
 				}
+
+				for(t = rolled; t; t = t->next){ /* iteratively find the highest */
+					if (t->i < sel->val->i && !hasSelection(t, sel)){
+						freeValue(&sel->val);
+						sel->val = copyValue(t); /* DONT ALIAS! */
+					}
+				}
+				#ifdef DEBUG
+				assert(sel->val);
+				#endif
+				break;
 			}
-			#ifdef DEBUG
-			assert(sel->val);
-			#endif
-			break;
-		default: /* numbers */
-			sel = newSelection(newValue(opts->seltype, NULL), sel);
+			case S_rand: /* select a random element */ {
+				for(t = rolled; index-- > 0; t = t->next){ /* reduce index */ }
+				sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
+				#ifdef DEBUG
+				assert(sel->val);
+				#endif
+				break;
+			}
+			case S_unique: /* find first unselected and select it */ {
+				sel = newSelection(copyValue(rolled), sel); /* S_unique has scount = 1 guarenteed */
+
+				for(t = rolled; t; t = t->next){ /* iteratively find uniques */
+					if (!hasSelectionInt(t->i, sel)){
+						sel = newSelection(copyValue(t), sel); /* DONT ALIAS! */
+					}
+				}
+				#ifdef DEBUG
+				assert(sel->val);
+				#endif
+				break;
+			}
+			default: /* numbers */ {
+				sel = newSelection(newValue(opts->seltype, NULL), sel);
+			}
 		}
 
 		prev = len;
