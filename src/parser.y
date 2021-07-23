@@ -132,6 +132,7 @@ line:		line math EOL								{ printAst($2); struct result *r = eval($2); printf(
 	|			line '@' error EOL					{ printf("silent error!\n") }
 	|			line '@' EXIT EOL						{ exit(0); }
 	|			line '@' EOL								{  }
+	|																	{  }
 	;
 
 %%
