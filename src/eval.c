@@ -690,7 +690,8 @@ struct result *eval(struct ast *base){
 	}
 	case 'C': /* function arguments */
 	case 'E': /* sym call */ {
-		r = eval( ((struct symcall *)base)->sym->func );
+		free(r);
+		r = eval(((struct symcall *)base)->sym->func);
 		break;
 	}
 	case 'A': /* sym definition */ {

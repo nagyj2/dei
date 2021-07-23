@@ -7,6 +7,8 @@
 #include "struct.h"
 #include "ast.h"
 
+#include "eval.h"
+
 #ifdef TESTS
 #include "tests.h"
 #endif
@@ -32,6 +34,8 @@ int main(int argc, char **argv){
 	printf("setres size: %lu\n", sizeof(struct setres));
 	printf("symcall size: %lu\n", sizeof(struct symcall));
 	printf("astAsgn size: %lu\n", sizeof(struct astAsgn));
+	printf("result size: %lu\n", sizeof(struct result));
+	printf("\n");
 	#endif
 
 	char *stdsave = "config.dei";
