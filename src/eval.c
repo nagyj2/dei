@@ -377,63 +377,68 @@ struct selection *select(struct value *rolled, struct fargs *opts){
 		int index = randint(0, elem);
 
 		switch (opts->seltype) {
-		case S_high: /* find a highest element */
-			for (t = rolled; t; t = t->next) /* find first unselected and select it */
-				if (!hasSelection(t, sel))
-				{
-					sel = newSelection(t, sel); /* ALIAS! */
-					break;
-				}
-			for (t = rolled; t; t = t->next)\
-				if (t->i > sel->val->i && !hasSelection(t, sel))
-					sel->val = t; /* ALIAS! */
+			case S_high: /* find a highest element */ {
+				for (t = rolled; t; t = t->next) /* find first unselected and select it */
+					if (!hasSelection(t, sel))
+					{
+						sel = newSelection(t, sel); /* ALIAS! */
+						break;
+					}
+				for (t = rolled; t; t = t->next)\
+					if (t->i > sel->val->i && !hasSelection(t, sel))
+						sel->val = t; /* ALIAS! */
 
-			#ifdef DEBUG
-			assert(sel->val);
-			#endif
-			break;
-		case S_low: /* find the lowest element */
-			for (t = rolled; t; t = t->next) /* find first unselected and select it */
-				if (!hasSelection(t, sel))
-				{
-					sel = newSelection(t, sel); /* ALIAS! */
-					break;
-				}
-			for (t = rolled; t; t = t->next)\
-				if (t->i < sel->val->i && !hasSelection(t, sel))
-					sel->val = t; /* ALIAS! */
-
-			#ifdef DEBUG
-			assert(sel->val);
-			#endif
-			break;
-		case S_rand: /* find a random element */
-			for(t = rolled; index-- > 0; t = t->next){ /* reduce index */ }
-			sel = newSelection(t, sel); /* ALIAS! */
-			#ifdef DEBUG
-			assert(sel->val);
-			#endif
-			break;
-		case S_unique: /* find first unselected and select it */
-			sel = newSelection(rolled, sel); /* S_unique has scount = 1 guarenteed */
-
-			for(t = rolled; t; t = t->next){ /* iteratively find uniques */
-				if (!hasSelectionInt(t->i, sel)){
-					sel = newSelection(t, sel); /* ALIAS! */
-				}
+				#ifdef DEBUG
+				assert(sel->val);
+				#endif
+				break;
 			}
-			#ifdef DEBUG
-			assert(sel->val);
-			#endif
-			break;
-		default:
-			for(t = rolled; t; t = t->next){ /* iteratively find uniques */
-				if (opts->seltype == t->i && !hasSelection(t,sel)){
-					sel = newSelection(t, sel); /* ALIAS! */
-					break;
-				}
+			case S_low: /* find the lowest element */ {
+				for (t = rolled; t; t = t->next) /* find first unselected and select it */
+					if (!hasSelection(t, sel))
+					{
+						sel = newSelection(t, sel); /* ALIAS! */
+						break;
+					}
+				for (t = rolled; t; t = t->next)\
+					if (t->i < sel->val->i && !hasSelection(t, sel))
+						sel->val = t; /* ALIAS! */
+
+				#ifdef DEBUG
+				assert(sel->val);
+				#endif
+				break;
 			}
-			break;
+			case S_rand: /* find a random element */ {
+				for(t = rolled; index-- > 0; t = t->next){ /* reduce index */ }
+				sel = newSelection(t, sel); /* ALIAS! */
+				#ifdef DEBUG
+				assert(sel->val);
+				#endif
+				break;
+			}
+			case S_unique: /* find first unselected and select it */ {
+				sel = newSelection(rolled, sel); /* S_unique has scount = 1 guarenteed */
+
+				for(t = rolled; t; t = t->next){ /* iteratively find uniques */
+					if (!hasSelectionInt(t->i, sel)){
+						sel = newSelection(t, sel); /* ALIAS! */
+					}
+				}
+				#ifdef DEBUG
+				assert(sel->val);
+				#endif
+				break;
+			}
+			default: {
+				for(t = rolled; t; t = t->next){ /* iteratively find uniques */
+					if (opts->seltype == t->i && !hasSelection(t,sel)){
+						sel = newSelection(t, sel); /* ALIAS! */
+						break;
+					}
+				}
+				break;
+			}
 		}
 
 	} while (--times > 0);
@@ -637,16 +642,16 @@ struct result *eval(struct ast *base){
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
+		freeResult(&inputs);
 		struct selection *selected = select(r->out, (struct fargs *) base->r), *t = NULL;
 
 		if(selected){
 			for(t = selected; t; t = t->next){
-				removeValueExact(t->val, &(r->out));
 				/* removed elements are still pointed to by selected, so we dont care about the output */
+				removeValueExact(t->val, &(r->out));
 			}
 
 			freeSelectionComplete( &selected );
-			freeResult(&inputs);
 		}
 		break;
 	}
@@ -678,11 +683,9 @@ struct result *eval(struct ast *base){
 		}
 		break;
 	}
-
-	case 'i': /* reroll */
-
+	case 'i': /* reroll */ {
 		break;
-
+	}
 	case 'R': /* roll nat die */ case 'r': /* roll artificial die */ {
 		r->type = R_roll;
 		struct result *die = eval(base->l);
@@ -705,31 +708,34 @@ struct result *eval(struct ast *base){
 		freeResult( &set );
 		break;
 	}
-	case 'D': /* natural die definition */
+	case 'D': /* natural die definition */ {
 		r->type = R_die;
 		r->faces = newValueChain(((struct natdie *)base)->min, ((struct natdie *)base)->max);
 		r->integer = ((struct natdie *)base)->count;
 		break;
-	case 'd': /* artificial die def. */
+	}
+	case 'd': /* artificial die def. */ {
 		r->type = R_die;
 		r->faces = dupValue(((struct setdie *)base)->faces);
 		r->integer = ((struct natdie *)base)->count;
 		break;
-	case 'I': /* natural integer */
+	}
+	case 'I': /* natural integer */ {
 		r->type = R_int;
 		r->integer = ((struct natint *)base)->integer;
 		break;
+	}
 	case 'Q': /* artificial roll */ {
 		r->type = R_roll;
 		r->out = dupValue(((struct setres *)base)->out);
 		break;
 	}
-	case 'C': /* function arguments */
+	case 'C': /* function arguments */ {
 		printf("parsed fargs! should never see this!\n");
 		exit(3);
 		break;
-	case 'E': /* sym call */
-	{
+	}
+	case 'E': /* sym call */ {
 		free(r);
 		r = eval(((struct symcall *)base)->sym->func);
 		break;
@@ -740,9 +746,10 @@ struct result *eval(struct ast *base){
 		r->integer = 0; /* signal success */
 		break;
 	}
-	default:
+	default: {
 		printf("unknown eval type, got %d",base->nodetype);
 		exit(3);
+	}
 	}
 
 	return r;
