@@ -40,6 +40,13 @@ struct value *rollSet(int times, struct value *faces){
 	return r;
 }
 
+int rollInt(int times, struct value *faces){
+	int j = randint(0, countValue(faces)-1);
+	struct value *t = NULL;
+	for (t = faces; j > 0; t = t->next, j--) { /* skip */ }
+	return t->i; /* return result from the face */
+}
+
 /**
  * Allocates memory for a new struct.
  * If memory cannot be allocated, an error is thrown.
@@ -625,6 +632,7 @@ struct result *eval(struct ast *base){
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
+		r->faces = dupValue(inputs->faces);
 		struct selection *selected = generate(r->out, (struct fargs *) base->r), *t = NULL;
 
 		for(t = selected; t; t = t->next){
@@ -642,6 +650,7 @@ struct result *eval(struct ast *base){
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
+		r->faces = dupValue(inputs->faces);
 		freeResult(&inputs);
 		struct selection *selected = select(r->out, (struct fargs *) base->r), *t = NULL;
 
@@ -651,7 +660,8 @@ struct result *eval(struct ast *base){
 				removeValueExact(t->val, &(r->out));
 			}
 
-			freeSelectionComplete( &selected );
+			/* TODO : Causes occasional crashes */
+			//freeSelectionComplete( &selected );
 		}
 		break;
 	}
@@ -684,6 +694,31 @@ struct result *eval(struct ast *base){
 		break;
 	}
 	case 'i': /* reroll */ {
+		r->type = R_roll;
+		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
+		r->out = dupValue(inputs->out); /* Duplicate start */
+		r->faces = dupValue(inputs->faces);
+		freeResult(&inputs);
+
+		if (!r->faces) {
+			printf("error: reroll needs roll faces@\n");
+			return r;
+		}
+
+		struct selection *selected = select(r->out, (struct fargs *)base->r), *t = NULL;
+
+		printValue(r->out);
+		printf("\n");
+		if(selected){
+			for(t = selected; t; t = t->next){
+				/* reroll each selected once */
+				t->val->i = rollInt(1, r->faces);
+			}
+
+			freeSelectionAliased( &selected );
+		}
+		printValue(r->out);
+		printf("\n");
 		break;
 	}
 	case 'R': /* roll nat die */ case 'r': /* roll artificial die */ {
