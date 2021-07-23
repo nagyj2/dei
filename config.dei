@@ -127,8 +127,8 @@
 @ 3d6 append two 1 twice
 @ 3d6 append unique
 @ 3d6 append unique twice
-@ 3d6 append 1s
-@ 3d6 append 1s twice
+@ 3d6 append 1
+@ 3d6 append 1 twice
 @ 3d6 drop lowest
 @ 3d6 count two lowest
 @ 3d6 choose 1
