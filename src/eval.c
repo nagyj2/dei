@@ -600,8 +600,8 @@ struct result *eval(struct ast *base){
 				r->out = newValue(t->val->i, r->out);
 			}
 		}
-		freeSelectionComplete( &selected );
 		freeResult( &inputs );
+		freeSelectionComplete( &selected );
 		break;
 	}
 
@@ -617,8 +617,8 @@ struct result *eval(struct ast *base){
 				/* removed elements are still pointed to by selected, so we dont care about the output */
 			}
 
-			freeSelectionComplete( &selected );
 			freeResult(&inputs);
+			freeSelectionComplete( &selected );
 		}
 		break;
 	}

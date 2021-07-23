@@ -289,13 +289,10 @@ struct symbol *lookup(char *sym){
  * and then re-set.
  */
 void setsym(struct symbol *name, struct ast *val){
-	if (name->func){
-		freeAst( &name->func );
+	freeAst( &(name->func) );
 		#ifdef DEBUG
-		assert(!name->func);
+	assert(name->func == NULL);
 		#endif
-		name->func = malloc(sizeof(struct ast));
-	}
 	name->func = val;
 }
 
@@ -345,9 +342,28 @@ void freeAst( struct ast **root ){
 		return;
 
 	}
-
-	free(*root);
+	free((*root));
 	*root = NULL;
+}
+
+
+void freeSymbol(struct symbol **sym){
+	if ((*sym)->func)
+		freeAst(&(*sym)->func);
+	free((*sym)->name);
+	*sym = NULL;
+}
+
+void freeTable(){
+	int i = 0;
+	for (i = 0; i < NHASH; i++){
+		struct symbol *sp = &symtab[i];
+		if (sp->name)
+		{
+			printf("found %s at index %d\n", sp->name, i);
+			freeSymbol(&sp);
+		}
+	}
 }
 
 

@@ -211,6 +211,18 @@ void setsym(struct symbol *name, struct ast *def);
  */
 void freeAst( struct ast **root );
 
+/** Frees the entire contents of the symbol table.
+ * 
+ */
+void freeTable();
+
+/** Frees a symbol and the value associated with it.
+ * 
+ * @param[in,out] sym the symbol to be free.
+ * @sideeffect @p sym is set to NULL after execution.
+ */
+void freeSymbol(struct symbol **sym);
+
 
 /* ======= DEBUGGING ======= */
 

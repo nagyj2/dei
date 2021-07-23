@@ -5,6 +5,7 @@
 
 #include "deimain.h"
 #include "struct.h"
+#include "ast.h"
 
 #ifdef TESTS
 #include "tests.h"
@@ -18,6 +19,19 @@ int main(int argc, char **argv){
 	#ifdef TESTS
 	test_value();
 	return 0;
+	#endif
+
+	#ifdef DEBUG
+	printf("value size: %lu\n", sizeof(struct value));
+	printf("symbol size: %lu\n", sizeof(struct symbol));
+	printf("ast size: %lu\n", sizeof(struct ast));
+	printf("natdie size: %lu\n", sizeof(struct natdie));
+	printf("setdie size: %lu\n", sizeof(struct setdie));
+	printf("natint size: %lu\n", sizeof(struct natint));
+	printf("fargs size: %lu\n", sizeof(struct fargs));
+	printf("setres size: %lu\n", sizeof(struct setres));
+	printf("symcall size: %lu\n", sizeof(struct symcall));
+	printf("astAsgn size: %lu\n", sizeof(struct astAsgn));
 	#endif
 
 	char *stdsave = "config.dei";
@@ -49,11 +63,15 @@ int main(int argc, char **argv){
 		printf("\n");
   }
 
+	freeTable();
+	return 0;
+
 	printf("stdin!\n> ");
 	yyin = stdin;
 	yylineno = 1;
 	yyrestart(yyin);
-  return yyparse();
+  int ret = yyparse();
+	return ret;
 }
 
 void yyerror(char *s, ...){

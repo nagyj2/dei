@@ -126,12 +126,12 @@ line:		line math EOL								{ printAst($2); struct result *r = eval($2); printf(
 	|			line error EOL							{ printf("error!\n> "); }
 	|			line EXIT EOL								{ printf("closing!\n"); exit(0); }
 	|			line EOL										{ printf("> "); }
+	|			EOL													{  }
 	|			line '@' math EOL						{ struct result *r = eval($3); freeResult(&r); freeAst(&$3); }
 	|			line '@' IDENT ':' math EOL	{ setsym($3, $5); }
 	|			line '@' error EOL					{ printf("silent error!\n") }
 	|			line '@' EXIT EOL						{ exit(0); }
 	|			line '@' EOL								{  }
-	|																	{  }
 	;
 
 %%

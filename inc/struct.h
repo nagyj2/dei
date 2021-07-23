@@ -128,9 +128,6 @@ bool hasValue(int key, struct value *base);
  */
 void freeValue( struct value **val );
 
-/* free the entire symbol table */
-//void freeTable( struct symbol *table[] );
-
 
 /* ======= DEBUGGING ======= */
 
