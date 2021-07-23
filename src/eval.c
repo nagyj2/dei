@@ -605,9 +605,7 @@ struct result *eval(struct ast *base){
 		break;
 	}
 
-	case 'f': /* drop */
-	case 'g': /* count */
-	case 'h': /* choose */ {
+	case 'f': /* drop */ {
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
@@ -615,18 +613,31 @@ struct result *eval(struct ast *base){
 
 		if(selected){
 			for(t = selected; t; t = t->next){
-				//struct value *a = NULL;
-				switch (base->nodetype)
-				{
-				case 'f': /* drop */
-					removeValueExact(t->val, &(r->out));
-					break;
-				case 'g': /* count */
-				case 'h': /* choose */
-				}
+				removeValueExact(t->val, &(r->out));
+				/* removed elements are still pointed to by selected, so we dont care about the output */
 			}
 
 			freeSelectionComplete( &selected );
+			freeResult(&inputs);
+		}
+		break;
+	}
+	case 'g': /* count */ {
+		break;
+	}
+	case 'h': /* choose */ {
+		r->type = R_roll;
+		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
+		r->out = NULL; /* Start with nothing */
+		struct selection *selected = select(inputs->out, (struct fargs *)base->r), *t = NULL;
+
+		if(selected){
+			for(t = selected; t; t = t->next){
+				r->out = newValue(t->val->i, r->out);
+				/* copy each selected element */
+			}
+
+			//freeSelectionComplete( &selected );
 			freeResult(&inputs);
 		}
 		break;
