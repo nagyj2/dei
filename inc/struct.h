@@ -34,7 +34,7 @@ struct symbol {
 /* = Value = */
 
 /** Create a new value.
- * If @ref prev is NULL, a new chain will be created. Otherwise, a new value struct will be created with @ref prev as the next element.
+ * If @p prev is NULL, a new chain will be created. Otherwise, a new value struct will be created with @p prev as the next element.
  * @param[in]  i    Integer value to assign to the new value element.
  * @param[in]  prev Previous head element. Can be NULL.
  * @return      A head element of a chain of value structs.
@@ -42,7 +42,6 @@ struct symbol {
 struct value *newValue(int i, struct value *prev);
 /** Copies an entire value chain.
  * Goes through the input chain to create a new chain containing the same values. The new elements are not aliased.
- * to the old chain; they are completely separate.
  * @param[in]  base The head element of the value chain to duplicate.
  * @return      The head of the newly created chain.
  */
@@ -56,12 +55,12 @@ struct value *backValue(struct value *base);
  * Goes through the elements of the chain and looks for an element which has a specific value.
  * @param[in]  key  The element value to look for.
  * @param[in]  base The value chain to search in.
- * @return      Returns the first instance of a value element holding key or NULL if the key was not found.
+ * @return      Returns the first instance of a value element holding @p key or NULL if @p key was not found.
  */
 struct value *findValue(int key, struct value *base);
 /** Remove first instance of value key and return it.
  * Looks for a specific value of the chain elements and removed it from the chain if found.
- * Returns NULL if key cannot be found or *base is NULL.
+ * Returns NULL if key cannot be found or @p *base is NULL.
  * @param[in]  key  The integer value to search for.
  * @param[in,out]  base The address of a chain pointer to search through.
  * @return      If key is found, the removed element is returned. Otherwise NULL.
@@ -70,10 +69,10 @@ struct value *findValue(int key, struct value *base);
 struct value *removeValue(int key, struct value **base);
 /** Remove an exact value struct instance from a chain and return it.
  * Looks for a specific value pointer within the input chain and removes and returns it if found.
- * Returns NULL if key cannot be found, key is NULL or *base is NULL.
+ * Returns NULL if key cannot be found, @p key is NULL or @p *base is NULL.
  * @param[in]  key  A pointer to the value to remove.
  * @param[in,out]  base The address of a chain pointer to search through.
- * @return      If key is found, the element is returned. Otherwise NULL.
+ * @return      If @p key is found, the element is returned. Otherwise NULL.
  * @sideeffect	base will no longer contain the return value in its chain if it is non-NULL.
  */
 struct value *removeValueExact(struct value *key, struct value **base);
