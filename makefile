@@ -4,32 +4,34 @@
 CC          := gcc-11
 SHELL				:= /bin/zsh
 
-#The Target Binary Program
+#Target Binary Programs
 TARGET      := dei
-TESTMAIN		:= deid
+TESTTARGET	:= deid
 
-#The Directories, Source, Includes, Objects, Binary and Resources
-SRCDIR      := ./src
+#Source code directories
+APPDIR      := ./src/app
+DATADIR			:= ./src/data
+GENDIR			:= ./src/gen
+TESTDIR			:= ./src/tests
+
+#Resource directories
 INCDIR      := ./inc
 BUILDDIR    := ./obj
 TARGETDIR   := ./bin
 DOCDIR			:= ./docs
-SRCEXT      := c
-OBJEXT      := o
 
+#Tool files
 FLEX				:= lexer.l
 BISON				:= parser.y
 
-#Flags, Libraries and Includes
-CFLAGS      := -Wall -g -std=c11
-LIB         := -L/usr/local/Cellar/check/0.15.2/lib
+#Flags, Libraries and Includes TODO : separate flags
+CFLAGS      := -Wall -g -std=c11 -lcunit
+LIB         := 
 INC         := -I$(INCDIR)
 INCDEP      := -I$(INCDIR)
 
 BISONFLAGS 	:= -t
 FLEXFLAGS 	:=
-
-CHECKFLAGS	:= -lcheck
 
 #OS Specific flags
 UNAME := $(shell uname)
@@ -39,38 +41,49 @@ else #($(UNAME), Darwin)
 OSS := -ll -D OSX
 endif
 
+#Names of Flex and Bison output
+BISON_H			:= $(addprefix $(INCDIR)/, $(BISON:y=tab.h))
+BISON_C			:= $(addprefix $(GENDIR)/, $(basename $(BISON)))
+BISON_OUT		:= $(addsuffix .output, $(addprefix $(BUILDDIR)/,$(basename $(BISON))))
+
+FLEX_C			:= $(addprefix $(GENDIR)/, $(FLEX:l=lex.c))
+
 #---------------------------------------------------------------------------------
 #DO NOT EDIT BELOW THIS LINE
 #---------------------------------------------------------------------------------
-DEPEXT      := d
+
 #Automatically find all sources in src directory and construct object dependancies
-SOURCES     := $(shell find $(SRCDIR) -type f ! \( -name "*.output" -o -name "*.l" -o -name "*.y" \) )
-OBJECTS     := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
+#Application specific files
+APPSOURCES	:= $(shell find $(APPDIR) -type f ! \( -name "*.output" -o -name "*.l" -o -name "*.y" \) )
+APPOBJECTS	:= $(patsubst $(APPDIR)/%, $(BUILDDIR)/%, $(APPSOURCES:.c=.o))
 
-#Where Bison outputs will go
-BISON_H			:= $(addprefix $(INCDIR)/, $(BISON:y=tab.h))
-BISON_C			:= $(addprefix $(SRCDIR)/, $(basename $(BISON)))
-BISON_OUT		:= $(addsuffix .output, $(addprefix $(BUILDDIR)/,$(basename $(BISON))))
+#Support data files
+DATASOURCES	:= $(shell find $(DATADIR) -type f -name "*.c" )
+DATAOBJECTS	:= $(patsubst $(DATADIR)/%, $(BUILDDIR)/%, $(DATASOURCES:.c=.o))
 
-#Where Flex output will go
-FLEX_C			:= $(addprefix $(SRCDIR)/, $(FLEX:l=lex.c))
+#Test files
+TESTSOURCES	:= $(shell find $(TESTDIR) -type f -name "*.c" )
+TESTOBJECTS	:= $(patsubst $(TESTDIR)/%, $(BUILDDIR)/%, $(TESTSOURCES:.c=.o))
+
+#Generated files
+GENSOURCES	:= $(BISON_C) $(FLEX_C) 
+GENOBJECTS	:= $(patsubst $(GENDIR)/%, $(BUILDDIR)/%, $(FLEX_C:.c=.o) $(addsuffix .tab.o, $(BISON_C)) )
+
 
 #Defauilt Make
 debug: CFLAGS += -D DEBUG
 debug: bison flex $(TARGET)
 
-tests: CFLAGS += -D DEBUG -D TESTS
-tests: BISONFLAGS += -v
-tests: clean all
+tests: clean $(TESTTARGET)
 
 all: bison flex $(TARGET) docs
 
 #Parser
-bison: $(addprefix $(SRCDIR)/, $(BISON))
+bison: $(addprefix $(APPDIR)/, $(BISON))
 	bison $(BISONFLAGS) -b $(BISON_C) --defines=$(BISON_H) $^
 
 #Lexer
-flex: $(addprefix $(SRCDIR)/, $(FLEX))
+flex: $(addprefix $(APPDIR)/, $(FLEX))
 	flex $(FLEXFLAGS) -o $(FLEX_C) $^
 
 #Remake
@@ -87,25 +100,57 @@ cleaner: clean
 	@$(RM) -rf $(DOCDIR)/latex
 
 #Pull in dependency info for *existing* .o files
--include $(OBJECTS:.$(OBJEXT)=.$(DEPEXT))
+-include $(OBJECTS:.o=.d)
 
-#Link
-$(TARGET): $(OBJECTS)
+#Create program
+$(TARGET): $(DATAOBJECTS) $(GENOBJECTS) $(APPOBJECTS)
 	@mkdir -p $(TARGETDIR)
-	$(CC) -o $(TARGETDIR)/$(TARGET) $^ $(LIB)
+	$(CC) $(CFLAGS) -o $(TARGETDIR)/$(TARGET) $^ $(LIB)
 
-$(TESTMAIN): $(TEST_OBJECTS)
-	$(CC) $(CHECKFLAGS) -o $(TARGETDIR)/$(TESTMAIN) $^ $(LIB)
+#Create test program
+$(TESTTARGET): $(DATAOBJECTS) $(TESTOBJECTS)
+	@mkdir -p $(TARGETDIR)
+	$(CC) -o $(TARGETDIR)/$(TESTTARGET) $^ $(LIB)
 
-#Compile
-$(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
+#Compile App file
+$(BUILDDIR)/%.o: $(APPDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
-	@$(CC) $(CFLAGS) $(INCDEP) -MM $(SRCDIR)/$*.$(SRCEXT) > $(BUILDDIR)/$*.$(DEPEXT)
-	@cp -f $(BUILDDIR)/$*.$(DEPEXT) $(BUILDDIR)/$*.$(DEPEXT).tmp
-	@sed -e 's|.*:|$(BUILDDIR)/$*.$(OBJEXT):|' < $(BUILDDIR)/$*.$(DEPEXT).tmp > $(BUILDDIR)/$*.$(DEPEXT)
-	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILDDIR)/$*.$(DEPEXT).tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILDDIR)/$*.$(DEPEXT)
-	@rm -f $(BUILDDIR)/$*.$(DEPEXT).tmp
+	@$(CC) $(CFLAGS) $(INCDEP) -MM $(APPDIR)/$*.c > $(BUILDDIR)/$*.d
+	@cp -f $(BUILDDIR)/$*.d $(BUILDDIR)/$*.d.tmp
+	@sed -e 's|.*:|$(BUILDDIR)/$*.o:|' < $(BUILDDIR)/$*.d.tmp > $(BUILDDIR)/$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILDDIR)/$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILDDIR)/$*.d
+	@rm -f $(BUILDDIR)/$*.d.tmp
+
+#Compile Data file
+$(BUILDDIR)/%.o: $(DATADIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+	@$(CC) $(CFLAGS) $(INCDEP) -MM $(DATADIR)/$*.c > $(BUILDDIR)/$*.d
+	@cp -f $(BUILDDIR)/$*.d $(BUILDDIR)/$*.d.tmp
+	@sed -e 's|.*:|$(BUILDDIR)/$*.o:|' < $(BUILDDIR)/$*.d.tmp > $(BUILDDIR)/$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILDDIR)/$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILDDIR)/$*.d
+	@rm -f $(BUILDDIR)/$*.d.tmp
+
+#Compile Generated file
+$(BUILDDIR)/%.o: $(GENDIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+	@$(CC) $(CFLAGS) $(INCDEP) -MM $(GENDIR)/$*.c > $(BUILDDIR)/$*.d
+	@cp -f $(BUILDDIR)/$*.d $(BUILDDIR)/$*.d.tmp
+	@sed -e 's|.*:|$(BUILDDIR)/$*.o:|' < $(BUILDDIR)/$*.d.tmp > $(BUILDDIR)/$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILDDIR)/$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILDDIR)/$*.d
+	@rm -f $(BUILDDIR)/$*.d.tmp
+
+#Compile Test file
+$(BUILDDIR)/%.o: $(TESTDIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+	@$(CC) $(CFLAGS) $(INCDEP) -MM $(TESTDIR)/$*.c > $(BUILDDIR)/$*.d
+	@cp -f $(BUILDDIR)/$*.d $(BUILDDIR)/$*.d.tmp
+	@sed -e 's|.*:|$(BUILDDIR)/$*.o:|' < $(BUILDDIR)/$*.d.tmp > $(BUILDDIR)/$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILDDIR)/$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILDDIR)/$*.d
+	@rm -f $(BUILDDIR)/$*.d.tmp
 
 #Documentation
 docs:
