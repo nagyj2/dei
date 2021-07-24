@@ -709,8 +709,8 @@ struct result *eval(struct ast *base){
 
 		struct selection *selected = select(r->out, (struct fargs *)base->r), *t = NULL;
 
-		printValue(r->out);
-		printf("\n");
+		// printValue(r->out);
+		// printf("\n");
 		if(selected){
 			for(t = selected; t; t = t->next){
 				/* reroll each selected once */
@@ -719,8 +719,8 @@ struct result *eval(struct ast *base){
 
 			freeSelectionAliased( &selected );
 		}
-		printValue(r->out);
-		printf("\n");
+		// printValue(r->out);
+		// printf("\n");
 		break;
 	}
 	case 'R': /* roll nat die */ case 'r': /* roll artificial die */ {

@@ -425,9 +425,9 @@ void printAst(struct ast *root){
 		case 'h': printf("Choose"); break;
 		case 'i': printf("Reroll"); break;
 		}
-		printf("(st.");
+		printf("(");
 		printAst(root->l);
-		printf(", ");
+		printf(" st.");
 		printAst(root->r);
 		printf(")");
 		break;
