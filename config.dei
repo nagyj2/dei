@@ -1,0 +1,205 @@
+@ \ Tests \
+@ \ Simple math \
+@ 3+4
+@ 3+4
+@ 2-6
+@ 3-6
+@ 2*6
+@ 6//3
+@ 4%3
+@ 3==4
+@ 2!=6
+@ 3>4
+@ 3<6
+@ 4>=3
+@ 8<=0
+@ -3+4
+@ -3+4
+@ -2-6
+@ -3-6
+@ -2*6
+@ -6//3
+@ -4%3
+@ -3==4
+@ -2!=6
+@ -3>4
+@ -3<6
+@ -4>=3
+@ -8<=0
+@ \ Simple dice \
+@ 4d6
+@ 4d[2..4]
+@ 4d{2,4}
+@ {2,4}
+@ \ Dice sum math \
+@ 3+d4
+@ 3+d4
+@ 2-d6
+@ 3-d6
+@ 2*d6
+@ 6//d3
+@ 4%d3
+@ 3==d4
+@ 2!=d6
+@ 3>d4
+@ 3<d6
+@ 4>=d3
+@ 8<=d1
+@ -3+d4
+@ -3+d4
+@ -2-d6
+@ -3-d6
+@ -2*d6
+@ -6//d3
+@ -4%d3
+@ -3==d4
+@ -2!=d6
+@ -3>d4
+@ -3<d6
+@ -4>=d3
+@ -8<=d3
+@ 3d2+d4
+@ 3d2+d4
+@ 2d2-d6
+@ 3d2-d6
+@ 2d2*d6
+@ 6d2//d3
+@ 4d2%d3
+@ 3d2==d4
+@ 2d2!=d6
+@ 3d2>d4
+@ 3d2<d6
+@ 4d2>=d3
+@ 8d2<=d1
+@ -3d3+d4
+@ -3d3+d4
+@ -2d3-d6
+@ -3d3-d6
+@ -2d3*d6
+@ -6d3//d3
+@ -4d3%d3
+@ -3d3==d4
+@ -2d3!=d6
+@ -3d3>d4
+@ -3d3<d6
+@ -4d3>=d3
+@ -8d3<=d3
+@ 2d2&d6
+@ 3d2|d4
+@ 3d2&&d6
+@ 2d2||d6
+@ 2d2!=d6
+@ \ Specialty dice operations \
+@ {2,5,3}
+@ {3,5,7}+{3,2,1}
+@ {3,-5,-2}
+@ 3d{1,-1}>d{2,-1}
+@ 3d{1,1}<d{3,5,1,-1}
+@ 4d{1,-1}>=d{1,1}
+@ 8d2<=d{1,-1}
+@ -3d3+d{1,1}
+@ -3d3+d{1,-1}
+@ -2d{1,-1}-d3
+@ -3d{1,-1}-d3
+@ 3d[5..10]>d[2..3]
+@ 3d[1..10]<d[1..1]
+@ 4d[5..5]>=d[-1..1]
+@ 8d2<=d[10..100]
+@ \ Identifiers \
+@ jeb
+@ JEB
+@ JEB_
+@ _JEB
+@ J_EB
+@ -3*att
+@ -att+d6
+@ att>=d3
+@ 3d2+jess
+@ jess+d4
+@ \ Dice Functions \
+@ 5d6 append lowest
+@ 5d6 append two lowest
+@ 5d6 append lowest twice
+@ 5d6 append two lowest twice
+@ 5d6 append highest
+@ 5d6 append two highest
+@ 5d6 append highest twice
+@ 5d6 append two highest twice
+@ 5d6 append random
+@ 5d6 append two random
+@ 5d6 append random twice
+@ 5d6 append two random twice
+@ 5d6 append 1
+@ 5d6 append two 1
+@ 5d6 append 1 twice
+@ 5d6 append two 1 twice
+@ 5d6 append unique
+@ 5d6 append unique twice
+@ 5d6 append 1
+@ 5d6 append 1 twice
+@ 10d6 reroll 1s
+@ 5d6 count 3 random
+@ 5d6 count lowest
+@ 5d6 count 2 lowest
+@ 5d6 count highest
+@ 5d6 count 2 highest
+@ 5d6 count random
+@ 5d6 count 1
+@ 5d6 count unique
+@ 5d6 count 1s
+@ 3d6 reroll lowest
+@ 3d6 reroll two lowest
+@ 3d6 reroll lowest twice
+@ 3d6 reroll two lowest twice
+@ 3d6 reroll 1
+@ 3d6 reroll two 1
+@ 3d6 reroll 1 twice
+@ 3d6 reroll two 1 twice
+@ 3d6 reroll unique
+@ 3d6 reroll unique twice
+@ 3d6 reroll 1s
+@ 3d6 reroll 1s twice
+@
+@ \ 3d6 reroll lowest if lower \
+@ \ 3d6 reroll two lowest if higher \
+@ \ 3d6 reroll lowest if lower twice \
+@ \ 3d6 reroll two lowest if higher twice \
+@ \ 3d6 reroll 1 if lower \
+@ \ 3d6 reroll two 1 if higher \
+@ \ 3d6 reroll 1 if lower twice \
+@ \ 3d6 reroll two 1 if higher twice \
+@ \ 3d6 reroll unique if lower \
+@ \ 3d6 reroll unique if higher twice \
+@ \ 3d6 reroll 1s if lower \
+@ \ 3d6 reroll 1s if higher twice \
+@ \ 5d6 choose 3 random \
+@ \ 5d6 choose lowest \
+@ \ 5d6 choose 2 lowest \
+@ \ 5d6 choose highest \
+@ \ 5d6 choose 2 highest \
+@ \ 5d6 choose random \
+@ \ 5d6 choose 1 \
+@ \ 5d6 choose unique \
+@ \ 5d6 choose 1s \
+@ \ 5d6 choose 3 1 \
+@ \ 5d6 drop lowest \
+@ \ 5d6 drop 2 lowest \
+@ \ 5d6 drop highest \
+@ \ 5d6 drop 2 highest \
+@ \ 5d6 drop random \
+@ \ 5d6 drop 3 random \
+@ \ 5d6 drop 1 \
+@ \ 5d6 drop 3 1 \
+@ \ 5d6 drop unique \
+@ \ 5d6 drop 1s \
+@ \ 3d6 count two lowest \
+@ \ 3d6 choose 1 \
+@ \ 3d6 drop two 1 \
+@ \ 3d6 count unique \
+@ \ 3d6 choose 1s \
+@ \ Assignments \
+@ a : 5
+@ b : 3d5
+@ b : 3d5 + str
+@ \ Special \
+@ \ stat : 4d6 reroll 1s once drop lowest \

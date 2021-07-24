@@ -1,22 +1,19 @@
-# Executables
-dei
-deid
+# Editor Files
+.vscode
 
 # Generated Files
-dei.c
-dei.lex.*
-dei.tab.*
-dei.dSYM/**/*
-deid.dSYM/**/*
-*.h.gch
-*.o
+bin/**/*
+obj/**/*
+src/lexer.lex.c
+src/parser.tab.c
+inc/parser.tab.h
+inc/*.h.gch
+parser.output
+docs/html/**/*
+docs/latex/**/*
 
 # Debug Files
-dei.log
-dei.output
-R
 lldebug
-
 
 # MacOS Files
 .DS_STORE
