@@ -67,14 +67,12 @@ int main(int argc, char **argv){
 		printf("\n");
   }
 
-	freeTable();
-	return 0;
-
 	printf("stdin!\n> ");
 	yyin = stdin;
 	yylineno = 1;
 	yyrestart(yyin);
   int ret = yyparse();
+	freeTable();
 	return ret;
 }
 
