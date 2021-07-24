@@ -647,6 +647,7 @@ struct result *eval(struct ast *base){
 	}
 
 	case 'f': /* drop */ {
+		/* SIGNIFICANT MEMORY LEAK!! */
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
@@ -677,6 +678,7 @@ struct result *eval(struct ast *base){
 		break;
 	}
 	case 'h': /* choose */ {
+		/* SIGNIFICANT MEMORY LEAK!! */
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = NULL; /* Start with nothing */
