@@ -1,17 +1,23 @@
-/**
+/** Declarations for an evaluation interface.
  * @file eval.h
+ * @author Jason Nagy (jaysun_n@hotmail.com)
+ * @version 0.1
+ * @date 2021-07-26
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
 #ifndef EVAL_H_INCLUDED
 #define EVAL_H_INCLUDED
 
-#include <stdlib.h> /* rand */
 #include <stdbool.h> /* bool */
-
 
 #include "struct.h"
 #include "ast.h"
 
+
+/* ===== DATA ===== */
 
 /** The type of resultfrom the evaluation of a specific AST node.
  * The type of node being used will imply which fields of the result are filled out.
@@ -42,6 +48,9 @@ struct result {
 	struct value *out;			/**< If type is @ref R_roll or @ref R_set, this represents the actual rolled numbers. Otherwise it is NULL. */
 	int integer;						/**< If type is @ref R_int Otherwise it is NULL. */
 };
+
+
+/* ===== FUNCTIONS ===== */
 
 /** Tests a result struct to ensure relevant fields are filled and others are not.
  * @param[in] res The result struct to be tested.
@@ -139,6 +148,8 @@ bool hasSelection(struct value *key, struct selection *base);
 bool hasSelectionInt(int key, struct selection *base);
 
 
+/* ===== EVALUATION ===== */
+
 /** Evaluates an AST to produce an output.
  * Evaluation does not modify the input nodes, allowing for better memory management.
  * @param[in]  base The current AST node to evaluate.
@@ -146,6 +157,8 @@ bool hasSelectionInt(int key, struct selection *base);
  */
 struct result *eval(struct ast *base);
 
+
+/* ===== MEMORY MANAGEMENT ===== */
 
 /** Frees memory allocated to input res according to its node type.
  * @param[in,out] res The result node to free.

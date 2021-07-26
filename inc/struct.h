@@ -1,17 +1,21 @@
-/** Basic structures which support Dei.
+/** A chainable structure to support the rest of Dei.
  * Contains common elements to all other modules of Dei along with functions to work with the structs.
  * @file struct.h
+ * @author Jason Nagy (jaysun_n@hotmail.com)
+ * @version 0.1
+ * @date 2021-07-26
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
 #ifndef STRUCT_H_INCLUDED
 #define STRUCT_H_INCLUDED
 
-#define NHASH 9997 /**< Size of the symbol table. */
-
 #include <stdbool.h> /* bool */
 
 
-/* === DATA === */
+/* ===== DATA ===== */
 
 /** An chain of integer values.
  * Stores an integer value and a link to the next one in the chain.
@@ -21,17 +25,8 @@ struct value {
 	struct value *next;						/**< The next element in the chain. Can be NULL. */
 };
 
-/** Symbol reference.
- * A symbol which stores an ast which is inserted into any expressions which reference the value.
- */
-struct symbol {
- char *name;          					/**< The name of the symbol. */
- struct ast *func;    					/**< The meaning of the symbol. */
-};
 
-/* === FUNCTIONS === */
-
-/* = Value = */
+/* ===== FUNCTIONS ===== */
 
 /** Create a new value.
  * If @p prev is NULL, a new chain will be created. Otherwise, a new value struct will be created with @p prev as the next element.
@@ -120,7 +115,7 @@ bool hasValueExact(struct value *key, struct value *base);
 bool hasValue(int key, struct value *base);
 
 
-/* === MEMORY MANAGEMENT === */
+/* ===== MEMORY MANAGEMENT ===== */
 
 /** Frees an entire value chain.
  * @param[in,out] val The address to a value chain which will be freed.
@@ -129,7 +124,7 @@ bool hasValue(int key, struct value *base);
 void freeValue( struct value **val );
 
 
-/* ======= DEBUGGING ======= */
+/* ===== DEBUGGING ===== */
 
 /* iteratively print a value chain */
 /** Outputs a representation of a value chain.

@@ -11,6 +11,8 @@
 #ifndef TESTS_H_INCLUDED
 #define TESTS_H_INCLUDED
 
+#include "greatest.h"
+
 #define MAX(a,b) ((a > b) ? a : b)
 #define MIN(a,b) ((a < b) ? a : b)
 #define LEN(a,b) (MAX(a, b) - MIN(a, b) + 1)
@@ -18,5 +20,14 @@
 
 /* Value test suite */
 void value_suite(void);
+
+/* AST test suite */
+void ast_suite(void);
+
+/* Symbol test suite */
+void symbol_suite(void);
+
+/* Symbol test suite */
+void evaluation_suite(void);
 
 #endif /* TESTS_H_INCLUDED */

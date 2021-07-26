@@ -6,6 +6,7 @@
 #include "deimain.h"
 #include "struct.h"
 #include "ast.h"
+#include "symbols.h"
 
 %}
 

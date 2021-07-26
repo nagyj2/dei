@@ -1,4 +1,4 @@
-/**
+/** Implementation of a language evaluator supporting symbols.
  * @file eval.c
  * @author Jason Nagy (jaysun_n@hotmail.com)
  * @version 0.1
@@ -7,9 +7,10 @@
  * @copyright Copyright (c) 2021
  * 
  */
+
+#include <stdlib.h> /* rand */
 #include <stdio.h> /* printf */
 #include <math.h> /* pow */
-
 
 #ifdef DEBUG
 #include <assert.h> /* assert */
@@ -17,7 +18,10 @@
 
 #include "parser.tab.h" /* DIV, INTER, UNION */
 #include "eval.h"
+#include "symbols.h"
 
+
+/* ===== FUNCTIONS ===== */
 
 /** Tests a result struct to ensure relevant fields are filled and others are not.
  * @param[in] res The result struct to be tested.
@@ -25,11 +29,23 @@
 void ensureType(struct result *res);
 
 
-int randint(int min, int max){
+/**
+ * 
+ * @param[] min 
+ * @param[] max 
+ * @return int 
+ */
+int randint(int min, int max) {
 	return (rand() % (max + 1 - min)) + min;
 }
 
-struct value *rollSet(int times, struct value *faces){
+/**
+ * 
+ * @param[] times 
+ * @param[] faces 
+ * @return struct value* 
+ */
+struct value *rollSet(int times, struct value *faces) {
 	struct value *r = NULL, *t = NULL;
 	int len = countValue(faces);
 	for (int i = 0; i < times; i++){
@@ -40,7 +56,13 @@ struct value *rollSet(int times, struct value *faces){
 	return r;
 }
 
-int rollInt(int times, struct value *faces){
+/**
+ * 
+ * @param[] times 
+ * @param[] faces 
+ * @return int 
+ */
+int rollInt(int times, struct value *faces) {
 	int j = randint(0, countValue(faces)-1);
 	struct value *t = NULL;
 	for (t = faces; j > 0; t = t->next, j--) { /* skip */ }
@@ -284,6 +306,9 @@ bool hasSelectionInt(int key, struct selection *base){
 	return false;
 }
 
+
+/* ===== MEMORY MANAGEMENT ===== */
+
 /**
  * Frees all contained values within a result variable.
  * Result values should only be aliased within functions and never passed between, reducing risk of memory problems.
@@ -362,6 +387,9 @@ while(*sel){
 assert(!*sel);
 #endif
 }
+
+
+/* ===== EVALUATION ===== */
 
 /** Performs a selection algorithm on @p rolled according to the options in @p opts.
  * @p rolled is not modified, but the output contains pointers to the elements within.

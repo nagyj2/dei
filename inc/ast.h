@@ -1,6 +1,12 @@
 /** Structs and functions to create and operate on ASTs.
  * Includes AST elements and support functions for creation, destruction and debugging.
  * @file ast.h
+ * @author Jason Nagy (jaysun_n@hotmail.com)
+ * @version 0.1
+ * @date 2021-07-26
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
 #ifndef AST_H_INCLUDED
@@ -10,7 +16,7 @@
 
 #include "struct.h"
 
-/* === DATA === */
+/* ===== DATA ===== */
 
 /** Builtin functions.
  * The operations which can be performed on a dice roll before standard arithmetic operations.
@@ -90,13 +96,6 @@ struct setres {
 	struct value *out;			/**< Output to set roll to */
 };
 
-/** A symbol reference.
- * A symbol (variable) reference. The referenced symbol is guarenteed present in the symbol table, but it may not be initialized.
- */
-struct symcall {
-	int nodetype;						/**< E */
-	struct symbol *sym;			/**< Called symbol */
-};
 
 /** Generic AST Node.
  * A node which can have up to 2 children. Used for operations which only require operator and operand information.
@@ -107,17 +106,8 @@ struct ast {
 	struct ast *r;					/**< Right operand */
 };
 
-/** Symbol assignment.
- * A node which will assign an ast value to a symbol. The ast value is not evaluated when saving it.
- */
-struct astAsgn {
-	int nodetype;						/**< A */
-	struct symbol *s;				/**< Symbol to assign value to */
-	struct ast *l;					/**< Value to assign to symbol */
-};
 
-
-/* === FUNCTIONS === */
+/* ===== FUNCTIONS ===== */
 
 /** Create a new AST node.
  * @param  nodetype[in] The operator the node will do.
@@ -140,12 +130,6 @@ struct ast *newCmp(int cmptype, struct ast *body, struct ast *args);
  * @return          An AST node represnting the function. Cannot be NULL.
  */
 struct ast *newFunc(int functype, struct ast *body, struct ast *args);
-/** Create a new variable assignment.
- * @param  sym[in] The variable symbol to assign to.
- * @param  def[in] The AST definition of the variable.
- * @return     An AST node representing the assignment. Cannot be NULL.
- */
-struct ast *newAsgn(struct symbol *sym, struct ast *def);
 
 /** Create a natural die definition leaf.
  * @param  count[in] The number of times to roll the die. Cannot be zero or less.
@@ -178,32 +162,9 @@ struct ast *newFargs(int fcount, int seltype, int scount, int cond);
  * @return     An AST node representing a fake roll. Cannot be NULL.
  */
 struct ast *newSetres(struct value *out);
-/** Create a symbol (variable) call leaf.
- * @param  sym[in] The symbol to reference. Cannot be NULL.
- * @return     An AST node representing a symbol call. Cannot be NULL.
- */
-struct ast *newSymcall(struct symbol *sym);
-
-/* = Symtab = */
-
-/** The symbol table which stores variables. */
-extern struct symbol symtab[NHASH];
-/** Searches the symbol table for a name and returns its location.
- * If the symbol table cannot find an already created version of the symbol, it will create a new entry and return it.
- * @param[in]  s The name of the symbol to search for.
- * @return   A pointer to the storage location of the symbol within the symbol table.
- */
-struct symbol *lookup(char *s);
-
-/** Assign an AST structure to a symbol.
- * @param[in,out] name The symbol reference to assign a meaning to. Cannot be NULL.
- * @param[in] val  The definition to be assigned to name
- * @sideeffect name will have a new func value
- */
-void setsym(struct symbol *name, struct ast *def);
 
 
-/* === MEMORY MANAGEMENT === */
+/* ===== MEMORY MANAGEMENT ===== */
 
 /** Recursively free memory from an AST tree.
  * @param root[in,out] Root node of an AST to free.
@@ -211,26 +172,15 @@ void setsym(struct symbol *name, struct ast *def);
  */
 void freeAst( struct ast **root );
 
-/** Frees the entire contents of the symbol table.
- * 
- */
-void freeTable();
 
-/** Frees a symbol and the value associated with it.
- * 
- * @param[in,out] sym the symbol to be free.
- * @sideeffect @p sym is set to NULL after execution.
- */
-void freeSymbol(struct symbol **sym);
-
-
-/* ======= DEBUGGING ======= */
+/* ===== DEBUGGING ===== */
 
 /** Recursively print the contents of an AST tree.
  * @param root[in] The root node to print.
  * @sideeffect A string representation of root will be displayed to stdout.
  */
 void printAst(struct ast *root);
+
 
 
 #endif /* AST_H_INCLUDED */

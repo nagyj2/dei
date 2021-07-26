@@ -169,3 +169,5 @@ $(BUILDDIR)/%.o: $(TESTDIR)/%.c
 
 #Non-File Targets - always fully execute
 .PHONY: all remake clean cleaner $(DOCUMENTS)
+
+.CLEAN:

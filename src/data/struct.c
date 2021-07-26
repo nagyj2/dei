@@ -1,3 +1,12 @@
+/** Implementation of the functions to support the value structure.
+ * @file struct.c
+ * @author Jason Nagy (jaysun_n@hotmail.com)
+ * @version 0.1
+ * @date 2021-07-26
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 
 #include <stdlib.h> /* malloc, exit */
 #include <stdio.h> /* printf */
@@ -8,11 +17,8 @@
 
 #include "struct.h"
 
-/* ===== DATAS ===== */
 
-struct symbol symtab[NHASH];    /* symbol table itself */
-
-/* === FUNCTIONS === */
+/* ===== FUNCTIONS ===== */
 
 /**
  * Allocates new memory for the struct and then populates its values.
@@ -265,8 +271,7 @@ bool hasValue(int key, struct value *base){
 }
 
 
-
-/* === MEMORY MANAGEMENT === */
+/* ===== MEMORY MANAGEMENT ===== */
 
 /**
  * Iteratively frees elements within a value chain.
@@ -287,7 +292,7 @@ void freeValue( struct value **val ){
 }
 
 
-/* ======= DEBUGGING ======= */
+/* ===== DEBUGGING ===== */
 
 /**
  * Iteratively outputs the values of a chain.

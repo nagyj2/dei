@@ -1,5 +1,11 @@
-/**
+/** Implementation of the symbol-less AST.
  * @file ast.c
+ * @author Jason Nagy (jaysun_n@hotmail.com)
+ * @version 0.1
+ * @date 2021-07-26
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
 #include <stdlib.h>
@@ -13,6 +19,8 @@
 
 #include "ast.h"
 
+
+/* ===== FUNCTIONS ===== */
 
 /**
  * Allocates new memory for the node and returns the pointer. If there is no space,
@@ -80,27 +88,6 @@ struct ast *newFunc(int functype, struct ast *body, struct ast *args){
 	return a;
 }
 
-/**
- * Allocates new memory for the node and returns the pointer. If there is no space,
- * a message is shown and an crash occurs. Cannot return NULL.
- */
-struct ast *newAsgn(struct symbol *sym, struct ast *def){
-	struct astAsgn *a = malloc(sizeof(struct astAsgn));
-	// printf("new asgn @%p\n", a);
-
-	if (!a){
-		printf("out of space\n");
-		exit(1);
-	}
-
-	a->nodetype = 'A';
-	a->s = sym;
-	a->l = def;
-	#ifdef DEBUG
-	assert(a);
-	#endif
-	return (struct ast *)a;
-}
 
 /**
  * If memory cannot be allocated, a crash occurs. Cannot be NULL.
@@ -212,98 +199,8 @@ struct ast *newSetres(struct value *out){
 	return (struct ast *)a;
 }
 
-/**
- * Allocates memory for a new symbol call and fills it in.
- * If memory cannot be allocated, a crash occurs. Cannot be NULL.
- */
-struct ast *newSymcall(struct symbol *sym){
-	struct symcall *a = malloc(sizeof(struct symcall));
-	// printf("new symcall @%p\n", a);
 
-	if (!a){
-		printf("out of space\n");
-		exit(1);
-	}
-
-	a->nodetype = 'E';
-	a->sym = sym;
-	#ifdef DEBUG
-	assert(a);
-	#endif
-	return (struct ast *)a;
-}
-
-
-/* create a new symbol table */
-/*void newSymtab(struct symbol *result[]){
-}*/
-
-/** Perform a hash algorithm to determine positioning in the symbol table.
- * @param  sym The symbol to hash upon.
- * @return     The index to start looking in the symbol table.
- */
-static unsigned symhash(char *sym){
-
-  unsigned int hash = 0;
-  unsigned c;
-
-  while ((c = *sym++)) hash = hash*9 ^ c;
-  return hash;
-}
-
-/**
- * Initial position is determined by hashing it and then iteratively looking for either
- * an existing entry or a free space top place it. If the entry already exists, it will always
- * be found before an empty slot, assuming no entries are deleted.
- * Causes a crash if the symbol table is filled.
- */
-struct symbol *lookup(char *sym){
-
-  struct symbol *sp = &symtab[symhash(sym)%NHASH]; /* symtab position's contents */
-  int scount = NHASH; /* how many slots we have yet to look at */
-
-  while (--scount >= 0){
-    /* if entry exists, check if it is the same and return if it is */
-    if (sp->name && !strcmp(sp->name, sym)) {
-
-      //DEBUG_REPORT("found %s at %p\n", sp->name, sp);
-      // printf("found %s at %p\n",sp->name,sp);
-      return sp;
-    }
-
-    /* if no entry, make an entry and return it */
-    if (!sp->name){
-      sp->name = strdup(sym);
-			sp->func = newNatint(0); /* init to zero */
-      //DEBUG_REPORT("new %s at %p(%p)\n", sp->name, sp, sp->func);
-			// printf("new %s at %p\n",sp->name,sp);
-      return sp;
-    }
-
-    /* if no return, try the next entry */
-    /* increment the pointer and if out of bounds (goto next), loop to start of symtab */
-    if (++sp >= symtab+NHASH) sp = symtab;
-  }
-
-  printf("symbol table overflow\n");
-  exit(2); /* tried all entries, table is full */
-}
-
-/**
- * All symbol references contain the function definition of the variable because they are
- * all pointers to the same location, so the definition pointer is simply freed if present
- * and then re-set.
- */
-void setsym(struct symbol *name, struct ast *val){
-	freeAst( &(name->func) );
-		#ifdef DEBUG
-	assert(name->func == NULL);
-		#endif
-	name->func = val;
-}
-
-
-/* === MEMORY MANAGEMENT === */
+/* ===== MEMORY MANAGEMENT ===== */
 
 /**
  * Recursively frees allocated memory according to DFS.
@@ -324,7 +221,7 @@ void freeAst( struct ast **root ){
 		freeAst( &(*root)->l );
 
 		/* 0 subtrees */
-	case 'D': case 'I': case 'C': case 'E':
+	case 'D': case 'I': case 'C': //case 'E':
 		break;
 
 		/* special - setdie */
@@ -338,9 +235,9 @@ void freeAst( struct ast **root ){
 		break;
 
 		/* special - astAsgn */
-	case 'A':
-		freeAst( &((struct astAsgn *)*root)->l );
-		break;
+	// case 'A':
+	// 	freeAst( &((struct astAsgn *)*root)->l );
+	// 	break;
 
 	default:
 		printf("unknown ast free, got %d\n", (*root)->nodetype);
@@ -353,27 +250,7 @@ void freeAst( struct ast **root ){
 }
 
 
-void freeSymbol(struct symbol **sym){
-	if ((*sym)->func)
-		freeAst(&(*sym)->func);
-	free((*sym)->name);
-	*sym = NULL;
-}
-
-void freeTable(){
-	int i = 0;
-	for (i = 0; i < NHASH; i++){
-		struct symbol *sp = &symtab[i];
-		if (sp->name)
-		{
-			// printf("found %s at index %d\n", sp->name, i);
-			freeSymbol(&sp);
-		}
-	}
-}
-
-
-/* ======= DEBUGGING ======= */
+/* ===== DEBUGGING ===== */
 
 /**
  * Logs an entire AST tree to stdout.
@@ -452,9 +329,9 @@ void printAst(struct ast *root){
 		printf("$%d,%d,%d,%d$", ((struct fargs *)root)->fcount, ((struct fargs *)root)->seltype, ((struct fargs *)root)->scount, (((struct fargs *)root)->cond) ? ((struct fargs *)root)->cond : -1);
 		break;
 
-	case 'E':
-		printf("%s", ((struct symcall *)root)->sym->name );
-		break;
+	// case 'E':
+	// 	printf("%s", ((struct symcall *)root)->sym->name );
+	// 	break;
 
 		/* special - setdie */
 	case 'd':
@@ -471,10 +348,10 @@ void printAst(struct ast *root){
 		break;
 
 		/* special - astAsgn */
-	case 'A':
-		printf("%s := ", ((struct astAsgn *)root)->s->name);
-		printAst(((struct astAsgn *)root)->l);
-		break;
+	// case 'A':
+	// 	printf("%s := ", ((struct astAsgn *)root)->s->name);
+	// 	printAst(((struct astAsgn *)root)->l);
+	// 	break;
 
 	default:
 		printf("\nunknown ast print, got %d\n", root->nodetype);

@@ -1,14 +1,19 @@
 /** The main entrypoint for the Dei program.
  * Performs setup functions required for the program to work.
  * @file deimain.h
+ * @author Jason Nagy (jaysun_n@hotmail.com)
+ * @version 0.1
+ * @date 2021-07-26
+ * 
+ * @copyright Copyright (c) 2021
+ * 
  */
 
 #ifndef DEIMAIN_H_INCLUDED
 #define DEIMAIN_H_INCLUDED
 
-#include <stdlib.h> /* srand */
+
 #include <stdio.h> /* needed for FILE */
-#include "struct.h"
 
 extern int yydebug;         /**< Bison debug flag */
 extern FILE *yyin;          /**< Pointer to input stream */

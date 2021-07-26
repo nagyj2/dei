@@ -1,19 +1,25 @@
+/** Implementation for the entry points of Dei.
+ * @file deimain.c
+ * @author Jason Nagy (jaysun_n@hotmail.com)
+ * @version 0.1
+ * @date 2021-07-26
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 
-#include <stdarg.h> /* needed for yyerror */
-#include <assert.h>
+#include <stdlib.h> /* srand */
+#include <stdarg.h> /* va_list */
 #include <time.h> /* time */
 
 #include "deimain.h"
 #include "struct.h"
 #include "ast.h"
-
+#include "symbols.h"
 #include "eval.h"
 
-#ifdef TESTS
-#include "tests.h"
-#endif
 
-int main(int argc, char **argv){
+int main(int argc, char **argv) {
 
 	/* seed random number generator */
 	srand(time(NULL));
