@@ -4,8 +4,8 @@
 # Generated Files
 bin/**/*
 obj/**/*
-src/lexer.lex.c
-src/parser.tab.c
+src/gen/lexer.lex.c
+src/gen/parser.tab.c
 inc/parser.tab.h
 inc/*.h.gch
 parser.output
