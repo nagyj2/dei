@@ -13,7 +13,7 @@
 
 #include <stdbool.h> /* bool */
 
-#include "struct.h"
+#include "value.h"
 #include "ast.h"
 
 

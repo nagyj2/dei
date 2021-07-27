@@ -17,7 +17,7 @@
 #include <assert.h> /* assert */
 #endif
 
-#include "struct.h"
+#include "value.h"
 
 
 /* ===== FUNCTIONS ===== */

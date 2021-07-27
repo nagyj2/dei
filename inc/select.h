@@ -15,7 +15,7 @@
 
 #include <stdbool.h> /* bool */
 
-#include "struct.h"
+#include "value.h"
 
 
 /** A structure for tracking a disconnected set of values.

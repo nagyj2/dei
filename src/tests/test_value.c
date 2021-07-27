@@ -13,7 +13,7 @@
 #include <stdbool.h>
 
 #include "tests.h"
-#include "struct.h"
+#include "value.h"
 
 #define LENGTH 10
 #define FAILIFHAS(t,val,key) for (t = val; t; t = t->next) { if (t->i == key) FAIL(); }

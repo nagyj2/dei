@@ -14,7 +14,7 @@
 
 #include <string.h> /* strdup */
 
-#include "struct.h"
+#include "value.h"
 
 /* ===== DATA ===== */
 

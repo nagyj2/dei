@@ -17,8 +17,9 @@
 #endif
 
 #include "parser.tab.h" /* DIV, INTER, UNION */
-#include "select.h"
+#include "value.h"
 #include "eval.h"
+#include "select.h"
 #include "symbols.h"
 
 

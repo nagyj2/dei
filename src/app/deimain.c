@@ -13,7 +13,7 @@
 #include <time.h> /* time */
 
 #include "deimain.h"
-#include "struct.h"
+#include "value.h"
 #include "ast.h"
 #include "symbols.h"
 #include "eval.h"
