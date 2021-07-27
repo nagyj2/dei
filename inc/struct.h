@@ -18,7 +18,7 @@
 /* ===== DATA ===== */
 
 /** A structure to contain an integer and a link to another value.
- * Used to represent multiple data structures, such =m as die rolls and faces.
+ * Used to represent multiple data structures, such as die rolls and faces.
  */
 struct value {
 	int i;								/**< The value stored at the current node. */
@@ -27,6 +27,8 @@ struct value {
 
 /** Shorthand for the value structure. */
 typedef struct value ValueChain;
+
+
 
 /* ===== FUNCTIONS ===== */
 
@@ -47,7 +49,6 @@ ValueChain *newValue(int i, ValueChain *prev);
 ValueChain *dupValue(ValueChain *base);
 
 /** Find the last element in a @ref ValueChain and return it.
- * Iterates through @p base to return the last element.
  * If @p base is NULL, NULL is returned.
  * @param[in]	base The chain to find the last value of.
  * @return    The last @ref ValueChain element in @p base.
@@ -92,7 +93,7 @@ void reverseValue(ValueChain **base);
 
 /** Copies a single @ref ValueChain.
  * A utility function to duplicate a single element of @p base.
- * The two struct instances are separate and not aliased.
+ * The created entity is separate from the input and is not aliased.
  * @param[in]	base The structure element to copy.
  * @return    A new @ref ValueChain copy of @p base.
  */
@@ -109,20 +110,21 @@ ValueChain *newValueChain(int min, int max);
 
 
 /** Counts the number of elements in the input @ref ValueChain and returns it.
- * If @p base is NULL, 0 will be returned.
+ * If @p base is NULL, 0 is returned.
  * @param[in]	base The chain to count the elements of.
  * @return    Returns the integer number of elements in base.
  */
 int countValue(ValueChain *base);
 
 /** Sum all the values contained in a series of @ref ValueChain.
- * If @p base is NULL, 0 will be returned.
+ * If @p base is NULL, 0 is returned.
  * @param[in]	base The chain to sum the values of.
  * @return    Returns the integer sum of elements in base.
  */
 int sumValue(ValueChain *base);
 
-/** Checks to see whether an exact @ref ValueChain is in another.
+/** Checks to see whether an exact @ref ValueChain is in another chain.
+ * False is returned if @p base is NULL.
  * @param[in]	key  The value to search for. Can be a value chain, but only current element will be searched for.
  * @param[in]	base The chain to search through.
  * @return    True if @p key is within @p base. Otherwise false.
@@ -130,6 +132,7 @@ int sumValue(ValueChain *base);
 bool hasValueExact(ValueChain *key, ValueChain *base);
 
 /** Checks to see whether an integer value is within a @ref ValueChain.
+ * False is returned if @p base is NULL.
  * @param[in]	key  The integer value to search for.
  * @param[in]	base The chain to search through.
  * @return    True if @p key is contained is within an element of @p base. Otherwise false.
