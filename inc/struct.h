@@ -1,5 +1,5 @@
-/** A chainable structure to support the rest of Dei.
- * Contains common elements to all other modules of Dei along with functions to work with the structs.
+/** Contains @ref ValueChain structure, enabling chain-able integers.
+ * Also contains declarations for functions which operate on them.
  * @file struct.h
  * @author Jason Nagy (jaysun_n@hotmail.com)
  * @version 0.1
@@ -17,120 +17,145 @@
 
 /* ===== DATA ===== */
 
-/** An chain of integer values.
- * Stores an integer value and a link to the next one in the chain.
+/** A structure to contain an integer and a link to another value.
+ * Used to represent multiple data structures, such =m as die rolls and faces.
  */
 struct value {
-	int i;												/**< The value stored at the current node. */
-	struct value *next;						/**< The next element in the chain. Can be NULL. */
+	int i;								/**< The value stored at the current node. */
+	struct value *next;		/**< The next element in the chain. Can be NULL. */
 };
 
+/** Shorthand for the value structure. */
+typedef struct value ValueChain;
 
 /* ===== FUNCTIONS ===== */
 
-/** Create a new value.
- * If @p prev is NULL, a new chain will be created. Otherwise, a new value struct will be created with @p prev as the next element.
- * @param[in]  i    Integer value to assign to the new value element.
- * @param[in]  prev Previous head element. Can be NULL.
- * @return      A head element of a chain of value structs.
+/** Create either a new ValueChain or append a new element.
+ * If @p prev is NULL, a structure will be created. Otherwise, a new structure will be created with @p prev as the next element.
+ * @param[in]	i    Integer value to assign to the new structure.
+ * @param[in] prev Previous head structure. Can be NULL.
+ * @return    A new @ref ValueChain structure with non-NULL value field.
  */
-struct value *newValue(int i, struct value *prev);
-/** Copies an entire value chain.
- * Goes through the input chain to create a new chain containing the same values. The new elements are not aliased.
- * @param[in]  base The head element of the value chain to duplicate.
- * @return      The head of the newly created chain.
+ValueChain *newValue(int i, ValueChain *prev);
+
+/** Duplicates an input ValueChain.
+ * Goes through the input chain to create a @ref ValueChain containing the same values.
+ * The new elements are entirely separate from the input; they are not aliased.
+ * @param[in]	base The head element of the value chain to duplicate. The duplication will be from this element to the end.
+ * @return    The head of the newly created @ref ValueChain.
  */
-struct value *dupValue(struct value *base);
-/** Returns the last element in a chain.
- * @param[in]  base The chain to find the last value of.
- * @return      The last element in the input chain.
+ValueChain *dupValue(ValueChain *base);
+
+/** Find the last element in a @ref ValueChain and return it.
+ * Iterates through @p base to return the last element.
+ * If @p base is NULL, NULL is returned.
+ * @param[in]	base The chain to find the last value of.
+ * @return    The last @ref ValueChain element in @p base.
  */
-struct value *backValue(struct value *base);
-/** Return the first element containing a specific value.
+ValueChain *backValue(ValueChain *base);
+
+/** Return the @ref ValueChain which contains a specifc integer value.
  * Goes through the elements of the chain and looks for an element which has a specific value.
- * @param[in]  key  The element value to look for.
- * @param[in]  base The value chain to search in.
- * @return      Returns the first instance of a value element holding @p key or NULL if @p key was not found.
+ * If @p base does not contain @p key, NULL is returned.
+ * @param[in]	key  The integer value to search for.
+ * @param[in]	base The chain of values to search in.
+ * @return    The first instance of a value element holding @p key.
  */
-struct value *findValue(int key, struct value *base);
-/** Remove first instance of value key and return it.
- * Looks for a specific value of the chain elements and removed it from the chain if found.
- * Returns NULL if key cannot be found or @p *base is NULL.
- * @param[in]  key  The integer value to search for.
- * @param[in,out]  base The address of a chain pointer to search through.
- * @return      If key is found, the removed element is returned. Otherwise NULL.
- * @sideeffect	base will no longer contain the return value in its chain if it is non-NULL.
- */
-struct value *removeValue(int key, struct value **base);
-/** Remove an exact value struct instance from a chain and return it.
- * Looks for a specific value pointer within the input chain and removes and returns it if found.
- * Returns NULL if key cannot be found, @p key is NULL or @p *base is NULL.
- * @param[in]  key  A pointer to the value to remove.
- * @param[in,out]  base The address of a chain pointer to search through.
- * @return      If @p key is found, the element is returned. Otherwise NULL.
- * @sideeffect	base will no longer contain the return value in its chain if it is non-NULL.
- */
-struct value *removeValueExact(struct value *key, struct value **base);
-/** Reverse the order of a value chain.
- * @param[in,out] base The address of a chain pointer to reverse.
- */
-void reverseValue(struct value **base);
+ValueChain *findValue(int key, ValueChain *base);
 
-/** Copies a single value from a value chain.
- * A utility function to return a copy of the value of base. The two struct instances are separate and are not aliased.
- * @param[in]  base The exact value struct to copy.
- * @return      A copy of the input.
+/** Remove first instance of an integer value from a @ref ValueChain and return it.
+ * Looks for a specific value of the chain elements and removes it from the chain if found.
+ * Returns NULL if @p key cannot be found or @p base is NULL.
+ * @param[in]  		key  The integer value to search for.
+ * @param[in,out]	base The address of a pointer to search through.
+ * @return      If @p key is found, the element containing @p key is returned.
+ * @sideeffect	@p base will no longer contain the returned @ref ValueChain.
  */
-struct value *copyValue(struct value *base);
-/** Creates a new value chain from a start and end point.
- * A utility function to create a brand new value chain from integer min to integer max, inclusive.
- * @param[in]  min The lower end of the new chain.
- * @param[in]  max The higher end of the new chain. Must be greater than or equal to min.
- * @return     A value pointer to a new value chain.
- */
-struct value *newValueChain(int min, int max);
+ValueChain *removeValue(int key, ValueChain **base);
 
-/** Find the number of elements in a value chain.
- * @param[in]  base The chain to count the elements of.
- * @return      Returns the integer number of elements in base. If base is NULL, 0 is returned.
+/** Remove an exact @ref ValueChain in another and remove it if present.
+ * Compares memory locations of the inputs to identify a match and subsequent removal.
+ * Returns NULL if @p key cannot be found or @p base is NULL.
+ * @param[in]  		key	A pointer to the value to remove.
+ * @param[in,out] base The address of a pointer to search through.
+ * @return      If @p key is found, the element containing @p key is returned.
+ * @sideeffect	@p base will no longer contain the returned @ref ValueChain.
  */
-int countValue(struct value *base);
-/** Sum all the values contained in a value chain.
- * @param[in]  base The value chain to sum the values of.
- * @return      Returns the integer sum of elements in base. If base is NULL, 0 is returned.
+ValueChain *removeValueExact(ValueChain *key, ValueChain **base);
+
+/** Reverse the order of a @ref ValueChain.
+ * @param[in,out] base The address of a pointer to reverse.
+ * @sideeffect 		@p base will be reversed. Any pointers aliased will not be updated.
  */
-int sumValue(struct value *base);
-/** Determine whether exact value struct is in a value chain.
- * @param[in]  key  The struct to search for.
- * @param[in]  base The value chain to search through.
- * @return      True if key is within base. Otherwise false.
+void reverseValue(ValueChain **base);
+
+
+/** Copies a single @ref ValueChain.
+ * A utility function to duplicate a single element of @p base.
+ * The two struct instances are separate and not aliased.
+ * @param[in]	base The structure element to copy.
+ * @return    A new @ref ValueChain copy of @p base.
  */
-bool hasValueExact(struct value *key, struct value *base);
-/* return whether int value is in base */
-/** Determine whether a specific integer value is in a value chain.
- * @param[in]  key  The integer value to search for.
- * @param[in]  base The value chain to search through.
- * @return      True if key is within base. Otherwise false.
+ValueChain *copyValue(ValueChain *base);
+
+/** Creates a new @ref ValueChain and populates it with sequential numbers.
+ * A utility function to create a brand new chain.
+ * This method creates from @p min to @p max inclusive.
+ * @param[in]	min The lower end of the new chain.
+ * @param[in]	max The higher end of the new chain. Must be greater than or equal to @p min.
+ * @return   	A pointer to a new @ref ValueChain which contains elements [ @p min, @p max ].
  */
-bool hasValue(int key, struct value *base);
+ValueChain *newValueChain(int min, int max);
+
+
+/** Counts the number of elements in the input @ref ValueChain and returns it.
+ * If @p base is NULL, 0 will be returned.
+ * @param[in]	base The chain to count the elements of.
+ * @return    Returns the integer number of elements in base.
+ */
+int countValue(ValueChain *base);
+
+/** Sum all the values contained in a series of @ref ValueChain.
+ * If @p base is NULL, 0 will be returned.
+ * @param[in]	base The chain to sum the values of.
+ * @return    Returns the integer sum of elements in base.
+ */
+int sumValue(ValueChain *base);
+
+/** Checks to see whether an exact @ref ValueChain is in another.
+ * @param[in]	key  The value to search for. Can be a value chain, but only current element will be searched for.
+ * @param[in]	base The chain to search through.
+ * @return    True if @p key is within @p base. Otherwise false.
+ */
+bool hasValueExact(ValueChain *key, ValueChain *base);
+
+/** Checks to see whether an integer value is within a @ref ValueChain.
+ * @param[in]	key  The integer value to search for.
+ * @param[in]	base The chain to search through.
+ * @return    True if @p key is contained is within an element of @p base. Otherwise false.
+ */
+bool hasValue(int key, ValueChain *base);
+
 
 
 /* ===== MEMORY MANAGEMENT ===== */
 
-/** Frees an entire value chain.
- * @param[in,out] val The address to a value chain which will be freed.
- * @sideeffect After the fucntion finished evaluation, all pointers to released data will equal to NULL.
+/** Frees allocated memory from a series of @ref ValueChain.
+ * @param[in,out]	val The address to a chain which will be freed.
+ * @sideeffect 		All pointers to released data will equal to NULL. This will impact aliased references.
  */
-void freeValue( struct value **val );
+void freeValue(ValueChain **val);
+
 
 
 /* ===== DEBUGGING ===== */
 
-/* iteratively print a value chain */
-/** Outputs a representation of a value chain.
- * @param[in] base The value chain to output.
- * @sideeffect base's contents will be sent to stdout.
+/** Outputs a representation of a @ref ValueChain to standard output.
+ * @param[in]		base The chain to output the contents of.
+ * @sideeffect 	@p base's contents will be sent to standard output.
  */
-void printValue(struct value *base);
+void printValue(ValueChain *base);
+
+
 
 #endif /* STRUCT_H_INCLUDED */

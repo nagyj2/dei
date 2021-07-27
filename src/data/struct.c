@@ -1,4 +1,6 @@
-/** Implementation of the functions to support the value structure.
+/** Implements a singlely linked-list implementation to store integer chains.
+ * The start of the chain, the head, is kept as a pointer and all other elements need to be iterated to.
+ * Chains cannot be traversed in the reverse direction because of the single-link structure.
  * @file struct.c
  * @author Jason Nagy (jaysun_n@hotmail.com)
  * @version 0.1
@@ -22,19 +24,17 @@
 
 /**
  * Allocates new memory for the struct and then populates its values.
- * Assigns prev to next without checking because it is either NULL, meaning a new chain or it
- * is a new head, so it becomes the next element.
  * Returns NULL if memory could not be allocated.
  */
-struct value *newValue(int i, struct value *prev){
-	struct value *a = malloc(sizeof(struct value));
+ValueChain *newValue(int i, ValueChain *prev){
+	ValueChain *a = malloc(sizeof(ValueChain));
 	if (!a){
 		printf("out of space");
 		return NULL;
 	}
 
 	a->i = i;
-	a->next = prev;
+	a->next = prev; /* Dont need to check because NULL means a new chain and non-NULL means a new head */
 	#ifdef DEBUG
 	assert(a && a->i == i && a->next == prev);
 	#endif
@@ -42,10 +42,11 @@ struct value *newValue(int i, struct value *prev){
 }
 
 /**
- * Iteratively creates new value elements connected to one another. Finally, the chain is reversed.
+ * Iteratively creates new value elements connected to one another. Afterwards, the chain is reversed.
+ * If any element could not be created, NULL will be returned.
  */
-struct value *dupValue(struct value *base){
-	struct value *head = NULL, *t = NULL;
+ValueChain *dupValue(ValueChain *base) {
+	ValueChain *head = NULL, *t = NULL;
 
 	for(t = base; t; t = t->next){
 		head = newValue(t->i, head);
@@ -54,7 +55,7 @@ struct value *dupValue(struct value *base){
 	reverseValue( &head );
 
 	#ifdef DEBUG
-	struct value *h = NULL;
+	ValueChain *h = NULL;
 	for(t = base, h = head; t || h; t = t->next, h = h->next){
 		assert(t->i == h->i);
 	}
@@ -64,14 +65,13 @@ struct value *dupValue(struct value *base){
 }
 
 /**
- * Iteratively work through the chain until the next element is NULL.
- * Aliases the final element.
+ * Iteratively work through the chain until the next element is NULL, signifying the last element.
+ * Returns an alias to the final element.
  */
-struct value *backValue(struct value *base){
-	struct value *t = NULL;
+ValueChain *backValue(ValueChain *base){
+	ValueChain *t = NULL;
 
-	for(t = base; t->next; t = t->next){
-	}
+	for(t = base; t->next; t = t->next){ /* Skip */ }
 
 	#ifdef DEBUG
 	assert(t && t->i && !t->next);
@@ -80,13 +80,13 @@ struct value *backValue(struct value *base){
 }
 
 /**
- * Iteratively search for the key and return the first match. Will return NULL
- * if the key is not in base or base itself is NULL.
- * Aliases the found element.
+ * Iteratively search for the integer key and return the first match.
+ * Short-circuits on a found element.
+ * When a match is found, an alias of the element is returned.
  */
-struct value *findValue(int key, struct value *base){
+ValueChain *findValue(int key, ValueChain *base){
 	if (!base) return NULL;
-	struct value *t = NULL;
+	ValueChain *t = NULL;
 
 	for(t = base; t; t = t->next){
 		if (t->i == key) return t;
@@ -98,12 +98,13 @@ struct value *findValue(int key, struct value *base){
 }
 
 /**
+ * Iteratively searches for an integer key and removes it when found.
  * When found, the value is extracted by modifying the previous element's next attribute.
- * The pointer attached to the new value is then returned.
+ * The searched-for element has its next attribute modified to remove it from the chain.
  */
-struct value *removeValue(int key, struct value **base){
+ValueChain *removeValue(int key, ValueChain **base){
 	if (!*base) return NULL;
-	struct value *t = NULL, *prev = NULL;
+	ValueChain *t = NULL, *prev = NULL;
 
 	#ifdef DEBUG
 	int size = countValue(*base);
@@ -133,12 +134,15 @@ struct value *removeValue(int key, struct value **base){
 }
 
 /**
- * When found, the element is removed from the chain and modified to completely separate it.
- * It is then returned.
+ * Iteratively searches for an exact key and removes it when found.
+ * To check an element, the memory address is checked, so this method works only for aliases.
+ * When found, the value is extracted by modifying the previous element's next attribute.
+ * The searched-for element has its next attribute modified to remove it from the chain.
+ * @p key and the returned value are the same memory address.
  */
-struct value *removeValueExact(struct value *key, struct value **base){
+ValueChain *removeValueExact(ValueChain *key, ValueChain **base){
 	if (!*base || !key) return NULL;
-	struct value *t = NULL, *prev = NULL;
+	ValueChain *t = NULL, *prev = NULL;
 
 	#ifdef DEBUG
 	int size = countValue(*base);
@@ -169,35 +173,40 @@ struct value *removeValueExact(struct value *key, struct value **base){
 
 /**
  * Iteratively performs a reversal algorithm on the elements until the terminal element is reached.
- * The new head is then set to the input pointer.
+ * Operates by operating on 3 elements concurrently.
+ * Any aliases which exist will be silently modified.
+ * @p base is then set to the last element.
  */
-void reverseValue(struct value **base){
-	struct value *prev = NULL, *curr = *base, *next = NULL;
+void reverseValue(ValueChain **base){
+	ValueChain *prev = NULL, *curr = *base, *next = NULL;
 
 	while(curr){
-		next = curr->next;
-		curr->next = prev;
-		prev = curr;
-		curr = next;
+		next = curr->next;	/* Save next element */
+		curr->next = prev;	/* Set "next" element to previous */
+		prev = curr;				/* Set last element to current */
+		curr = next;				/* Set current to the saved next element */
 	}
-	*base = prev;
+	*base = prev;					/* Update head to the last element */
 
 }
 
 
 /**
- * Uses the ability to start a new chain from @ref newValue to create a chain with the value of input.
+ * Creates a new element by making a copy of another.
+ * Uses newValue()'s ability to create a new @ref ValueChain head.
+ * Copys the value of @p base by accessing its integer value.
  */
-struct value *copyValue(struct value *base){
+ValueChain *copyValue(ValueChain *base){
 	return newValue(base->i, NULL);
 }
 
 /**
- * Displays a warning if the minimum is greater than the maximum.
+ * Iteratively creates a new @ref ValueChain by exploiting newValue()'s ability to chain elements.
+ * Displays a warning if @p min is greater than @p max and forces a 1 element chain with a value of @p min.
  */
-struct value *newValueChain(int min, int max){
+ValueChain *newValueChain(int min, int max){
 	if (min > max) {printf("warning: min=%d > max=%d, empty die\n",min,max); max = min;}
-	struct value *val1 = NULL;
+	ValueChain *val1 = NULL;
 	for (int i = max; i >= min; i--)
 		val1 = newValue(i, val1);
 	return val1;
@@ -205,10 +214,10 @@ struct value *newValueChain(int min, int max){
 
 
 /**
- * Iteratively increments a counter.
+ * Iteratively searches through a @ref ValueChain and counts the number of jumps performed.
  */
-int countValue(struct value *base){
-	struct value *t = NULL;
+int countValue(ValueChain *base){
+	ValueChain *t = NULL;
 	int c = 0;
 
 	for(t = base; t; t = t->next)	c++;
@@ -220,10 +229,10 @@ int countValue(struct value *base){
 }
 
 /**
- * Iteratively accumulates the individual element's values.
+ * Iteratively advances through a @ref ValueChain and accumulates the individual element's values.
  */
-int sumValue(struct value *base){
-		struct value *t = NULL;
+int sumValue(ValueChain *base){
+		ValueChain *t = NULL;
 		int s = 0;
 
 		#ifdef DEBUG
@@ -240,9 +249,11 @@ int sumValue(struct value *base){
 
 /**
  * Checks for an exact struct instance by comparing memory addresses of the pointers.
+ * Since this function operates on comparison of memory addresses, it will only return true if @p key is an alias.
+ * Short-circuits on a found element.
  */
-bool hasValueExact(struct value *key, struct value *base){
-		struct value *t = NULL;
+bool hasValueExact(ValueChain *key, ValueChain *base){
+		ValueChain *t = NULL;
 
 		#ifdef DEBUG
 		//assert(countValue(key) == 1); /* disallow chains */
@@ -259,9 +270,10 @@ bool hasValueExact(struct value *key, struct value *base){
 
 /**
  * Checks for an exact struct instance by comparing values of each element.
+ * Short-circuits on a found element.
  */
-bool hasValue(int key, struct value *base){
-	struct value *t = NULL;
+bool hasValue(int key, ValueChain *base){
+	ValueChain *t = NULL;
 
 	for(t = base; t; t = t->next){
 		if (t->i == key) return true;
@@ -274,11 +286,12 @@ bool hasValue(int key, struct value *base){
 /* ===== MEMORY MANAGEMENT ===== */
 
 /**
- * Iteratively frees elements within a value chain.
- * Each element's location data is also set to NULL.
+ * Iteratively frees memory allocated to @ref ValueChain's.
+ * Additionally, data at each element's location is set to NULL.
+ * As a side effect, all references to values in the chain will be set to NULL silently.
  */
-void freeValue( struct value **val ){
-	struct value *nval = NULL;
+void freeValue( ValueChain **val ){
+	ValueChain *nval = NULL;
   while(*val){
     nval = (*val)->next;
     free(*val);
@@ -295,10 +308,10 @@ void freeValue( struct value **val ){
 /* ===== DEBUGGING ===== */
 
 /**
- * Iteratively outputs the values of a chain.
+ * Iteratively outputs the values of a chain to standard output.
  */
-void printValue(struct value *base){
-	struct value *t;
+void printValue(ValueChain *base){
+	ValueChain *t;
 	for (t = base; t; t = t->next)
 		printf("%d ",t->i);
 	//printf("\n");
