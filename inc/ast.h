@@ -98,6 +98,7 @@ struct setres {
 
 
 /** Generic AST Node.
+ * \struct ast
  * A node which can have up to 2 children. Used for operations which only require operator and operand information.
  */
 struct ast {
@@ -110,55 +111,55 @@ struct ast {
 /* ===== FUNCTIONS ===== */
 
 /** Create a new AST node.
- * @param  nodetype[in] The operator the node will do.
- * @param  l[in]    The left operand subtree.
- * @param  r[in]    The right operand subtree. Can be NULL.
+ * @param[in]  nodetype The operator the node will do.
+ * @param[in]  l    The left operand subtree.
+ * @param[in]  r    The right operand subtree. Can be NULL.
  * @return          An AST node representing the operation. Cannot be NULL.
  */
 struct ast *newAst(int nodetype, struct ast *l, struct ast *r);
 /** Create a comparison AST node.
- * @param  cmptype[in] The comparison subtype.
- * @param  body[in]    The left operand subtree.
- * @param  args[in]    The right operand subtree.
+ * @param[in]  cmptype The comparison subtype.
+ * @param[in]  body    The left operand subtree.
+ * @param[in]  args    The right operand subtree.
  * @return         An AST node representing the operation. Cannot be NULL.
  */
 struct ast *newCmp(int cmptype, struct ast *body, struct ast *args);
 /** Create a new function AST node.
- * @param  functype[in] The function subtype. Must be from _bifs_.
- * @param  body[in]     The subtree which the function will be performed on.
- * @param  args[in]     Arguments for the function.
+ * @param[in]  functype The function subtype. Must be from _bifs_.
+ * @param[in]  body     The subtree which the function will be performed on.
+ * @param[in]  args     Arguments for the function.
  * @return          An AST node represnting the function. Cannot be NULL.
  */
 struct ast *newFunc(int functype, struct ast *body, struct ast *args);
 
 /** Create a natural die definition leaf.
- * @param  count[in] The number of times to roll the die. Cannot be zero or less.
- * @param  min[in]   The minimum face on the die.
- * @param  max[in]   The maximum face on the die.
+ * @param[in]  count The number of times to roll the die. Cannot be zero or less.
+ * @param[in]  min   The minimum face on the die.
+ * @param[in]  max   The maximum face on the die.
  * @return       An AST representing a natural die roll. Cannot be NULL.
  */
 struct ast *newNatdie(int count, int min, int max);
 /** Create an artificial die definition leaf.
- * @param  count[in] The number of times to roll the die. Cannot be zero or less.
- * @param  faces[in] The faces on the die. Cannot be NULL.
+ * @param[in]  count The number of times to roll the die. Cannot be zero or less.
+ * @param[in]  faces The faces on the die. Cannot be NULL.
  * @return       An AST representing an artificial die roll. Cannot be NULL.
  */
 struct ast *newSetdie(int count, struct value *faces);
 /** Create a natural integer leaf.
- * @param  integer[in] The number to be represented.
+ * @param[in]  integer The number to be represented.
  * @return         An AST node representing an integer. Cannot be NULL.
  */
 struct ast *newNatint(int integer);
 /** Create function arguments leaf
- * @param  fcount[in]  The number of times to perform the function. Cannot be zero or less.
- * @param  seltype[in] The selection type. Must be from _sifs_.
- * @param  scount[in]  The number of times to perform selection. Cannot be zero or less.
- * @param  cond[in]    The condition type on when to save the function result. Must be from _cifs_.
+ * @param[in]  fcount  The number of times to perform the function. Cannot be zero or less.
+ * @param[in]  seltype The selection type. Must be from _sifs_.
+ * @param[in]  scount  The number of times to perform selection. Cannot be zero or less.
+ * @param[in]  cond    The condition type on when to save the function result. Must be from _cifs_.
  * @return         An AST node representing function arguments. Cannot be NULL.
  */
 struct ast *newFargs(int fcount, int seltype, int scount, int cond);
 /** Create a artificial roll leaf.
- * @param  out[in] The numbers which were 'rolled'. Can be NULL.
+ * @param[in]  out The numbers which were 'rolled'. Can be NULL.
  * @return     An AST node representing a fake roll. Cannot be NULL.
  */
 struct ast *newSetres(struct value *out);
@@ -167,7 +168,7 @@ struct ast *newSetres(struct value *out);
 /* ===== MEMORY MANAGEMENT ===== */
 
 /** Recursively free memory from an AST tree.
- * @param root[in,out] Root node of an AST to free.
+ * @param[in,out] root Root node of an AST to free.
  * @sideeffect root pointer will be set to NULL.
  */
 void freeAst( struct ast **root );
@@ -176,7 +177,7 @@ void freeAst( struct ast **root );
 /* ===== DEBUGGING ===== */
 
 /** Recursively print the contents of an AST tree.
- * @param root[in] The root node to print.
+ * @param[in] root The root node to print.
  * @sideeffect A string representation of root will be displayed to stdout.
  */
 void printAst(struct ast *root);

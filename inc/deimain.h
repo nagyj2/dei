@@ -24,9 +24,8 @@ extern int yylineno; 				/**< Current parsing line number in input stream. */
  */
 extern void yyrestart(FILE* file);
 /** Output a formatted string and produce an error token in the parser.
- * @param s       A format string.
- * @param VARARGS Elements to insert into the format string.
- * @sideefect 		The input formatted string is displayed to stderr and a 'error' token will be inserted into the parsing state.
+ * @param[in] s       A format string.
+ * @sideeffect 		The input formatted string is displayed to stderr and a 'error' token will be inserted into the parsing state.
  */
 void yyerror(char *s, ...);
 /** Starts the parsing process on yyin.
@@ -40,8 +39,8 @@ int yylex();
 
 /** The main entry point of the program.
  * Performs setup for file parsing before taking from stdin.
- * @param  argc The number of arguments in argv.
- * @param  argv Any CLI arguments.
+ * @param[in]  argc The number of arguments in argv.
+ * @param[in]  argv Any CLI arguments.
  * @return      An exit value depending on whether the program ended successfully.
  */
 int main(int argc, char **argv);
