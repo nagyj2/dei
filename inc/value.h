@@ -1,6 +1,6 @@
 /** Contains @ref ValueChain structure, enabling chain-able integers.
  * Also contains declarations for functions which operate on them.
- * @file struct.h
+ * @file value.h
  * @author Jason Nagy (jaysun_n@hotmail.com)
  * @version 0.1
  * @date 2021-07-26
@@ -25,7 +25,9 @@ struct value {
 	struct value *next;		/**< The next element in the chain. Can be NULL. */
 };
 
-/** Shorthand for the value structure. */
+/** @typedef ValueChain
+ * Shorthand for the value structure.
+ */
 typedef struct value ValueChain;
 
 

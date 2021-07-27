@@ -76,7 +76,7 @@ ValueChain *backValue(ValueChain *base){
 	for (t = base; t->next; t = t->next) { /* Skip */ }
 
 	#ifdef DEBUG
-	assert(t && t->i && !t->next);
+	// assert(t && t->i && !t->next);
 	#endif
 	return t;
 }
