@@ -22,6 +22,7 @@ int main(int argc, char **argv){
 
   /* Run all tests in the suite */
   RUN_SUITE(value_suite);
+  RUN_SUITE(select_suite);
   RUN_SUITE(ast_suite);
   RUN_SUITE(symbol_suite);
 

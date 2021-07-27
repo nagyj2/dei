@@ -1,4 +1,4 @@
-/** Testing suite for the struct.c structures and methods.
+/** Testing suite for the value.c structures and methods.
  * All methods available to operate on value structs are tested here in numerous cases.
  * This file serves to provide a definition to the @p value_suite variable declared in tests.h.
  * @file test_value.c
