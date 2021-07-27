@@ -21,6 +21,9 @@
 /* Value test suite */
 void value_suite(void);
 
+/* Selection test suite */
+void select_suite(void);
+
 /* AST test suite */
 void ast_suite(void);
 

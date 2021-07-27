@@ -1,4 +1,4 @@
-/** Contains @ref SelectionChain structure, enabling selection of multiple disconnected @ref ValueChain's.
+/** Contains @ref SelectionChain structure, enabling selection of multiple disconnected @ref ValueChain structures.
  * Also contains declarations for functions to manipulate these structures.
  * @file select.h
  * @author Jason Nagy (jaysun_n@hotmail.com)
@@ -27,10 +27,18 @@ struct value_selection {
 	struct value_selection *next;	/**< The next selected element. Can be NULL. */
 };
 
-/** Shorthand for the value_selection structure. */
+/** @typedef SelectionChain
+ * Shorthand for the value_selection structure.
+ */
 typedef struct value_selection SelectionChain;
 
 
+/* ===== CLASS-LIKE FUNCTIONS ===== */
+
+/* Access value selected */
+/* Access next element */
+/* Update value selected */
+/* Update next element */
 
 /* ===== FUNCTIONS ===== */
 
@@ -133,7 +141,7 @@ bool hasSelection(ValueChain *key, SelectionChain *base);
  * False is returned if @p base is NULL.
  * @param[in] key  An integer to search for.
  * @param[in] base The chain to search through.
- * @return    True if @p key is within a selected @ref ValueChain's value. False otherwise.
+ * @return    True if @p key is within a selected @ref ValueChain value. False otherwise.
  */
 bool hasSelectionInt(int key, SelectionChain *base);
 
@@ -151,8 +159,10 @@ bool hasSelectionInt(int key, SelectionChain *base);
 void freeSelectionAliased(SelectionChain **sel);
 
 /** Frees memory allocated to @ref SelectionChain structures and any pointed to @ref ValueChain elements.
- * Only the pointed to @ref ValueChain's are freed, not the entire chain they represent.
- * All freed pointers are set to NULL.
+ * Only the pointed to @ref ValueChain is freed, not the entire chain they represent.
+ * Freed pointers are set to NULL.
+ * @warning Frees everything pointed to, but is silent about it, so when other pointers read the value, they may not see NULL.
+ * Best practice is to remove and then free.
  * @param[in,out] sel The chain and its elements to free.
  * @sideeffect Input @p sel, all the aliased @ref SelectionChain elements and aliased @ref ValueChain elements to will be freed and the pointers silently set to NULL.
  */

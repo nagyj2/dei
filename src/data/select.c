@@ -33,6 +33,11 @@ SelectionChain *newSelection(ValueChain *val, SelectionChain *prev){
 		return NULL;
 	}
 
+	if (val == NULL) {
+		printf("NULL selection!\n");
+		exit(4);
+	}
+
   /** TODO: check and ensure prev doesnt have val already  */
 	a->val = val;
 	a->next = prev;
@@ -46,7 +51,8 @@ SelectionChain *newSelection(ValueChain *val, SelectionChain *prev){
  * Aliases the back element of a selection.
  * Iteratively searches for the final element in @p base.
  */
-SelectionChain *backSelection(SelectionChain *base){
+SelectionChain *backSelection(SelectionChain *base) {
+	if (base == NULL) return NULL;
 	SelectionChain *t = NULL;
 	for (t = base; t->next; t = t->next){ /* get to the end */ }
 
@@ -289,7 +295,7 @@ void freeSelectionComplete(SelectionChain **sel) {
   SelectionChain *nsel = NULL;
   while(*sel){
     nsel = (*sel)->next;
-    if ((*sel)->val) free( (*sel)->val );
+    free( (*sel)->val );
     (*sel)->val = NULL;
     #ifdef DEBUG
     assert(!(*sel)->val);
@@ -332,6 +338,6 @@ void freeSelectionAliased(SelectionChain **sel) {
 void printSelection(SelectionChain *sel) {
   SelectionChain *t = NULL;
   for (t = sel; t; t = t->next) {
-    printf("S(%d:%p) ", t->val->i, t->val);
+    printf("S(%d:%p), ", t->val->i, t->val);
   }
 }
