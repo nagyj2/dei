@@ -193,6 +193,9 @@ TEST testValue_Search(void) {
 
   /* Find in NULL */
   ASSERT_EQ(NULL, findValue(6, a));
+  
+  /* Find back of NULL */
+  ASSERT_EQ(NULL, backValue(a));
 
   /* Max -> Min */
   for (i = 0; i < LENGTH; i++) {
