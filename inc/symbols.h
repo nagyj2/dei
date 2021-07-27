@@ -1,5 +1,5 @@
 /** Extension to ast.h which deals with symbols
- * @file symboltable.h
+ * @file symbols.h
  * @author Jason Nagy (jaysun_n@hotmail.com)
  * @version 0.1
  * @date 2021-07-26
@@ -57,19 +57,19 @@ struct astAsgn {
  */
 struct symbol *lookup(char *s);
 /** Create a symbol (variable) call leaf.
- * @param  sym[in] The symbol to reference. Cannot be NULL.
+ * @param[in]  sym The symbol to reference. Cannot be NULL.
  * @return     An AST node representing a symbol call. Cannot be NULL.
  */
 struct ast *newSymcall(struct symbol *sym);
 /** Create a new variable assignment.
- * @param  sym[in] The variable symbol to assign to.
- * @param  def[in] The AST definition of the variable.
+ * @param[in]  sym The variable symbol to assign to.
+ * @param[in]  def The AST definition of the variable.
  * @return     An AST node representing the assignment. Cannot be NULL.
  */
 struct ast *newAsgn(struct symbol *sym, struct ast *def);
 /** Assign an AST structure to a symbol.
  * @param[in,out] name The symbol reference to assign a meaning to. Cannot be NULL.
- * @param[in] val  The definition to be assigned to name
+ * @param[in] def  The definition to be assigned to name
  * @sideeffect name will have a new func value
  */
 void setsym(struct symbol *name, struct ast *def);
@@ -101,7 +101,7 @@ void freeAst_Symbol(struct ast **root);
 /* === DEBUGGING === */
 
 /** Implementation of ast.h's printAst() which supports symbols.
- * @param[] root The tree to print.
+ * @param[in] root The tree to print.
  */
 void printAst_Symbol(struct ast *root);
 

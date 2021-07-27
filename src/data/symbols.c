@@ -8,8 +8,12 @@
  * 
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <stdlib.h> /* malloc, NULL */
+#include <stdio.h> /* printf */
+
+#ifdef DEBUG
+#include <assert.h> /* assert */
+#endif
 
 #include "parser.tab.h"
 
