@@ -243,7 +243,7 @@ TEST testValue_Search(void) {
 
 /* Test value removal */
 TEST testValue_Removal(void) {
-  struct value* v = NULL, *t = NULL;
+  struct value* v = NULL, *t = NULL, *u = NULL;
   int i;
 
   ASSERT_EQ(NULL, removeValue(0, &v));
@@ -253,31 +253,41 @@ TEST testValue_Removal(void) {
     v = newValue(i, v);
   }
 
-  /* Remove from middle */
-  t = removeValue(4, &v);
-  ASSERT_EQ(4, t->i);
-  ASSERT_EQ(NULL, t->next);
-  FAILIFHAS(t, v, 4);
-  freeValue(&t);
-
-  /* Remove from last */
-  t = removeValue(0, &v);
-  ASSERT_EQ(0, t->i);
-  ASSERT_EQ(NULL, t->next);
-  FAILIFHAS(t, v, 0);
-  freeValue(&t);
-  
-  /* Remove from first */
-  t = removeValue(9, &v);
-  ASSERT_EQ(9, t->i);
-  ASSERT_EQ(NULL, t->next);
-  FAILIFHAS(t, v, 9);
-  freeValue(&t);
+  /* Middle, Last, First */
+  int a[3] = { 4, 0, 9 };
+  for (i = 0; i < 3; i++) {
+    t = removeValue(a[i], &v);
+    ASSERT_EQ(a[i], t->i);
+    ASSERT_EQ(NULL, t->next);
+    FAILIFHAS(t, v, a[i]);
+    freeValue(&t);
+  }
 
   /* Missed remove */
   t = removeValue(15, &v);
   ASSERT_EQ(NULL, t);
   FAILIFHAS(t, v, 15);
+
+  /* Middle, Last, First */
+  int b[3] = { 5, 1, 8 };
+  for (i = 0; i < 4; i++) {
+    u = findValue(b[i], v);
+    t = removeValueExact(u, &v);
+    ASSERT_EQ(u, t);
+    ASSERT_EQ(b[i], t->i);
+    ASSERT_EQ(NULL, t->next);
+    FAILIFHAS(t, v, b[i]);
+    freeValue(&t);
+    freeValue(&u);
+  }
+
+  /* Missed remove */
+  u = newValue(15, NULL);
+  t = removeValueExact(u, &v);
+  ASSERT_EQ(NULL, t);
+  ASSERT_NEQ(u, t); /* Both NULL */
+  FAILIFHAS(t, v, 15);
+  freeValue(&u);
 
   freeValue(&v);
 
