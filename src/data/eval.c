@@ -17,6 +17,7 @@
 #endif
 
 #include "parser.tab.h" /* DIV, INTER, UNION */
+#include "select.h"
 #include "eval.h"
 #include "symbols.h"
 
@@ -69,243 +70,6 @@ int rollInt(int times, struct value *faces) {
 	return t->i; /* return result from the face */
 }
 
-/**
- * Allocates memory for a new struct.
- * If memory cannot be allocated, an error is thrown.
- * If prev is NULL, a new selection chain is created.
- * Returns NULL if memory could not be allocated.
- */
-struct selection *newSelection(struct value *val, struct selection *prev){
-	struct selection *a = malloc(sizeof(struct selection));
-
-	if (!a){
-		printf("out of space\n");
-		return NULL;
-	}
-
-	a->val = val;
-	a->next = prev;
-	#ifdef DEBUG
-	assert(a && a->val == val && a->next == prev);
-	#endif
-	return a;
-}
-
-/**
- * Aliases the back element of a selection.
- */
-struct selection *backSelection(struct selection *base){
-	struct selection *t = NULL;
-	for (t = base; t->next; t = t->next){ /* get to the end */ }
-
-	#ifdef DEBUG
-	assert(t && t->val && !t->next);
-	#endif
-	return t;
-}
-
-/**
- * Aliases the found element
-*/
-struct selection *findSelection(int key, struct selection *base){
-	if (!base) return NULL;
-	struct selection *t = NULL;
-
-	for(t = base; t; t = t->next){
-		if ( t->val->i == key ) return t;
-	}
-	/*#ifdef DEBUG
-	assert(!hasSelection(key,base));
-	#endif*/
-	return NULL;
-}
-
-/**
- * Aliases the found element
- */
-struct selection *findSelectionExact(struct value *key, struct selection *base){
-	if (!base) return NULL;
-	struct selection *t = NULL;
-
-	for(t = base; t; t = t->next){
-		if ( t->val == key ) return t;
-	}
-	#ifdef DEBUG
-	assert(!hasSelection(key,base));
-	#endif
-	return NULL;
-}
-
-/**
- * Removes the first selected element with the value key from base and returns the removed element.
- * base is modified, so a pointer pointer is required.
- */
-struct selection *removeSelection(int key, struct selection **base){
-	if (!*base) return NULL;
-	struct selection *t = NULL, *prev = NULL;
-
-	#ifdef DEBUG
-	int size = countSelection(*base);
-	#endif
-
-	for(t = *base; t; t = t->next){
-		if (t->val->i == key){
-			if (prev)	prev->next 	= t->next; /* skip over current */
-			else 			*base 			= t->next; /* move head to next */
-			t->next = NULL; /* Erase link */
-
-			#ifdef DEBUG
-			assert(!hasSelectionExact(t, *base));
-			assert(size - 1 == countSelection(*base));
-			#endif
-			return t;
-		}
-		prev = t;
-	}
-
-	#ifdef DEBUG
-	/* assert(!hasSelection(key, *base)); */
-	assert(size == countSelection(*base));
-	#endif
-	return NULL;
-}
-
-/**
- * Removes the exact element key from base.
- * base is modified, so a pointer pointer is required.
- */
-struct selection *removeSelectionValue(struct value *key, struct selection **base){
-	if (!*base) return NULL;
-	struct selection *t = NULL, *prev = NULL;
-
-	#ifdef DEBUG
-	int size = countSelection(*base);
-	#endif
-
-	for(t = *base; t; t = t->next){
-		if (t->val == key){
-			if (prev)	prev->next 	= t->next; /* skip over current */
-			else 			*base 			= t->next; /* move head to next */
-			t->next = NULL; /* Erase link */
-
-			#ifdef DEBUG
-			assert(!hasSelectionExact(t, *base));
-			assert(size - 1 == countSelection(*base));
-			#endif
-			return t;
-		}
-		prev = t;
-	}
-
-	#ifdef DEBUG
-	/* assert(!hasSelection(key, *base)); */
-	assert(size == countSelection(*base));
-	#endif
-	return NULL;
-}
-
-/**
- * Removes an exact selection struct from a chain.
- * base is modified, so a pointer pointer is required.
- */
-struct selection *removeSelectionExact(struct selection *key, struct selection **base){
-	if (!*base) return NULL;
-	struct selection *t = NULL, *prev = NULL;
-
-	#ifdef DEBUG
-	int size = countSelection(*base);
-	#endif
-
-	for(t = *base; t; t = t->next){
-		if (t == key){
-			if (prev)	prev->next 	= t->next; /* skip over current */
-			else 			*base 			= t->next; /* move head to next */
-			t->next = NULL; /* Erase link */
-
-			#ifdef DEBUG
-			assert(!hasSelectionExact(t, *base));
-			assert(size - 1 == countSelection(*base));
-			#endif
-			return t;
-		}
-		prev = t;
-	}
-
-	#ifdef DEBUG
-	/* assert(!hasSelection(key, *base)); */
-	assert(size == countSelection(*base));
-	#endif
-	return NULL;
-}
-
-
-/**
- *
- */
-struct selection *copySelection(struct selection *base){
-	return newSelection(newValue(base->val->i, NULL), NULL);
-}
-
-
-/**
- * Iteratively increments a counter for each element.
- */
-int countSelection(struct selection *base){
-	struct selection *t = NULL;
-	int c = 0;
-	for (t = base; t; t = t->next) c++;
-
-	#ifdef DEBUG
-	assert(c >= 0);
-	#endif
-	return c;
-}
-
-/**
- * Iteratively checks for the input key.
- */
-bool hasSelectionExact(struct selection *key, struct selection *base){
-	if (!base) return false;
-	struct selection *t = NULL;
-
-	for(t = base; t; t = t->next){
-		if (t == key){
-			return true;
-		}
-	}
-	return false;
-}
-
-/**
- * Iteratively checks for the input key.
- */
-bool hasSelection(struct value *key, struct selection *base){
-	if (!base) return false;
-	struct selection *t = NULL;
-
-	for(t = base; t; t = t->next){
-		if (t->val == key){
-			return true;
-		}
-	}
-	return false;
-}
-
-/**
- * Iteratively checks for the input key.
- */
-bool hasSelectionInt(int key, struct selection *base){
-	if (!base) return false;
-	struct selection *t = NULL;
-
-	for(t = base; t; t = t->next){
-		if (t->val->i == key){
-			return true;
-		}
-	}
-	return false;
-}
-
 
 /* ===== MEMORY MANAGEMENT ===== */
 
@@ -333,60 +97,6 @@ void freeResult(struct result **res){
 	#endif
 }
 
-/** Frees memory allocated to a selection chain.
- * Since selection values are aliased, this function only frees the selection nodes, not their values.
- * @param[in,out] res The node to free.
- */
-void freeSelection(struct selection **sel){
-struct selection *nsel = NULL;
-while(*sel){
-	nsel = (*sel)->next;
-	free(*sel);
-	*sel = NULL;
-	*sel = nsel;
-}
-
-#ifdef DEBUG
-assert(!*sel);
-#endif
-}
-
-/** Frees memory allocated to a selection chain and the pointers contained within
- * For appending operations, new value structs are created, so they must be cleaned specially.
- * @param[in,out] res The node to free.
- */
-void freeSelectionComplete(struct selection **sel){
-struct selection *nsel = NULL;
-while(*sel){
-	nsel = (*sel)->next;
-	if ((*sel)->val) free( (*sel)->val );
-	(*sel)->val = NULL;
-	#ifdef DEBUG
-	assert(!(*sel)->val);
-	#endif
-	free(*sel);
-	*sel = NULL;
-	*sel = nsel;
-}
-
-#ifdef DEBUG
-assert(!*sel);
-#endif
-}
-
-void freeSelectionAliased(struct selection **sel){
-struct selection *nsel = NULL;
-while(*sel){
-	nsel = (*sel)->next;
-	free(*sel);
-	*sel = NULL;
-	*sel = nsel;
-}
-
-#ifdef DEBUG
-assert(!*sel);
-#endif
-}
 
 
 /* ===== EVALUATION ===== */
@@ -394,12 +104,12 @@ assert(!*sel);
 /** Performs a selection algorithm on @p rolled according to the options in @p opts.
  * @p rolled is not modified, but the output contains pointers to the elements within.
  * @param[in]  rolled The options the algorithm can select from.
- * @param[in]  opts   Selection options, such as times and what to select.
+ * @param[in]  opts   SelectionChain options, such as times and what to select.
  * @return        A list of selected elements from @p rolled. Elements are aliased.
  */
-struct selection *select(struct value *rolled, struct fargs *opts){
+SelectionChain *select(struct value *rolled, struct fargs *opts){
 	// if scount == -1 at start, set times to iterate to the same size as rolled
-	struct selection *sel = NULL;
+	SelectionChain *sel = NULL;
 	int elem = countValue(rolled) - 1, times = opts->scount;
 	if (elem == 0) return NULL;
 
@@ -484,11 +194,11 @@ struct selection *select(struct value *rolled, struct fargs *opts){
  * These new elements may be based off of rolled, but the output does not contain pointers to existing elements.
  * These selected elements will eventually be placed into rolled.
  * @param[in]  rolled Information the generation algorithm can act on.
- * @param[in]  opts   Selection options, such as times and what to select.
+ * @param[in]  opts   SelectionChain options, such as times and what to select.
  * @return        A list of selected elements NOT from rolled.
  */
-struct selection *generate(struct value *rolled, struct fargs *opts){
-	struct selection *sel = NULL;
+SelectionChain *generate(struct value *rolled, struct fargs *opts){
+	SelectionChain *sel = NULL;
 	int times = opts->scount;
 	/* lengths of current and past selection. Used to detect when there is no length change. length of input chain */
 	int len = 0, prev = 0, elem = countValue(rolled) - 1; 
@@ -661,7 +371,7 @@ struct result *eval(struct ast *base){
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
 		r->faces = dupValue(inputs->faces);
-		struct selection *selected = generate(r->out, (struct fargs *) base->r), *t = NULL;
+		SelectionChain *selected = generate(r->out, (struct fargs *) base->r), *t = NULL;
 
 		for(t = selected; t; t = t->next){
 			switch(base->nodetype){
@@ -681,7 +391,7 @@ struct result *eval(struct ast *base){
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
 		r->faces = dupValue(inputs->faces);
 		freeResult(&inputs);
-		struct selection *selected = select(r->out, (struct fargs *) base->r), *t = NULL;
+		SelectionChain *selected = select(r->out, (struct fargs *) base->r), *t = NULL;
 
 		if(selected){
 			for(t = selected; t; t = t->next){
@@ -697,7 +407,7 @@ struct result *eval(struct ast *base){
 	case 'g': /* count */ {
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
-		struct selection *selected = select(inputs->out, (struct fargs *)base->r);
+		SelectionChain *selected = select(inputs->out, (struct fargs *)base->r);
 
 		r->out = newValue(countSelection(selected), NULL);
 
@@ -710,7 +420,7 @@ struct result *eval(struct ast *base){
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = NULL; /* Start with nothing */
-		struct selection *selected = select(inputs->out, (struct fargs *)base->r), *t = NULL;
+		SelectionChain *selected = select(inputs->out, (struct fargs *)base->r), *t = NULL;
 
 		if(selected){
 			for(t = selected; t; t = t->next){
@@ -735,7 +445,7 @@ struct result *eval(struct ast *base){
 			return r;
 		}
 
-		struct selection *selected = select(r->out, (struct fargs *)base->r), *t = NULL;
+		SelectionChain *selected = select(r->out, (struct fargs *)base->r), *t = NULL;
 
 		// printValue(r->out);
 		// printf("\n");
