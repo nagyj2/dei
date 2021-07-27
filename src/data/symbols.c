@@ -129,7 +129,7 @@ struct ast *newAsgn(struct symbol *sym, struct ast *def){
  * and then re-set.
  */
 void setsym(struct symbol *name, struct ast *val){
-	freeAst( &(name->func) );
+	freeAst_Symbol( &(name->func) );
 		#ifdef DEBUG
 	assert(name->func == NULL);
 		#endif
@@ -145,7 +145,7 @@ void setsym(struct symbol *name, struct ast *val){
  */
 void freeSymbol(struct symbol **sym){
 	if ((*sym)->func)
-		freeAst(&(*sym)->func);
+		freeAst_Symbol(&(*sym)->func);
 	free((*sym)->name);
 	*sym = NULL;
 }
@@ -177,11 +177,11 @@ void freeAst_Symbol( struct ast **root ){
 	case '&': case '|': case INTER: case UNION:
 	case '1': case '2': case '3': case '4': case '5': case '6':
 	case 'e': case 'f': case 'g': case 'h': case 'i':
-		freeAst( &(*root)->r );
+		freeAst_Symbol( &(*root)->r );
 
 		/* 1 subtree */
 	case 'M': case 'R': case 'S': case 'Z':
-		freeAst( &(*root)->l );
+		freeAst_Symbol( &(*root)->l );
 
 		/* 0 subtrees */
 	case 'D': case 'I': case 'C': case 'E':
@@ -199,7 +199,7 @@ void freeAst_Symbol( struct ast **root ){
 
 		/* special - astAsgn */
 	case 'A':
-		freeAst( &((struct astAsgn *)*root)->l );
+		freeAst_Symbol( &((struct astAsgn *)*root)->l );
 		break;
 
 	default:
