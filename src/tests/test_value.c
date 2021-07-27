@@ -270,7 +270,7 @@ TEST testValue_Removal(void) {
 
   /* Middle, Last, First */
   int b[3] = { 5, 1, 8 };
-  for (i = 0; i < 4; i++) {
+  for (i = 0; i < 3; i++) {
     u = findValue(b[i], v);
     t = removeValueExact(u, &v);
     ASSERT_EQ(u, t);

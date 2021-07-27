@@ -71,7 +71,9 @@ ValueChain *dupValue(ValueChain *base) {
 ValueChain *backValue(ValueChain *base){
 	ValueChain *t = NULL;
 
-	for(t = base; t->next; t = t->next){ /* Skip */ }
+	if (!base)	return NULL;
+	
+	for (t = base; t->next; t = t->next) { /* Skip */ }
 
 	#ifdef DEBUG
 	assert(t && t->i && !t->next);
@@ -135,12 +137,12 @@ ValueChain *removeValue(int key, ValueChain **base){
 
 /**
  * Iteratively searches for an exact key and removes it when found.
- * To check an element, the memory address is checked, so this method works only for aliases.
- * When found, the value is extracted by modifying the previous element's next attribute.
- * The searched-for element has its next attribute modified to remove it from the chain.
+ * To check an element, the memory addresses are compared, so this method works only for aliases.
+ * The searched-for element has its next attribute modified to remove @p key from the chain.
+ * Short-curcuits when @p key is found.
  * @p key and the returned value are the same memory address.
  */
-ValueChain *removeValueExact(ValueChain *key, ValueChain **base){
+ValueChain *removeValueExact(ValueChain *key, ValueChain **base) {
 	if (!*base || !key) return NULL;
 	ValueChain *t = NULL, *prev = NULL;
 
@@ -177,7 +179,7 @@ ValueChain *removeValueExact(ValueChain *key, ValueChain **base){
  * Any aliases which exist will be silently modified.
  * @p base is then set to the last element.
  */
-void reverseValue(ValueChain **base){
+void reverseValue(ValueChain **base) {
 	ValueChain *prev = NULL, *curr = *base, *next = NULL;
 
 	while(curr){
@@ -196,7 +198,7 @@ void reverseValue(ValueChain **base){
  * Uses newValue()'s ability to create a new @ref ValueChain head.
  * Copys the value of @p base by accessing its integer value.
  */
-ValueChain *copyValue(ValueChain *base){
+ValueChain *copyValue(ValueChain *base) {
 	return newValue(base->i, NULL);
 }
 
@@ -204,7 +206,7 @@ ValueChain *copyValue(ValueChain *base){
  * Iteratively creates a new @ref ValueChain by exploiting newValue()'s ability to chain elements.
  * Displays a warning if @p min is greater than @p max and forces a 1 element chain with a value of @p min.
  */
-ValueChain *newValueChain(int min, int max){
+ValueChain *newValueChain(int min, int max) {
 	if (min > max) {printf("warning: min=%d > max=%d, empty die\n",min,max); max = min;}
 	ValueChain *val1 = NULL;
 	for (int i = max; i >= min; i--)
@@ -216,7 +218,7 @@ ValueChain *newValueChain(int min, int max){
 /**
  * Iteratively searches through a @ref ValueChain and counts the number of jumps performed.
  */
-int countValue(ValueChain *base){
+int countValue(ValueChain *base) {
 	ValueChain *t = NULL;
 	int c = 0;
 
@@ -231,20 +233,21 @@ int countValue(ValueChain *base){
 /**
  * Iteratively advances through a @ref ValueChain and accumulates the individual element's values.
  */
-int sumValue(ValueChain *base){
-		ValueChain *t = NULL;
-		int s = 0;
+int sumValue(ValueChain *base) {
+	ValueChain *t = NULL;
+	int s = 0;
 
-		#ifdef DEBUG
-		int size = countValue(base);
-		#endif
+	#ifdef DEBUG
+	int size = countValue(base);
+	#endif
 
-		for(t = base; t; t = t->next)	s += t->i;
+	for (t = base; t; t = t->next)
+		s += t->i;
 
-		#ifdef DEBUG
-		assert(size == countValue(base));
-		#endif
-		return s;
+	#ifdef DEBUG
+	assert(size == countValue(base));
+	#endif
+	return s;
 }
 
 /**
@@ -252,27 +255,29 @@ int sumValue(ValueChain *base){
  * Since this function operates on comparison of memory addresses, it will only return true if @p key is an alias.
  * Short-circuits on a found element.
  */
-bool hasValueExact(ValueChain *key, ValueChain *base){
-		ValueChain *t = NULL;
+bool hasValueExact(ValueChain *key, ValueChain *base) {
+	if (!base)	return false;
+	ValueChain *t = NULL;
+	
+	#ifdef DEBUG
+	//assert(countValue(key) == 1); /* disallow chains */
+	#endif
 
-		#ifdef DEBUG
-		//assert(countValue(key) == 1); /* disallow chains */
-		#endif
-
-		for(t = base; t; t = t->next){
-			if (t == key){
-				return true;
-			}
+	for(t = base; t; t = t->next) {
+		if (t == key){
+			return true;
 		}
-
-		return false;
 	}
+
+	return false;
+}
 
 /**
  * Checks for an exact struct instance by comparing values of each element.
  * Short-circuits on a found element.
  */
-bool hasValue(int key, ValueChain *base){
+bool hasValue(int key, ValueChain *base) {
+	if (!base)	return false;
 	ValueChain *t = NULL;
 
 	for(t = base; t; t = t->next){
@@ -286,11 +291,11 @@ bool hasValue(int key, ValueChain *base){
 /* ===== MEMORY MANAGEMENT ===== */
 
 /**
- * Iteratively frees memory allocated to @ref ValueChain's.
+ * Iteratively frees memory allocated to a @ref ValueChain.
  * Additionally, data at each element's location is set to NULL.
  * As a side effect, all references to values in the chain will be set to NULL silently.
  */
-void freeValue( ValueChain **val ){
+void freeValue(ValueChain **val) {
 	ValueChain *nval = NULL;
   while(*val){
     nval = (*val)->next;
@@ -310,7 +315,7 @@ void freeValue( ValueChain **val ){
 /**
  * Iteratively outputs the values of a chain to standard output.
  */
-void printValue(ValueChain *base){
+void printValue(ValueChain *base) {
 	ValueChain *t;
 	for (t = base; t; t = t->next)
 		printf("%d ",t->i);
