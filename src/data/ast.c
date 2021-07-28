@@ -23,11 +23,10 @@
 /* ===== FUNCTIONS ===== */
 
 /**
- * Allocates new memory for the node and returns the pointer. If there is no space,
- * a message is shown and an crash occurs. Cannot return NULL.
+ * Allocates new memory for the node and returns the pointer.
  */
-struct ast *newAst(int nodetype, struct ast *l, struct ast *r){
-	struct ast *a = malloc(sizeof(struct ast));
+AST *newAst(int nodetype, AST *l, AST *r){
+	AST *a = malloc(sizeof(AST));
 	// printf("new ast @%p\n", a);
 
 	if (!a){
@@ -45,11 +44,11 @@ struct ast *newAst(int nodetype, struct ast *l, struct ast *r){
 }
 
 /**
- * Allocates new memory for the node and returns the pointer. If there is no space,
- * a message is shown and an crash occurs. Cannot return NULL.
+ * Allocates new memory for the node and returns the pointer.
+ * Is only used to generate comparison-type nodes.
  */
-struct ast *newCmp(int cmptype, struct ast *l, struct ast *r){
-	struct ast *a = malloc(sizeof(struct ast));
+AST *newCmp(int cmptype, AST *l, AST *r){
+	AST *a = malloc(sizeof(AST));
 	// printf("new cmp @%p\n", a);
 
 	if (!a){
@@ -67,11 +66,11 @@ struct ast *newCmp(int cmptype, struct ast *l, struct ast *r){
 }
 
 /**
- * Allocates new memory for the node and returns the pointer. If there is no space,
- * a message is shown and an crash occurs. Cannot return NULL.
+ * Allocates new memory for the node and returns the pointer. 
+ * Is only used to generate function-type nodes.
  */
-struct ast *newFunc(int functype, struct ast *body, struct ast *args){
-	struct ast *a = malloc(sizeof(struct ast));
+AST *newFunc(int functype, AST *body, AST *args){
+	AST *a = malloc(sizeof(AST));
 	// printf("new func @%p\n", a);
 
 	if (!a){
@@ -90,15 +89,23 @@ struct ast *newFunc(int functype, struct ast *body, struct ast *args){
 
 
 /**
- * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ * Allocates new memory for the node and returns the pointer. 
+ * Natural dice are defined to hand a start and end face and contain all digits between.
+ * If the maximum face is lower than the minimum, the result is flipped.
  */
-struct ast *newNatdie(int count, int min, int max){
-		struct natdie *a = malloc(sizeof(struct natdie));
+AST *newNatdie(int count, int min, int max){
+		NatDie *a = malloc(sizeof(NatDie));
 		// printf("new natdie @%p\n", a);
 
 		if (!a){
 			printf("out of space\n");
 			exit(1);
+		}
+
+		if (max < min) {
+			int t = min;
+			min = max;
+			max = min;
 		}
 
 		a->nodetype = 'D';
@@ -108,15 +115,15 @@ struct ast *newNatdie(int count, int min, int max){
 		#ifdef DEBUG
 		assert(a);
 		#endif
-		return (struct ast *)a;
+		return (AST *)a;
 }
 
 /**
- * Allocates memory for a artificial die node and fills it in.
- * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ * Allocates new memory for the node and returns the pointer. 
+ * Die faces are represented as a sequence of values.
  */
-struct ast *newSetdie(int count, struct value *faces){
-		struct setdie *a = malloc(sizeof(struct setdie));
+AST *newSetdie(int count, ValueChain *faces){
+		SetDie *a = malloc(sizeof(SetDie));
 		// printf("new setdie @%p\n", a);
 
 		if (!a){
@@ -130,15 +137,14 @@ struct ast *newSetdie(int count, struct value *faces){
 		#ifdef DEBUG
 		assert(a);
 		#endif
-		return (struct ast *)a;
+		return (AST *)a;
 }
 
 /**
- * Allocates memory for a new integer node and fills it in.
- * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ * Allocates new memory for the node and returns the pointer.
  */
-struct ast *newNatint(int integer){
-		struct natint *a = malloc(sizeof(struct natint));
+AST *newNatint(int integer){
+		NatInt *a = malloc(sizeof(NatInt));
 		// printf("new natint @%p\n", a);
 
 		if (!a){
@@ -151,15 +157,16 @@ struct ast *newNatint(int integer){
 		#ifdef DEBUG
 		assert(a);
 		#endif
-		return (struct ast *)a;
+		return (AST *)a;
 }
 
 /**
- * Allocates memory for function arguments.
- * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ * Allocates new memory for the node and returns the pointer. 
+ * All parameters are stored as integers.
+ * seltype should be from @ref Selectors.
  */
-struct ast *newFargs(int fcount, int seltype, int scount, int cond){
-		struct fargs *a = malloc(sizeof(struct fargs));
+AST *newFargs(int fcount, int seltype, int scount, int cond){
+		FuncArgs *a = malloc(sizeof(FuncArgs));
 		// printf("new fargs @%p\n", a);
 
 		if (!a){
@@ -175,15 +182,15 @@ struct ast *newFargs(int fcount, int seltype, int scount, int cond){
 		#ifdef DEBUG
 		assert(a);
 		#endif
-		return (struct ast *)a;
+		return (AST *)a;
 }
 
 /**
- * Allocates memory for an artificial die roll and fills it in.
- * If memory cannot be allocated, a crash occurs. Cannot be NULL.
+ * Allocates new memory for the node and returns the pointer. 
+ * A set roll is a roll which has been 'faked', but still has access to functions.
  */
-struct ast *newSetres(struct value *out){
-	struct setres *a = malloc(sizeof(struct setres));
+AST *newSetres(ValueChain *out){
+	SetRoll *a = malloc(sizeof(SetRoll));
 	// printf("new setres @%p\n", a);
 
 	if (!a){
@@ -196,17 +203,17 @@ struct ast *newSetres(struct value *out){
 	#ifdef DEBUG
 	assert(a);
 	#endif
-	return (struct ast *)a;
+	return (AST *)a;
 }
 
 
 /* ===== MEMORY MANAGEMENT ===== */
 
 /**
- * Recursively frees allocated memory according to DFS.
- * Also sets each pointer to NULL as it completes.
+ * Recursively frees allocated memory in an @ref AST tree.
+ * Also sets each pointer to NULL as it executes.
  */
-void freeAst( struct ast **root ){
+void freeAst( AST **root ){
 
 	switch ((*root)->nodetype){
 		/* 2 subtrees */
@@ -226,12 +233,12 @@ void freeAst( struct ast **root ){
 
 		/* special - setdie */
 	case 'd':
-		freeValue( &((struct setdie *)*root)->faces );
+		freeValue( &((SetDie *)*root)->faces );
 		break;
 
 		/* special - setres */
 	case 'Q':
-		freeValue( &((struct setres *)*root)->out );
+		freeValue( &((SetRoll *)*root)->out );
 		break;
 
 		/* special - astAsgn */
@@ -253,9 +260,9 @@ void freeAst( struct ast **root ){
 /* ===== DEBUGGING ===== */
 
 /**
- * Logs an entire AST tree to stdout.
+ * Prints an entire @ref AST to standard output.
  */
-void printAst(struct ast *root){
+void printAst(AST *root){
 	switch (root->nodetype){
 		/* 2 subtrees */
 	case '+': case '-': case '*': case '%': case '^':
@@ -318,15 +325,15 @@ void printAst(struct ast *root){
 
 		/* 0 subtrees */
 	case 'D':
-		printf("%dd[%d..%d]", ((struct natdie *)root)->count, ((struct natdie *)root)->min, ((struct natdie *)root)->max);
+		printf("%dd[%d..%d]", ((NatDie *)root)->count, ((NatDie *)root)->min, ((NatDie *)root)->max);
 		break;
 
 	case 'I':
-		printf("%d", ((struct natint *)root)->integer);
+		printf("%d", ((NatInt *)root)->integer);
 		break;
 
 	case 'C':
-		printf("$%d,%d,%d,%d$", ((struct fargs *)root)->fcount, ((struct fargs *)root)->seltype, ((struct fargs *)root)->scount, (((struct fargs *)root)->cond) ? ((struct fargs *)root)->cond : -1);
+		printf("$%d,%d,%d,%d$", ((FuncArgs *)root)->fcount, ((FuncArgs *)root)->seltype, ((FuncArgs *)root)->scount, (((FuncArgs *)root)->cond) ? ((FuncArgs *)root)->cond : -1);
 		break;
 
 	// case 'E':
@@ -335,15 +342,15 @@ void printAst(struct ast *root){
 
 		/* special - setdie */
 	case 'd':
-		printf("%dd[", ((struct setdie *)root)->count);
-		printValue(((struct setdie *)root)->faces);
+		printf("%dd[", ((SetDie *)root)->count);
+		printValue(((SetDie *)root)->faces);
 		printf("]");
 		break;
 
 		/* special - setres */
 	case 'Q':
 		printf("{");
-		printValue(((struct setres *)root)->out);
+		printValue(((SetRoll *)root)->out);
 		printf("}");
 		break;
 
