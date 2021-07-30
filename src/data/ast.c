@@ -105,7 +105,7 @@ AST *newNatdie(int count, int min, int max){
 		if (max < min) {
 			int t = min;
 			min = max;
-			max = min;
+			max = t;
 		}
 
 		a->nodetype = 'D';
