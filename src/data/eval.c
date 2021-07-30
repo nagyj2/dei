@@ -156,11 +156,15 @@ SelectionChain *select(struct value *rolled, struct fargs *opts){
 				break;
 			}
 			case S_rand: /* find a random element */ {
-				for(t = rolled; index-- > 0; t = t->next){ /* reduce index */ }
+				for (t = rolled; index-- > 0; t = t->next) { /* reduce index */ }
+				if (!hasSelection(t, sel)) {
 				sel = newSelection(t, sel); /* ALIAS! */
 				#ifdef DEBUG
 				assert(sel->val);
 				#endif
+				} else {
+					times++;
+				}
 				break;
 			}
 			case S_unique: /* find first unselected and select it */ {
