@@ -425,18 +425,32 @@ struct result *eval(struct ast *base){
 		/* SIGNIFICANT MEMORY LEAK!! */
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
-		r->out = NULL; /* Start with nothing */
-		SelectionChain *selected = select(inputs->out, (struct fargs *)base->r), *t = NULL;
+		ValueChain *outputs = dupValue(inputs->out);
+		freeResult(&inputs);
 
-		if(selected){
-			for(t = selected; t; t = t->next){
-				r->out = newValue(t->val->i, r->out);
-				/* copy each selected element */
+		r->out = NULL; /* Start with nothing */
+		SelectionChain *selected = select(outputs, (struct fargs *) base->r), *t = NULL;
+
+		if (selected) {
+
+			ValueChain *tt = NULL; /* Hold removed elements */
+			for (t = selected; t; t = t->next) {
+				/* transfer each selected ValueChain */
+				tt = removeValueExact(t->val, &outputs);
+				#ifdef DEBUG
+				assert(tt);
+				int l = countValue(r->out);
+				#endif
+				tt->next = r->out; /* set to new head */
+				r->out = tt; /* update head pointer */
+				#ifdef DEBUG
+				assert(l + 1 == countValue(r->out));
+				#endif
 			}
 
-			freeSelectionAliased( &selected );
-			freeResult(&inputs);
+			freeSelectionAliased(&selected);
 		}
+		freeValue(&outputs);
 		break;
 	}
 	case 'i': /* reroll */ {
