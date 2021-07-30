@@ -224,27 +224,27 @@ void printAst_Symbol(struct ast *root){
 	case '+': case '-': case '*': case '%': case '^':
 	case '&': case '|':
 		printf("(");
-		printAst(root->l);
+		printAst_Symbol(root->l);
 		printf("%c",root->nodetype);
-		printAst(root->r);
+		printAst_Symbol(root->r);
 		printf(")");
 		break;
 
 	case INTER: case UNION: case DIV:
 		printf("(");
-		printAst(root->l);
+		printAst_Symbol(root->l);
 		switch (root->nodetype){
 		case INTER: printf("&&"); break;
 		case UNION: printf("||"); break;
 		case DIV: printf("//"); break;
 		}
-		printAst(root->r);
+		printAst_Symbol(root->r);
 		printf(")");
 		break;
 
 	case '1': case '2': case '3': case '4': case '5': case '6':
 		printf("(");
-		printAst(root->l);
+		printAst_Symbol(root->l);
 		switch (root->nodetype){
 		case '1': printf(">"); break;
 		case '2': printf("<"); break;
@@ -253,7 +253,7 @@ void printAst_Symbol(struct ast *root){
 		case '5': printf(">="); break;
 		case '6': printf("<="); break;
 		}
-		printAst(root->r);
+		printAst_Symbol(root->r);
 		printf(")");
 		break;
 
@@ -266,16 +266,16 @@ void printAst_Symbol(struct ast *root){
 		case 'i': printf("Reroll"); break;
 		}
 		printf("(");
-		printAst(root->l);
+		printAst_Symbol(root->l);
 		printf(" st.");
-		printAst(root->r);
+		printAst_Symbol(root->r);
 		printf(")");
 		break;
 
 		/* 1 subtree */
 	case 'M': case 'R': case 'S': case 'Z':
 		printf("%c(",root->nodetype);
-		printAst(root->l);
+		printAst_Symbol(root->l);
 		printf(")");
 		break;
 
@@ -313,7 +313,7 @@ void printAst_Symbol(struct ast *root){
 		/* special - astAsgn */
 	case 'A':
 		printf("%s := ", ((struct astAsgn *)root)->s->name);
-		printAst(((struct astAsgn *)root)->l);
+		printAst_Symbol(((struct astAsgn *)root)->l);
 		break;
 
 	default:
