@@ -45,10 +45,10 @@ int randint(int min, int max) {
  * 
  * @param[] times 
  * @param[] faces 
- * @return struct value* 
+ * @return ValueChain* 
  */
-struct value *rollSet(int times, struct value *faces) {
-	struct value *r = NULL, *t = NULL;
+ValueChain *rollSet(int times, ValueChain *faces) {
+	ValueChain *r = NULL, *t = NULL;
 	int len = countValue(faces);
 	for (int i = 0; i < times; i++){
 		int j = randint(0, len-1); /* index by element */
@@ -64,9 +64,9 @@ struct value *rollSet(int times, struct value *faces) {
  * @param[] faces 
  * @return int 
  */
-int rollInt(int times, struct value *faces) {
+int rollInt(int times, ValueChain *faces) {
 	int j = randint(0, countValue(faces)-1);
-	struct value *t = NULL;
+	ValueChain *t = NULL;
 	for (t = faces; j > 0; t = t->next, j--) { /* skip */ }
 	return t->i; /* return result from the face */
 }
@@ -108,7 +108,7 @@ void freeResult(struct result **res){
  * @param[in]  opts   SelectionChain options, such as times and what to select.
  * @return        A list of selected elements from @p rolled. Elements are aliased.
  */
-SelectionChain *select(struct value *rolled, struct fargs *opts){
+SelectionChain *select(ValueChain *rolled, FuncArgs *opts){
 	// if scount == -1 at start, set times to iterate to the same size as rolled
 	SelectionChain *sel = NULL;
 	int elem = countValue(rolled) - 1, times = opts->scount;
@@ -119,7 +119,7 @@ SelectionChain *select(struct value *rolled, struct fargs *opts){
 	}
 
 	do {
-		struct value *t = NULL;
+		ValueChain *t = NULL;
 		int index = randint(0, elem);
 
 		switch (opts->seltype) {
@@ -202,7 +202,7 @@ SelectionChain *select(struct value *rolled, struct fargs *opts){
  * @param[in]  opts   SelectionChain options, such as times and what to select.
  * @return        A list of selected elements NOT from rolled.
  */
-SelectionChain *generate(struct value *rolled, struct fargs *opts){
+SelectionChain *generate(ValueChain *rolled, FuncArgs *opts){
 	SelectionChain *sel = NULL;
 	int times = opts->scount;
 	/* lengths of current and past selection. Used to detect when there is no length change. length of input chain */
@@ -212,7 +212,7 @@ SelectionChain *generate(struct value *rolled, struct fargs *opts){
 		printf("warning: unique selector is assumed to have 1 time, got %d!\n", times);
 
 	do {
-		struct value *t = NULL;
+		ValueChain *t = NULL;
 		int index = randint(0, elem); /* index to take from for random */
 		
 		switch (opts->seltype){
@@ -291,7 +291,7 @@ SelectionChain *generate(struct value *rolled, struct fargs *opts){
 /**
  *
  */
-struct result *eval(struct ast *base){
+struct result *eval(AST *base){
 	struct result *r = malloc(sizeof(struct result));
 	// printf("new result %d @%p ", base->nodetype, r); printAst(base); printf("\n");
 	r->faces = NULL;
@@ -341,7 +341,7 @@ struct result *eval(struct ast *base){
 		r->type = R_set;
 		struct result *larg = eval(base->l);
 		struct result *rarg = eval(base->r);
-		struct value *t = NULL;
+		ValueChain *t = NULL;
 		if (base->nodetype == INTER) r->out = dupValue(larg->out); /* if '&', start from NULL */
 		for(t = rarg->out; t; t = t->next){
 			if (hasValue(t->i,larg->out)) r->out = newValue(t->i, r->out);
@@ -354,7 +354,7 @@ struct result *eval(struct ast *base){
 		r->type = R_set;
 		struct result *larg = eval(base->l);
 		struct result *rarg = eval(base->r);
-		struct value *t = NULL;
+		ValueChain *t = NULL;
 		r->out = dupValue(larg->out);
 		if (base->nodetype == '|'){
 			for(t = rarg->out; t; t = t->next){
@@ -376,7 +376,7 @@ struct result *eval(struct ast *base){
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
 		r->faces = dupValue(inputs->faces);
-		SelectionChain *selected = generate(r->out, (struct fargs *) base->r), *t = NULL;
+		SelectionChain *selected = generate(r->out, (FuncArgs *) base->r), *t = NULL;
 
 		for(t = selected; t; t = t->next){
 			switch(base->nodetype){
@@ -390,13 +390,12 @@ struct result *eval(struct ast *base){
 	}
 
 	case 'f': /* drop */ {
-		/* SIGNIFICANT MEMORY LEAK!! */
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
 		r->faces = dupValue(inputs->faces);
 		freeResult(&inputs);
-		SelectionChain *selected = select(r->out, (struct fargs *) base->r), *t = NULL;
+		SelectionChain *selected = select(r->out, (FuncArgs *) base->r), *t = NULL;
 
 		if (selected) {
 			ValueChain *tt = NULL; /* Hold reference to discarded  */
@@ -413,7 +412,7 @@ struct result *eval(struct ast *base){
 	case 'g': /* count */ {
 		r->type = R_roll;
 		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
-		SelectionChain *selected = select(inputs->out, (struct fargs *)base->r);
+		SelectionChain *selected = select(inputs->out, (FuncArgs *)base->r);
 
 		r->out = newValue(countSelection(selected), NULL);
 
@@ -429,7 +428,7 @@ struct result *eval(struct ast *base){
 		freeResult(&inputs);
 
 		r->out = NULL; /* Start with nothing */
-		SelectionChain *selected = select(outputs, (struct fargs *) base->r), *t = NULL;
+		SelectionChain *selected = select(outputs, (FuncArgs *) base->r), *t = NULL;
 
 		if (selected) {
 
@@ -465,10 +464,8 @@ struct result *eval(struct ast *base){
 			return r;
 		}
 
-		SelectionChain *selected = select(r->out, (struct fargs *)base->r), *t = NULL;
+		SelectionChain *selected = select(r->out, (FuncArgs *)base->r), *t = NULL;
 
-		// printValue(r->out);
-		// printf("\n");
 		if(selected){
 			for(t = selected; t; t = t->next){
 				/* reroll each selected once */
@@ -477,8 +474,6 @@ struct result *eval(struct ast *base){
 
 			freeSelectionAliased( &selected );
 		}
-		// printValue(r->out);
-		// printf("\n");
 		break;
 	}
 	case 'R': /* roll nat die */ case 'r': /* roll artificial die */ {
@@ -505,24 +500,24 @@ struct result *eval(struct ast *base){
 	}
 	case 'D': /* natural die definition */ {
 		r->type = R_die;
-		r->faces = newValueChain(((struct natdie *)base)->min, ((struct natdie *)base)->max);
-		r->integer = ((struct natdie *)base)->count;
+		r->faces = newValueChain(((NatDie *)base)->min, ((NatDie *)base)->max);
+		r->integer = ((NatDie *)base)->count;
 		break;
 	}
 	case 'd': /* artificial die def. */ {
 		r->type = R_die;
-		r->faces = dupValue(((struct setdie *)base)->faces);
-		r->integer = ((struct natdie *)base)->count;
+		r->faces = dupValue(((SetDie *)base)->faces);
+		r->integer = ((NatDie *)base)->count;
 		break;
 	}
 	case 'I': /* natural integer */ {
 		r->type = R_int;
-		r->integer = ((struct natint *)base)->integer;
+		r->integer = ((NatInt *)base)->integer;
 		break;
 	}
 	case 'Q': /* artificial roll */ {
 		r->type = R_roll;
-		r->out = dupValue(((struct setres *)base)->out);
+		r->out = dupValue(((SetRoll *)base)->out);
 		break;
 	}
 	case 'C': /* function arguments */ {
