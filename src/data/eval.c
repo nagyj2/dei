@@ -394,14 +394,15 @@ struct result *eval(struct ast *base){
 		freeResult(&inputs);
 		SelectionChain *selected = select(r->out, (struct fargs *) base->r), *t = NULL;
 
-		if(selected){
-			for(t = selected; t; t = t->next){
+		if (selected) {
+			ValueChain *tt = NULL; /* Hold reference to discarded  */
+			for (t = selected; t; t = t->next) {
 				/* removed elements are still pointed to by selected, so we dont care about the output */
-				removeValueExact(t->val, &(r->out));
+				tt = removeValueExact(t->val, &(r->out));
+				freeValue(&tt); /* free now removed element */
 			}
 
-			/* TODO : Causes occasional crashes */
-			//freeSelectionComplete( &selected );
+			freeSelectionAliased(&selected);
 		}
 		break;
 	}
