@@ -22,6 +22,7 @@
 #include "select.h"
 #include "symbols.h"
 #include "result.h"
+#include "util.h"
 
 
 /* ===== FUNCTIONS ===== */
@@ -31,16 +32,6 @@
  */
 void ensureType(struct result *res);
 
-
-/**
- * 
- * @param[] min 
- * @param[] max 
- * @return int 
- */
-int randint(int min, int max) {
-	return (rand() % (max + 1 - min)) + min;
-}
 
 /**
  * 
