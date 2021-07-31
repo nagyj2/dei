@@ -108,7 +108,7 @@
 <COMMENT>([^\\]|\n)+|.  { /* consume */ }
 
 [ \t]     { /* ignore whitespace */ }
-"\n"      { return EOL; }
+\n      	{ return EOL; }
 <<EOF>>		{ return 0; }
 
 .         { yyerror("unknown token: %c\n", *yytext); }
