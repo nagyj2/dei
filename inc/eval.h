@@ -27,14 +27,5 @@
 struct result *eval(struct ast *base);
 
 
-/* ===== MEMORY MANAGEMENT ===== */
-
-/** Frees memory allocated to input res according to its node type.
- * @param[in,out] res The result node to free.
- * @sideeffect The input's memory location and all those subsequently pointed to will be freed and the pointers set to NULL.
- */
-void freeResult(struct result **res);
-
-
 
 #endif /* EVAL_H_INCLUDED */
