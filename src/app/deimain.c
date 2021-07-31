@@ -16,6 +16,7 @@
 #include "value.h"
 #include "ast.h"
 #include "symbols.h"
+#include "result.h"
 #include "eval.h"
 
 

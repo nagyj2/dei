@@ -9,6 +9,7 @@
 #include "ast.h"
 #include "symbols.h"
 #include "eval.h"
+#include "result.h"
 
 %}
 

@@ -21,6 +21,7 @@
 #include "eval.h"
 #include "select.h"
 #include "symbols.h"
+#include "result.h"
 
 
 /* ===== FUNCTIONS ===== */
@@ -70,34 +71,6 @@ int rollInt(int times, ValueChain *faces) {
 	for (t = faces; j > 0; t = t->next, j--) { /* skip */ }
 	return t->i; /* return result from the face */
 }
-
-
-/* ===== MEMORY MANAGEMENT ===== */
-
-/**
- * Frees all contained values within a result variable.
- * Result values should only be aliased within functions and never passed between, reducing risk of memory problems.
- */
-void freeResult(struct result **res){
-	switch ((*res)->type){
-	case R_roll:	freeValue(&(*res)->faces);
-	case R_set:		freeValue(&(*res)->out); break;
-	case R_die:		freeValue(&(*res)->faces); break;
-	case R_int:
-	}
-
-	#ifdef DEBUG
-	assert(!(*res)->faces && !(*res)->out);
-	#endif
-
-	free(*res);
-	*res = NULL;
-
-	#ifdef DEBUG
-	assert(!*res);
-	#endif
-}
-
 
 
 /* ===== EVALUATION ===== */
