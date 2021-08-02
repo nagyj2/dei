@@ -31,17 +31,17 @@ int main(int argc, char **argv) {
 	#endif
 
 	#ifdef DEBUG
-	printf("value size: %lu\n", sizeof(struct value));
-	printf("symbol size: %lu\n", sizeof(struct symbol));
-	printf("ast size: %lu\n", sizeof(struct ast));
-	printf("natdie size: %lu\n", sizeof(struct natdie));
-	printf("setdie size: %lu\n", sizeof(struct setdie));
-	printf("natint size: %lu\n", sizeof(struct natint));
-	printf("fargs size: %lu\n", sizeof(struct fargs));
-	printf("setres size: %lu\n", sizeof(struct setres));
-	printf("symcall size: %lu\n", sizeof(struct symcall));
-	printf("astAsgn size: %lu\n", sizeof(struct astAsgn));
-	printf("result size: %lu\n", sizeof(struct result));
+	printf("ValueChain size: %lu\n", sizeof(ValueChain));
+	printf("Symbol size: %lu\n", sizeof(Symbol));
+	printf("AST size: %lu\n", sizeof(AST));
+	printf("NatDie size: %lu\n", sizeof(NatDie));
+	printf("SetDie size: %lu\n", sizeof(SetDie));
+	printf("NatInt size: %lu\n", sizeof(NatInt));
+	printf("FuncArgs size: %lu\n", sizeof(FuncArgs));
+	printf("SetRoll size: %lu\n", sizeof(SetRoll));
+	printf("SymbolRef size: %lu\n", sizeof(SymbolRef));
+	printf("SymbolAssign size: %lu\n", sizeof(SymbolAssign));
+	printf("Result size: %lu\n", sizeof(Result));
 	printf("\n");
 	#endif
 
