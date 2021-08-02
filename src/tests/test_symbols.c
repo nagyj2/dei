@@ -33,8 +33,6 @@ TEST testSymbol_Usage(void) {
 
 		freeSymbol(&sym);
 		ASSERT_EQ(NULL, sym);
-		alias = lookup(name[i]);
-		ASSERT_EQ(NULL, alias);
 	}
 
 	PASS();
@@ -50,17 +48,24 @@ TEST testSymbol_Assignment(void) {
 	setsym(sym, def);
 	def = lookup(name)->func;
 	ASSERT_EQ(5, ((NatInt *) def)->integer);
+	
+	AST *ndef = newNatint(4);
+	setsym(sym, ndef);
+	ndef = lookup(name)->func;
+	ASSERT_EQ(4, ((NatInt *) ndef)->integer);
 
 	PASS();
 }
 
-/* Create a symbol call */
+/* Test symbol call */
 TEST testSymbol_SymbolRef(void) {
 	char *name = "var7";
 	Symbol *sym = lookup(name);
 	AST *ref = newSymcall(sym);
 
-	ASSERT_EQ('E', ((SymbolRef *) ref)->sym->func->nodetype);
+	ASSERT_EQ('E', ((SymbolRef *) ref)->nodetype);
+	ASSERT_EQ('I', ((SymbolRef *) ref)->sym->func->nodetype);
+	ASSERT_EQ(0, strcmp(name, ((SymbolRef *) ref)->sym->name));
 
 	freeAst_Symbol(&ref);
 	ASSERT_EQ(NULL, ref);
@@ -70,8 +75,26 @@ TEST testSymbol_SymbolRef(void) {
 	PASS();
 }
 
+/* Test symbol assignment */
+TEST testSymbol_AssignNode(void) {
+	char *name = "var8";
+	Symbol *sym = lookup(name);
+	AST *def = newNatint(5);
+	AST *ref = newAsgn(sym, def);
+
+	ASSERT_EQ('A', ref->nodetype);
+	ASSERT_EQ(sym, ((SymbolAssign *)ref)->s);
+	ASSERT_EQ(def, ((SymbolAssign *)ref)->l);
+
+	freeAst_Symbol(&ref);
+	ASSERT_EQ(NULL, ref);
+
+	PASS();
+}
+
 SUITE(symbol_suite) {
 	RUN_TEST(testSymbol_Usage);
 	RUN_TEST(testSymbol_Assignment);
 	RUN_TEST(testSymbol_SymbolRef);
+	RUN_TEST(testSymbol_AssignNode);
 }
