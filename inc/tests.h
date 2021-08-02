@@ -18,19 +18,15 @@
 #define LEN(a,b) (MAX(a, b) - MIN(a, b) + 1)
 #define CONSSUM(start,end) (int) (((float) LEN(start, end) / 2.0)  * (start + end))
 
+#define SELECTALL(t,v,s) for(SelectionChain *_t=v; _t; _t=_t->next) s=newSelection(_t,s)
+
 /* Value test suite */
 void value_suite(void);
 
 /* Selection test suite */
 void select_suite(void);
 
-/* AST test suite */
-void ast_suite(void);
-
 /* Symbol test suite */
 void symbol_suite(void);
-
-/* Symbol test suite */
-void evaluation_suite(void);
 
 #endif /* TESTS_H_INCLUDED */
