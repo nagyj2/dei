@@ -257,15 +257,14 @@ SelectionChain *generate(ValueChain *rolled, FuncArgs *opts){
  */
 Result *eval(AST *base){
 	Result *r = malloc(sizeof(Result));
-	// printf("new result %d @%p ", base->nodetype, r); printAst(base); printf("\n");
-	r->faces = NULL;
-	r->out = NULL;	/* set unuseds to NULL */
-	r->integer = 0; /* unused ->keep? */
-
 	if (!r){
 		printf("out of space\n");
 		exit(1);
 	}
+	
+	r->faces = NULL;
+	r->out = NULL;	/* set unuseds to NULL */
+	r->integer = 0; /* unused ->keep? */
 
 	switch (base->nodetype){
 	case '+': case '-': case '*': case DIV: case '%': case '^':
@@ -428,14 +427,12 @@ Result *eval(AST *base){
 			return r;
 		}
 
-		
 		SelectionChain *selected = NULL, *t = NULL;
-		if (countValue(r->out)) { selected = newSelection(r->out,NULL); } /* For some reason, select() has problems with single r->out */
-		else { selected = select(r->out, (FuncArgs *) base->r); }
+		selected = (countValue(r->out) > 1) ? select(r->out, (FuncArgs *) base->r) : newSelection(r->out, NULL); /* For some reason, select() has problems with single r->out */
 
 		if(selected){
 			for(t = selected; t; t = t->next){
-				/* reroll each selected once */
+				/* try to reroll each selected once */
 				int roll = rollInt(1, r->faces);
 				// printf("%d cmp %d (%d) : Hi:%d, Lo:%d, No:%d\n", t->val->i, roll, ((FuncArgs *) base->r)->cond, C_high, C_low, C_none);
 				switch (((FuncArgs *) base->r)->cond) {
