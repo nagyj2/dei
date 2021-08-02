@@ -74,8 +74,8 @@ typedef enum cifs Conditionals;
  */
 struct ast {
 	int nodetype;						/**< Math operations, functions, comparisons, M, R, S, Z */
-	AST *l;					/**< Left operand */
-	AST *r;					/**< Right operand */
+	struct ast *l;					/**< Left operand */
+	struct ast *r;					/**< Right operand */
 };
 
 /** @typedef AST
