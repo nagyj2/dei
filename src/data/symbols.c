@@ -15,7 +15,7 @@
 #include <assert.h> /* assert */
 #endif
 
-#include "parser.tab.h"
+#include "parser.tab.h" /* DIV, INTER, UNION */
 
 #include "symbols.h"
 
