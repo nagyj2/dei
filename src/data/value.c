@@ -1,7 +1,7 @@
 /** Implements a singlely linked-list implementation to store integer chains.
  * The start of the chain, the head, is kept as a pointer and all other elements need to be iterated to.
  * Chains cannot be traversed in the reverse direction because of the single-link structure.
- * @file struct.c
+ * @file value.c
  * @author Jason Nagy (jaysun_n@hotmail.com)
  * @version 0.1
  * @date 2021-07-26
