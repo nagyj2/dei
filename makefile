@@ -36,11 +36,12 @@ FLEXFLAGS 	:=
 BISONFLAGS 	:= -t
 LIB         := 
 INC         := -I$(INCDIR)
-INCDEP      := -I$(INCDIR)
 
 #---------------------------------------------------------------------------------
 #Automatic operations
 #---------------------------------------------------------------------------------
+
+$(DEBUGTARGET): CFLAGS += -D DEBUG
 
 #OS Specific flags
 UNAME := $(shell uname)
@@ -73,10 +74,10 @@ GENSOURCES	:= $(GENBISON_C) $(GENFLEX_C)
 GENOBJECTS	:= $(patsubst $(GENDIR)/%, $(BUILDDIR)/%, $(GENSOURCES:.c=.o) )
 
 #Create a debug version of main target
-$(DEBUGTARGET): CFLAGS += -D DEBUG
+$(DEBUGTARGET): 
 
-#Create all artifacts
-all: $(TESTTARGET) $(DEBUGTARGET) $(TARGET) $(DOCUMENTS)
+#Create all artifacts (except debug b/c unsure how...)
+all: $(TESTTARGET) $(TARGET) $(DOCUMENTS)
 
 #Remake all artifacts
 remake: cleaner all
@@ -91,9 +92,6 @@ cleaner: clean
 	@$(RM) -rf $(GENDIR)
 	@$(RM) -rf $(DOCDIR)/html
 	@$(RM) -rf $(DOCDIR)/latex
-
-#Pull in dependency info for *existing* .o files
--include $(OBJECTS:.o=.d)
 
 #Generate Lexer .c file
 $(GENFLEX_C): $(addprefix $(APPDIR)/, $(FLEX_L))
@@ -124,50 +122,25 @@ $(TESTTARGET): $(DATAOBJECTS) $(TESTOBJECTS)
 $(DOCUMENTS):
 	doxygen Doxyfile
 
-#Compile App file
+#Compile Application files
 $(BUILDDIR)/%.o: $(APPDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
-	@$(CC) $(CFLAGS) $(INCDEP) -MM $(APPDIR)/$*.c > $(BUILDDIR)/$*.d
-	@cp -f $(BUILDDIR)/$*.d $(BUILDDIR)/$*.d.tmp
-	@sed -e 's|.*:|$(BUILDDIR)/$*.o:|' < $(BUILDDIR)/$*.d.tmp > $(BUILDDIR)/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILDDIR)/$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILDDIR)/$*.d
-	@rm -f $(BUILDDIR)/$*.d.tmp
 
-#Compile Data file
+#Compile Data files
 $(BUILDDIR)/%.o: $(DATADIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
-	@$(CC) $(CFLAGS) $(INCDEP) -MM $(DATADIR)/$*.c > $(BUILDDIR)/$*.d
-	@cp -f $(BUILDDIR)/$*.d $(BUILDDIR)/$*.d.tmp
-	@sed -e 's|.*:|$(BUILDDIR)/$*.o:|' < $(BUILDDIR)/$*.d.tmp > $(BUILDDIR)/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILDDIR)/$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILDDIR)/$*.d
-	@rm -f $(BUILDDIR)/$*.d.tmp
 
-#Compile Generated file
+#Compile Generated files
 $(BUILDDIR)/%.o: $(GENDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
-	@$(CC) $(CFLAGS) $(INCDEP) -MM $(GENDIR)/$*.c > $(BUILDDIR)/$*.d
-	@cp -f $(BUILDDIR)/$*.d $(BUILDDIR)/$*.d.tmp
-	@sed -e 's|.*:|$(BUILDDIR)/$*.o:|' < $(BUILDDIR)/$*.d.tmp > $(BUILDDIR)/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILDDIR)/$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILDDIR)/$*.d
-	@rm -f $(BUILDDIR)/$*.d.tmp
 
-#Compile Test file
+#Compile Test files
 $(BUILDDIR)/%.o: $(TESTDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
-	@$(CC) $(CFLAGS) $(INCDEP) -MM $(TESTDIR)/$*.c > $(BUILDDIR)/$*.d
-	@cp -f $(BUILDDIR)/$*.d $(BUILDDIR)/$*.d.tmp
-	@sed -e 's|.*:|$(BUILDDIR)/$*.o:|' < $(BUILDDIR)/$*.d.tmp > $(BUILDDIR)/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILDDIR)/$*.d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILDDIR)/$*.d
-	@rm -f $(BUILDDIR)/$*.d.tmp
-
-
-
 
 #Non-File Targets - always fully execute
 .PHONY: all remake clean cleaner $(DOCUMENTS)
-
-.CLEAN:
