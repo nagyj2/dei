@@ -26,6 +26,13 @@ struct symbol {
  struct ast *func;    					/**< The meaning of the symbol. */
 };
 
+/**
+ * @typedef Symbol
+ * Shorthand for symbol structure
+ */
+typedef struct symbol Symbol;
+
+
 extern struct symbol symtab[NHASH];    /**< Symbol table declaration. */
 
 
@@ -38,6 +45,13 @@ struct symcall {
 	int nodetype;						/**< E */
 	struct symbol *sym;			/**< Called symbol */
 };
+
+/**
+ * @typedef SymbolRef
+ * Shorthand for symcall structure.
+ */
+typedef struct symcall SymbolRef;
+
 /** Symbol assignment.
  * A node which will assign an ast value to a symbol. The ast value is not evaluated when saving it.
  */
@@ -47,6 +61,12 @@ struct astAsgn {
 	struct ast *l;					/**< Value to assign to symbol */
 };
 
+/**
+ * @typedef SymbolAssign
+ * Shorthand for astAsgn structure.
+ */
+typedef struct astAsgn SymbolAssign;
+
 
 /* === FUNCTIONS === */
 
@@ -55,24 +75,24 @@ struct astAsgn {
  * @param[in]  s The name of the symbol to search for.
  * @return   A pointer to the storage location of the symbol within the symbol table.
  */
-struct symbol *lookup(char *s);
+Symbol *lookup(char *s);
 /** Create a symbol (variable) call leaf.
  * @param[in]  sym The symbol to reference. Cannot be NULL.
  * @return     An AST node representing a symbol call. Cannot be NULL.
  */
-struct ast *newSymcall(struct symbol *sym);
+AST *newSymcall(Symbol *sym);
 /** Create a new variable assignment.
  * @param[in]  sym The variable symbol to assign to.
  * @param[in]  def The AST definition of the variable.
  * @return     An AST node representing the assignment. Cannot be NULL.
  */
-struct ast *newAsgn(struct symbol *sym, struct ast *def);
+AST *newAsgn(Symbol *sym, AST *def);
 /** Assign an AST structure to a symbol.
  * @param[in,out] name The symbol reference to assign a meaning to. Cannot be NULL.
  * @param[in] def  The definition to be assigned to name
  * @sideeffect name will have a new func value
  */
-void setsym(struct symbol *name, struct ast *def);
+void setsym(Symbol *name, AST *def);
 
 /* === MEMORY MANAGEMENT === */
 
@@ -81,17 +101,18 @@ void setsym(struct symbol *name, struct ast *def);
  * @param[in,out] sym the symbol to be free.
  * @sideeffect @p sym is set to NULL after execution.
  */
-void freeSymbol(struct symbol **sym);
+void freeSymbol(Symbol **sym);
 
 /** Frees the entire contents of the symbol table.
- * 
+ * @sideeffect All symbols within symbol table are freed and set to NULL.
  */
 void freeTable();
 
 /** Implementation of ast.h's freeAst() which supports symbols.
  * @param[in,out] root The tree to free.
+ * @sideeffect Frees memory allocated to a symbol and its saved AST.
  */
-void freeAst_Symbol(struct ast **root);
+void freeAst_Symbol(AST **root);
 
 /* create a new symbol table */
 /*void newSymtab(struct symbol *result[]){
@@ -103,6 +124,6 @@ void freeAst_Symbol(struct ast **root);
 /** Implementation of ast.h's printAst() which supports symbols.
  * @param[in] root The tree to print.
  */
-void printAst_Symbol(struct ast *root);
+void printAst_Symbol(AST *root);
 
 #endif /* SYMBOLS_H_INCLUDED */

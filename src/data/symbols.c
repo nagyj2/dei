@@ -22,7 +22,7 @@
 
 /* === DATA === */
 
-struct symbol symtab[NHASH];    /**< Definition of the symbol table. */
+Symbol symtab[NHASH];    /**< Definition of the symbol table. */
 
 
 /* === FUNCTIONS === */
@@ -46,9 +46,9 @@ static unsigned symhash(char *sym){
  * be found before an empty slot, assuming no entries are deleted.
  * Causes a crash if the symbol table is filled.
  */
-struct symbol *lookup(char *sym){
+Symbol *lookup(char *sym){
 
-  struct symbol *sp = &symtab[symhash(sym)%NHASH]; /* symtab position's contents */
+  Symbol *sp = &symtab[symhash(sym)%NHASH]; /* symtab position's contents */
   int scount = NHASH; /* how many slots we have yet to look at */
 
   while (--scount >= 0){
@@ -83,8 +83,8 @@ struct symbol *lookup(char *sym){
  * Allocates memory for a new symbol call and fills it in.
  * If memory cannot be allocated, a crash occurs. Cannot be NULL.
  */
-struct ast *newSymcall(struct symbol *sym){
-	struct symcall *a = malloc(sizeof(struct symcall));
+AST *newSymcall(Symbol *sym){
+	SymbolRef *a = malloc(sizeof(SymbolRef));
 	// printf("new symcall @%p\n", a);
 
 	if (!a){
@@ -97,15 +97,15 @@ struct ast *newSymcall(struct symbol *sym){
 	#ifdef DEBUG
 	assert(a);
 	#endif
-	return (struct ast *)a;
+	return (AST *)a;
 }
 
 /**
  * Allocates new memory for the node and returns the pointer. If there is no space,
  * a message is shown and an crash occurs. Cannot return NULL.
  */
-struct ast *newAsgn(struct symbol *sym, struct ast *def){
-	struct astAsgn *a = malloc(sizeof(struct astAsgn));
+AST *newAsgn(Symbol *sym, AST *def){
+	SymbolAssign *a = malloc(sizeof(SymbolAssign));
 	// printf("new asgn @%p\n", a);
 
 	if (!a){
@@ -119,7 +119,7 @@ struct ast *newAsgn(struct symbol *sym, struct ast *def){
 	#ifdef DEBUG
 	assert(a);
 	#endif
-	return (struct ast *)a;
+	return (AST *)a;
 }
 
 
@@ -128,7 +128,7 @@ struct ast *newAsgn(struct symbol *sym, struct ast *def){
  * all pointers to the same location, so the definition pointer is simply freed if present
  * and then re-set.
  */
-void setsym(struct symbol *name, struct ast *val){
+void setsym(Symbol *name, AST *val){
 	freeAst_Symbol( &(name->func) );
 		#ifdef DEBUG
 	assert(name->func == NULL);
@@ -139,11 +139,11 @@ void setsym(struct symbol *name, struct ast *val){
 
 /* === MEMORY MANAGEMENT === */
 
-/**
- * 
- * @param[] sym 
+/** Frees memory allocated to a symbol.
+ * Also frees the definition of the symbol.
+ * @param[in,out] sym @ref Symbol structure to free.
  */
-void freeSymbol(struct symbol **sym){
+void freeSymbol(Symbol **sym){
 	if ((*sym)->func)
 		freeAst_Symbol(&(*sym)->func);
 	free((*sym)->name);
@@ -156,7 +156,7 @@ void freeSymbol(struct symbol **sym){
 void freeTable(){
 	int i = 0;
 	for (i = 0; i < NHASH; i++){
-		struct symbol *sp = &symtab[i];
+		Symbol *sp = &symtab[i];
 		if (sp->name)
 		{
 			// printf("found %s at index %d\n", sp->name, i);
@@ -169,7 +169,7 @@ void freeTable(){
  * Recursively frees allocated memory according to DFS.
  * Also sets each pointer to NULL as it completes.
  */
-void freeAst_Symbol( struct ast **root ){
+void freeAst_Symbol( AST **root ){
 
 	switch ((*root)->nodetype){
 		/* 2 subtrees */
@@ -189,17 +189,17 @@ void freeAst_Symbol( struct ast **root ){
 
 		/* special - setdie */
 	case 'd':
-		freeValue( &((struct setdie *)*root)->faces );
+		freeValue( &((SetDie *)*root)->faces );
 		break;
 
 		/* special - setres */
 	case 'Q':
-		freeValue( &((struct setres *)*root)->out );
+		freeValue( &((SetRoll *)*root)->out );
 		break;
 
 		/* special - astAsgn */
 	case 'A':
-		freeAst_Symbol( &((struct astAsgn *)*root)->l );
+		freeAst_Symbol( &((SymbolAssign *)*root)->l );
 		break;
 
 	default:
@@ -218,7 +218,7 @@ void freeAst_Symbol( struct ast **root ){
 /**
  * Logs an entire AST tree to stdout.
  */
-void printAst_Symbol(struct ast *root){
+void printAst_Symbol(AST *root){
 	switch (root->nodetype){
 		/* 2 subtrees */
 	case '+': case '-': case '*': case '%': case '^':
@@ -281,39 +281,39 @@ void printAst_Symbol(struct ast *root){
 
 		/* 0 subtrees */
 	case 'D':
-		printf("%dd[%d..%d]", ((struct natdie *)root)->count, ((struct natdie *)root)->min, ((struct natdie *)root)->max);
+		printf("%dd[%d..%d]", ((NatDie *)root)->count, ((NatDie *)root)->min, ((NatDie *)root)->max);
 		break;
 
 	case 'I':
-		printf("%d", ((struct natint *)root)->integer);
+		printf("%d", ((NatInt *)root)->integer);
 		break;
 
 	case 'C':
-		printf("$%d,%d,%d,%d$", ((struct fargs *)root)->fcount, ((struct fargs *)root)->seltype, ((struct fargs *)root)->scount, (((struct fargs *)root)->cond) ? ((struct fargs *)root)->cond : -1);
+		printf("$%d,%d,%d,%d$", ((FuncArgs *)root)->fcount, ((FuncArgs *)root)->seltype, ((FuncArgs *)root)->scount, (((struct fargs *)root)->cond) ? ((struct fargs *)root)->cond : -1);
 		break;
 
 	case 'E':
-		printf("%s", ((struct symcall *)root)->sym->name );
+		printf("%s", ((SymbolRef *)root)->sym->name );
 		break;
 
 		/* special - setdie */
 	case 'd':
-		printf("%dd[", ((struct setdie *)root)->count);
-		printValue(((struct setdie *)root)->faces);
+		printf("%dd[", ((SetDie *)root)->count);
+		printValue(((SetDie *)root)->faces);
 		printf("]");
 		break;
 
 		/* special - setres */
 	case 'Q':
 		printf("{");
-		printValue(((struct setres *)root)->out);
+		printValue(((SetRoll *)root)->out);
 		printf("}");
 		break;
 
 		/* special - astAsgn */
 	case 'A':
-		printf("%s := ", ((struct astAsgn *)root)->s->name);
-		printAst_Symbol(((struct astAsgn *)root)->l);
+		printf("%s := ", ((SymbolAssign *)root)->s->name);
+		printAst_Symbol(((SymbolAssign *)root)->l);
 		break;
 
 	default:
