@@ -68,6 +68,22 @@ enum cifs {
 typedef enum cifs Conditionals;
 
 
+
+/** Generic Binary AST Node.
+ * A node which can have up to 2 children. Used for operations which only require operator and operand information.
+ */
+struct ast {
+	int nodetype;						/**< Math operations, functions, comparisons, M, R, S, Z */
+	AST *l;					/**< Left operand */
+	AST *r;					/**< Right operand */
+};
+
+/** @typedef AST
+ * Shorthand for the bifs structure.
+ */
+typedef struct ast AST;
+
+
 /** A natural die definition.
  * A natural die contains all numbers between two bounds, inclusive. Also tracks the number of times to roll.
  */
@@ -90,7 +106,7 @@ typedef struct natdie NatDie;
 struct setdie {
 	int nodetype;						/**< d */
 	int count;							/**< Number of times to perform dice rolls */
-	struct value *faces;		/**< Faces on the die */
+	ValueChain *faces;		/**< Faces on the die */
 };
 
 /** @typedef SetDie
@@ -136,28 +152,13 @@ typedef struct fargs FuncArgs;
  */
 struct setres {
 	int nodetype;						/**< Q */
-	struct value *out;			/**< Output to set roll to */
+	ValueChain *out;			/**< Output to set roll to */
 };
 
 /** @typedef SetRoll
  * Shorthand for the setres structure.
  */
 typedef struct setres SetRoll;
-
-
-/** Generic Binary AST Node.
- * A node which can have up to 2 children. Used for operations which only require operator and operand information.
- */
-struct ast {
-	int nodetype;						/**< Math operations, functions, comparisons, M, R, S, Z */
-	struct ast *l;					/**< Left operand */
-	struct ast *r;					/**< Right operand */
-};
-
-/** @typedef AST
- * Shorthand for the bifs structure.
- */
-typedef struct ast AST;
 
 
 /* ===== FUNCTIONS ===== */

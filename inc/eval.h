@@ -24,7 +24,7 @@
  * @param[in]  base The current AST node to evaluate.
  * @return      The result of the @p base node's operation.
  */
-struct result *eval(struct ast *base);
+Result *eval(AST *base);
 
 
 

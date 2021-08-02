@@ -57,7 +57,7 @@ typedef struct result Result;
  * @param[in] res The result struct to be tested.
  * @deprecated Never used.
  */
-void ensureType(struct result *res);
+void ensureType(Result *res);
 
 
 

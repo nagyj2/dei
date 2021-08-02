@@ -23,7 +23,7 @@
  */
 struct symbol {
  char *name;          					/**< The name of the symbol. */
- struct ast *func;    					/**< The meaning of the symbol. */
+ AST *func;    					/**< The meaning of the symbol. */
 };
 
 /**
@@ -43,7 +43,7 @@ extern struct symbol symtab[NHASH];    /**< Symbol table declaration. */
  */
 struct symcall {
 	int nodetype;						/**< E */
-	struct symbol *sym;			/**< Called symbol */
+	Symbol *sym;			/**< Called symbol */
 };
 
 /**
@@ -57,8 +57,8 @@ typedef struct symcall SymbolRef;
  */
 struct astAsgn {
 	int nodetype;						/**< A */
-	struct symbol *s;				/**< Symbol to assign value to */
-	struct ast *l;					/**< Value to assign to symbol */
+	Symbol *s;				/**< Symbol to assign value to */
+	AST *l;					/**< Value to assign to symbol */
 };
 
 /**
