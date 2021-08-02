@@ -20,6 +20,10 @@
 
 #define SELECTALL(t,v,s) for(SelectionChain *_t=v; _t; _t=_t->next) s=newSelection(_t,s)
 
+void yyerror(char *s, ...);
+int yyparse();
+int yylex();
+
 /* Value test suite */
 void value_suite(void);
 
