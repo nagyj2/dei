@@ -256,7 +256,7 @@ SelectionChain *generate(ValueChain *rolled, FuncArgs *opts){
  *
  */
 Result *eval(AST *base){
-	Result *r = malloc(sizeof(Result));
+Result *r = malloc(sizeof(Result));
 	if (!r){
 		printf("out of space\n");
 		exit(1);
@@ -318,11 +318,17 @@ Result *eval(AST *base){
 		Result *larg = eval(base->l);
 		Result *rarg = eval(base->r);
 		ValueChain *t = NULL;
-		r->out = dupValue(larg->out);
-		if (base->nodetype == '|'){
+
+		// r->out = dupValue(larg->out);
+		for (t = larg->out; t; t = t->next) {
+			if (!hasValue(t->i, r->out))
+				r->out = newValue(t->i, r->out);
+		}
+		
+		if (base->nodetype == '|') {
 			for(t = rarg->out; t; t = t->next){
 				if (!hasValue(t->i, r->out))
-				r->out = newValue(t->i, r->out);
+					r->out = newValue(t->i, r->out);
 			}
 		}else{
 			for(t = rarg->out; t; t = t->next){
