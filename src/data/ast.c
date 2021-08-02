@@ -228,7 +228,7 @@ void freeAst( AST **root ){
 		freeAst( &(*root)->l );
 
 		/* 0 subtrees */
-	case 'D': case 'I': case 'C': //case 'E':
+	case 'D': case 'I': case 'C':
 		break;
 
 		/* special - setdie */
@@ -240,11 +240,6 @@ void freeAst( AST **root ){
 	case 'Q':
 		freeValue( &((SetRoll *)*root)->out );
 		break;
-
-		/* special - astAsgn */
-	// case 'A':
-	// 	freeAst( &((struct astAsgn *)*root)->l );
-	// 	break;
 
 	default:
 		printf("unknown ast free, got %d\n", (*root)->nodetype);
@@ -336,10 +331,6 @@ void printAst(AST *root){
 		printf("$%d,%d,%d,%d$", ((FuncArgs *)root)->fcount, ((FuncArgs *)root)->seltype, ((FuncArgs *)root)->scount, (((FuncArgs *)root)->cond) ? ((FuncArgs *)root)->cond : -1);
 		break;
 
-	// case 'E':
-	// 	printf("%s", ((struct symcall *)root)->sym->name );
-	// 	break;
-
 		/* special - setdie */
 	case 'd':
 		printf("%dd[", ((SetDie *)root)->count);
@@ -353,12 +344,6 @@ void printAst(AST *root){
 		printValue(((SetRoll *)root)->out);
 		printf("}");
 		break;
-
-		/* special - astAsgn */
-	// case 'A':
-	// 	printf("%s := ", ((struct astAsgn *)root)->s->name);
-	// 	printAst(((struct astAsgn *)root)->l);
-	// 	break;
 
 	default:
 		printf("\nunknown ast print, got %d\n", root->nodetype);
