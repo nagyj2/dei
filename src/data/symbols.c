@@ -267,7 +267,7 @@ void printAst_Symbol(AST *root){
 		}
 		printf("(");
 		printAst_Symbol(root->l);
-		printf(" st.");
+		printf(" ");
 		printAst_Symbol(root->r);
 		printf(")");
 		break;
@@ -289,7 +289,7 @@ void printAst_Symbol(AST *root){
 		break;
 
 	case 'C':
-		printf("$%d,%d,%d,%d$", ((FuncArgs *)root)->fcount, ((FuncArgs *)root)->seltype, ((FuncArgs *)root)->scount, (((FuncArgs *)root)->cond) ? ((FuncArgs *)root)->cond : -1);
+		printf("%d, %d, %d, %d", ((FuncArgs *)root)->fcount, ((FuncArgs *)root)->seltype, ((FuncArgs *)root)->scount, (((FuncArgs *)root)->cond) ? ((FuncArgs *)root)->cond : -1);
 		break;
 
 	case 'E':

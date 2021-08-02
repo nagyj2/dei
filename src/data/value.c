@@ -317,7 +317,7 @@ void freeValue(ValueChain **val) {
  */
 void printValue(ValueChain *base) {
 	ValueChain *t;
-	for (t = base; t; t = t->next)
-		printf("%d ",t->i);
-	//printf("\n");
+	for (t = base; t->next; t = t->next)
+		printf("%d ", t->i);
+	printf("%d", t->i);
 }

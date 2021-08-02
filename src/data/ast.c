@@ -306,7 +306,7 @@ void printAst(AST *root){
 		}
 		printf("(");
 		printAst(root->l);
-		printf(" st.");
+		printf(" ");
 		printAst(root->r);
 		printf(")");
 		break;
@@ -328,7 +328,7 @@ void printAst(AST *root){
 		break;
 
 	case 'C':
-		printf("$%d,%d,%d,%d$", ((FuncArgs *)root)->fcount, ((FuncArgs *)root)->seltype, ((FuncArgs *)root)->scount, (((FuncArgs *)root)->cond) ? ((FuncArgs *)root)->cond : -1);
+		printf("%d, %d, %d %d", ((FuncArgs *)root)->fcount, ((FuncArgs *)root)->seltype, ((FuncArgs *)root)->scount, (((FuncArgs *)root)->cond) ? ((FuncArgs *)root)->cond : -1);
 		break;
 
 		/* special - setdie */

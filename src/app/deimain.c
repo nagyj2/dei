@@ -49,11 +49,11 @@ int main(int argc, char **argv) {
 
 	FILE *f = fopen(stdsave, "r");
 	if (f){
-		printf("found save!\n");
+		// printf("found save!\n");
 		yyin = f;
 		yyparse();
 		fclose(yyin);
-		printf("\n");
+		// printf("\n");
 	}
 
 	int i;
@@ -65,16 +65,16 @@ int main(int argc, char **argv) {
 			return (1);
 		}
 
-		printf("new file!\n");
+		// printf("new file!\n");
 		yyin = f;
 		yylineno = 1;
 		yyrestart(yyin);
 		yyparse();
 		fclose(yyin);
-		printf("\n");
+		// printf("\n");
   }
 
-	printf("stdin!\n> ");
+	printf("\n> ");
 	yyin = stdin;
 	yylineno = 1;
 	yyrestart(yyin);
