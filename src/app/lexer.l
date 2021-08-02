@@ -4,8 +4,6 @@
 #include "parser.tab.h"
 
 #include "deimain.h"
-#include "value.h"
-#include "ast.h"
 #include "symbols.h"
 
 %}
