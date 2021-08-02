@@ -14,11 +14,11 @@
 %}
 
 %union {
-	struct ast *a;		/* AST nodes */
-	struct symbol *s;	/* identifier names */
-	struct value *v;	/* value chain building */
-	int i;						/* straight number */
-	int fn;						/* enum function */
+	AST *a;					/* AST nodes */
+	Symbol *s;			/* identifier names */
+	ValueChain *v;	/* value chain building */
+	int i;					/* straight number */
+	int fn;					/* enum function */
 }
 
 %token <i> NUM DNUM PNUM FQUANT SQUANT SSELECT PSELECT

@@ -30,7 +30,7 @@
 /** Tests a result struct to ensure relevant fields are filled and others are not.
  * @param[in] res The result struct to be tested.
  */
-void ensureType(struct result *res);
+void ensureType(Result *res);
 
 
 /**
@@ -255,8 +255,8 @@ SelectionChain *generate(ValueChain *rolled, FuncArgs *opts){
 /**
  *
  */
-struct result *eval(AST *base){
-	struct result *r = malloc(sizeof(struct result));
+Result *eval(AST *base){
+	Result *r = malloc(sizeof(Result));
 	// printf("new result %d @%p ", base->nodetype, r); printAst(base); printf("\n");
 	r->faces = NULL;
 	r->out = NULL;	/* set unuseds to NULL */
@@ -272,8 +272,8 @@ struct result *eval(AST *base){
 	case '1': /* > */ 	case '2': /* < */ 	case '3': /* != */
 	case '4': /* == */ 	case '5': /* >= */ 	case '6': /* <= */ {
 		r->type = R_int;
-		struct result *larg = eval(base->l);
-		struct result *rarg = eval(base->r);
+		Result *larg = eval(base->l);
+		Result *rarg = eval(base->r);
 		switch (base->nodetype){
 		case '+': r->integer = larg->integer + rarg->integer; break;
 		case '-': r->integer = larg->integer - rarg->integer; break;
@@ -295,7 +295,7 @@ struct result *eval(AST *base){
 
 	case 'M': {
 		r->type = R_int;
-		struct result *larg = eval(base->l);
+		Result *larg = eval(base->l);
 		r->integer = -(larg->integer);
 		freeResult( &larg );
 		break;
@@ -303,8 +303,8 @@ struct result *eval(AST *base){
 
 	case '&': case INTER:	{
 		r->type = R_set;
-		struct result *larg = eval(base->l);
-		struct result *rarg = eval(base->r);
+		Result *larg = eval(base->l);
+		Result *rarg = eval(base->r);
 		ValueChain *t = NULL;
 		if (base->nodetype == INTER) r->out = dupValue(larg->out); /* if '&', start from NULL */
 		for(t = rarg->out; t; t = t->next){
@@ -316,8 +316,8 @@ struct result *eval(AST *base){
 	}
 	case '|': case UNION: {
 		r->type = R_set;
-		struct result *larg = eval(base->l);
-		struct result *rarg = eval(base->r);
+		Result *larg = eval(base->l);
+		Result *rarg = eval(base->r);
 		ValueChain *t = NULL;
 		r->out = dupValue(larg->out);
 		if (base->nodetype == '|'){
@@ -337,7 +337,7 @@ struct result *eval(AST *base){
 
 	case 'e': /* append */ {
 		r->type = R_roll;
-		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
+		Result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
 		r->faces = dupValue(inputs->faces);
 		SelectionChain *selected = generate(r->out, (FuncArgs *) base->r), *t = NULL;
@@ -355,7 +355,7 @@ struct result *eval(AST *base){
 
 	case 'f': /* drop */ {
 		r->type = R_roll;
-		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
+		Result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
 		r->faces = dupValue(inputs->faces);
 		freeResult(&inputs);
@@ -375,7 +375,7 @@ struct result *eval(AST *base){
 	}
 	case 'g': /* count */ {
 		r->type = R_roll;
-		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
+		Result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		SelectionChain *selected = select(inputs->out, (FuncArgs *)base->r);
 
 		r->out = newValue(countSelection(selected), NULL);
@@ -387,7 +387,7 @@ struct result *eval(AST *base){
 	case 'h': /* choose */ {
 		/* SIGNIFICANT MEMORY LEAK!! */
 		r->type = R_roll;
-		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
+		Result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		ValueChain *outputs = dupValue(inputs->out);
 		freeResult(&inputs);
 
@@ -418,7 +418,7 @@ struct result *eval(AST *base){
 	}
 	case 'i': /* reroll */ {
 		r->type = R_roll;
-		struct result *inputs = eval( base->l ); /* find the outputs from the contained tree */
+		Result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* Duplicate start */
 		r->faces = dupValue(inputs->faces);
 		freeResult(&inputs);
@@ -442,7 +442,7 @@ struct result *eval(AST *base){
 	}
 	case 'R': /* roll nat die */ case 'r': /* roll artificial die */ {
 		r->type = R_roll;
-		struct result *die = eval(base->l);
+		Result *die = eval(base->l);
 		r->faces = dupValue(die->faces);
 		r->out = rollSet(die->integer, r->faces);
 		freeResult( &die );
@@ -450,14 +450,14 @@ struct result *eval(AST *base){
 	}
 	case 'Z': /* strip faces */ {
 		r->type = R_set;
-		struct result *roll = eval(base->l);
+		Result *roll = eval(base->l);
 		r->out = dupValue(roll->out);
 		freeResult( &roll );
 		break;
 	}
 	case 'S': /* sum roll values */{
 		r->type = R_int;
-		struct result *set = eval(base->l);
+		Result *set = eval(base->l);
 		r->integer = sumValue(set->out);
 		freeResult( &set );
 		break;
@@ -491,12 +491,12 @@ struct result *eval(AST *base){
 	}
 	case 'E': /* sym call */ {
 		free(r);
-		r = eval(((struct symcall *)base)->sym->func);
+		r = eval(((SymbolRef *)base)->sym->func);
 		break;
 	}
 	case 'A': /* sym definition */ {
 		r->type = R_int;
-		setsym(((struct astAsgn *)base)->s, ((struct astAsgn *)base)->l);
+		setsym(((SymbolAssign *)base)->s, ((SymbolAssign *)base)->l);
 		r->integer = 0; /* signal success */
 		break;
 	}
