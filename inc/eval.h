@@ -13,8 +13,8 @@
 
 #include <stdbool.h> /* bool */
 
-#include "value.h"
 #include "ast.h"
+#include "result.h"
 
 
 /* ===== FUNCTIONS ===== */
