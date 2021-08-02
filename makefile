@@ -41,7 +41,10 @@ INC         := -I$(INCDIR)
 #Automatic operations
 #---------------------------------------------------------------------------------
 
+#Create a debug version of main files
 $(DEBUGTARGET): CFLAGS += -D DEBUG
+#Create a debug version of test files
+$(TESTTARGET): CFLAGS += -D DEITEST
 
 #OS Specific flags
 UNAME := $(shell uname)
@@ -73,9 +76,6 @@ TESTOBJECTS	:= $(patsubst $(TESTDIR)/%, $(BUILDDIR)/%, $(TESTSOURCES:.c=.o))
 GENSOURCES	:= $(GENBISON_C) $(GENFLEX_C)
 GENOBJECTS	:= $(patsubst $(GENDIR)/%, $(BUILDDIR)/%, $(GENSOURCES:.c=.o) )
 
-#Create a debug version of main target
-$(DEBUGTARGET): 
-
 #Create all artifacts (except debug b/c unsure how...)
 all: $(TESTTARGET) $(TARGET) $(DOCUMENTS)
 
@@ -106,17 +106,17 @@ $(GENBISON_C): $(addprefix $(APPDIR)/, $(BISON_Y))
 #Create main target program
 $(TARGET): $(GENOBJECTS) $(DATAOBJECTS) $(APPOBJECTS)
 	@mkdir -p $(TARGETDIR)
-	$(CC) $(CFLAGS) -o $(TARGETDIR)/$(TARGET) $^ $(LIB)
+	$(CC) $(CFLAGS) -o $(TARGETDIR)/$@ $^ $(LIB)
 
 #Create debug target program
 $(DEBUGTARGET): $(GENOBJECTS) $(DATAOBJECTS) $(APPOBJECTS)
 	@mkdir -p $(TARGETDIR)
-	$(CC) $(CFLAGS) -o $(TARGETDIR)/$(DEBUGTARGET) $^ $(LIB)
+	$(CC) $(CFLAGS) -o $(TARGETDIR)/$@ $^ $(LIB)
 
 #Create test target program
-$(TESTTARGET): $(DATAOBJECTS) $(TESTOBJECTS)
+$(TESTTARGET): $(GENOBJECTS) $(DATAOBJECTS) $(TESTOBJECTS)
 	@mkdir -p $(TARGETDIR)
-	$(CC) -o $(TARGETDIR)/$(TESTTARGET) $^ $(LIB)
+	$(CC) $(CFLAGS) -o $(TARGETDIR)/$@ $^ $(LIB)
 
 #Create Documentation
 $(DOCUMENTS):
