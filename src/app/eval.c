@@ -424,18 +424,26 @@ Result *eval(AST *base){
 		freeResult(&inputs);
 
 		if (!r->faces) {
-			printf("error: reroll needs roll faces@\n");
+			printf("error: reroll needs die faces\n");
 			return r;
 		}
 
-		SelectionChain *selected = select(r->out, (FuncArgs *)base->r), *t = NULL;
+		
+		SelectionChain *selected = NULL, *t = NULL;
+		if (countValue(r->out)) { selected = newSelection(r->out,NULL); } /* For some reason, select() has problems with single r->out */
+		else { selected = select(r->out, (FuncArgs *) base->r); }
 
 		if(selected){
 			for(t = selected; t; t = t->next){
 				/* reroll each selected once */
-				t->val->i = rollInt(1, r->faces);
+				int roll = rollInt(1, r->faces);
+				// printf("%d cmp %d (%d) : Hi:%d, Lo:%d, No:%d\n", t->val->i, roll, ((FuncArgs *) base->r)->cond, C_high, C_low, C_none);
+				switch (((FuncArgs *) base->r)->cond) {
+				case C_high: 	if (t->val->i < roll) t->val->i = roll; break;
+				case C_low: 	if (t->val->i > roll) t->val->i = roll; break;
+				case C_none: 	t->val->i = roll; break;
+				}
 			}
-
 			freeSelectionAliased( &selected );
 		}
 		break;
