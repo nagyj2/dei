@@ -199,7 +199,7 @@ void freeAst_Symbol( AST **root ){
 
 		/* special - astAsgn */
 	case 'A':
-		freeAst_Symbol( &((SymbolAssign *)*root)->l );
+		// freeAst_Symbol( &((SymbolAssign *)*root)->l );
 		break;
 
 	default:

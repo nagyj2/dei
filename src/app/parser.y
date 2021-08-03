@@ -27,7 +27,7 @@
 %token UNION INTER DIV RANGE IF XQUANT EXIT EOL
 
 %type <i> nnum fquant ssel
-%type <a> math set func die a_args s_args m_args
+%type <a> stmt math set func die a_args s_args m_args error
 %type <v> list
 
 %start line
@@ -40,6 +40,21 @@
 %nonassoc UMINUS
 
 %%
+
+line:																{  }
+	|			'@'													{  }
+	|			line stmt EOL								{ printAst_Symbol($2); Result *r = eval($2); printf(" = %d\n", r->integer); freeResult(&r); freeAst_Symbol(&$2); printf("\n> "); }
+	|			line '@' stmt EOL						{ Result *r = eval($3); freeResult(&r); freeAst_Symbol(&$3); }
+	|			line EXIT EOL								{ exit(0); }
+	|			line '@' EXIT EOL						{ exit(0); /* Bison has no duplicate rules */ }
+	|			line error EOL							{ printf("!> "); }
+	|			line '@' error EOL					{ printf("!"); }
+	;
+
+stmt:		math												{ $$ = $1; }
+	|			IDENT ':' math							{ $$ = newAsgn($1, $3); }
+	|																	{ $$ = newNatint(0); }
+	;
 
 math:		math '+' math 							{ $$ = newAst('+', $1, $3); }
 	|			math '-' math								{ $$ = newAst('-', $1, $3); }
@@ -122,18 +137,18 @@ nnum:		NUM													{ $$ = $1; }
 	|			'-'	NUM											{ $$ = -$2; }
 	;
 
-line:		line math EOL								{ printAst_Symbol($2); Result *r = eval($2); printf(" = %d\n", r->integer); freeResult(&r); freeAst_Symbol(&$2); printf("\n> "); }
-	|			line IDENT ':' math EOL			{ setsym($2, $4); printf("\n> "); }
-	|			line error EOL							{ printf("\n!> "); }
-	|			line EXIT EOL								{ /* printf("closing!\n"); */ exit(0); }
-	|			line EOL										{ printf("> "); }
-	|			EOL													{  }
-	|			line '@' math EOL						{ Result *r = eval($3); freeResult(&r); freeAst_Symbol(&$3); }
-	|			line '@' IDENT ':' math EOL	{ setsym($3, $5); }
-	|			line '@' error EOL					{ printf("!") }
-	|			line '@' EXIT EOL						{ exit(0); }
-	|			line '@' EOL								{  }
-	|																	{  }
-	;
-
 %%
+
+	// line:		line math EOL								{ printAst_Symbol($2); Result *r = eval($2); printf(" = %d\n", r->integer); freeResult(&r); freeAst_Symbol(&$2); printf("\n> "); }
+	// 	|			line IDENT ':' math EOL			{ setsym($2, $4); printf("\n> "); }
+	// 	|			line error EOL							{ printf("\n!> "); }
+	// 	|			line EXIT EOL								{ /* printf("closing!\n"); */ exit(0); }
+	// 	|			line EOL										{ printf("> "); }
+	// 	|			EOL													{  }
+	// 	|			line '@' math EOL						{ Result *r = eval($3); freeResult(&r); freeAst_Symbol(&$3); }
+	// 	|			line '@' IDENT ':' math EOL	{ setsym($3, $5); }
+	// 	|			line '@' error EOL					{ printf("!") }
+	// 	|			line '@' EXIT EOL						{ exit(0); }
+	// 	|			line '@' EOL								{  }
+	// 	|																	{  }
+	// 	;
