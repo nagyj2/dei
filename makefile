@@ -1,115 +1,146 @@
 # Modified from: https://stackoverflow.com/questions/5178125/how-to-place-object-files-in-separate-subdirectory
 
-#Compiler and Linker
+#Compiler and Shell
 CC          := gcc-11
 SHELL				:= /bin/zsh
 
-#The Target Binary Program
+#Build Targets (Main Program, Unit Tests, Documentation)
 TARGET      := dei
-TESTMAIN		:= deid
+DEBUGTARGET := debug
+TESTTARGET	:= tests
+DOCUMENTS		:= docs
 
-#The Directories, Source, Includes, Objects, Binary and Resources
-SRCDIR      := ./src
+#Source code directories
+APPDIR      := ./src/app
+DATADIR			:= ./src/data
+GENDIR			:= ./src/gen
+TESTDIR			:= ./src/tests
+
+#Resource directories
 INCDIR      := ./inc
 BUILDDIR    := ./obj
 TARGETDIR   := ./bin
 DOCDIR			:= ./docs
-SRCEXT      := c
-OBJEXT      := o
 
-FLEX				:= lexer.l
-BISON				:= parser.y
+#Tool files
+FLEX_L			:= lexer.l
+BISON_Y			:= parser.y
 
-#Flags, Libraries and Includes
+FLEXOUT_C 	:= lexer.lex.c
+BISONOUT_C 	:= parser.tab.c
+BISONOUT_H 	:= $(BISONOUT_C:c=h)
+
+#Flags, Libraries and Includes TODO : separate flags
 CFLAGS      := -Wall -g -std=c11
-LIB         := -L/usr/local/Cellar/check/0.15.2/lib
-INC         := -I$(INCDIR)
-INCDEP      := -I$(INCDIR)
-
-BISONFLAGS 	:= -t
 FLEXFLAGS 	:=
+BISONFLAGS 	:= -t
+LIB         := 
+INC         := -I$(INCDIR)
 
-CHECKFLAGS	:= -lcheck
+#---------------------------------------------------------------------------------
+#Automatic operations
+#---------------------------------------------------------------------------------
+
+#Create a debug version of main files
+$(DEBUGTARGET): CFLAGS += -D DEBUG
+#Create a debug version of test files
+$(TESTTARGET): CFLAGS += -D DEITEST
 
 #OS Specific flags
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
-OSS := -lfl -D LINUX
+OSS := -D LINUX
 else #($(UNAME), Darwin)
-OSS := -ll -D OSX
+OSS := -D OSX
 endif
 
-#---------------------------------------------------------------------------------
-#DO NOT EDIT BELOW THIS LINE
-#---------------------------------------------------------------------------------
-DEPEXT      := d
-#Automatically find all sources in src directory and construct object dependancies
-SOURCES     := $(shell find $(SRCDIR) -type f ! \( -name "*.output" -o -name "*.l" -o -name "*.y" \) )
-OBJECTS     := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
+#Create path names of Flex and Bison output
+GENFLEX_C		:= $(addprefix $(GENDIR)/, $(FLEXOUT_C))
+GENBISON_C	:= $(addprefix $(GENDIR)/, $(BISONOUT_C))
+GENBISON_H	:= $(addprefix $(INCDIR)/, $(BISONOUT_H))
 
-#Where Bison outputs will go
-BISON_H			:= $(addprefix $(INCDIR)/, $(BISON:y=tab.h))
-BISON_C			:= $(addprefix $(SRCDIR)/, $(basename $(BISON)))
-BISON_OUT		:= $(addsuffix .output, $(addprefix $(BUILDDIR)/,$(basename $(BISON))))
+#Automatically find all sources within src directory and construct object dependancies
+#Main Application Specific Source Files
+APPSOURCES	:= $(shell find $(APPDIR) -type f ! \( -name "*.output" -o -name "*.l" -o -name "*.y" \) )
+APPOBJECTS	:= $(patsubst $(APPDIR)/%, $(BUILDDIR)/%, $(APPSOURCES:.c=.o))
 
-#Where Flex output will go
-FLEX_C			:= $(addprefix $(SRCDIR)/, $(FLEX:l=lex.c))
+#Support Data Source Files
+DATASOURCES	:= $(shell find $(DATADIR) -type f -name "*.c" )
+DATAOBJECTS	:= $(patsubst $(DATADIR)/%, $(BUILDDIR)/%, $(DATASOURCES:.c=.o))
 
-#Defauilt Make
-debug: CFLAGS += -D DEBUG
-debug: bison flex $(TARGET)
+#Test Source Files
+TESTSOURCES	:= $(shell find $(TESTDIR) -type f -name "*.c" )
+TESTOBJECTS	:= $(patsubst $(TESTDIR)/%, $(BUILDDIR)/%, $(TESTSOURCES:.c=.o))
 
-tests: CFLAGS += -D DEBUG -D TESTS
-tests: BISONFLAGS += -v
-tests: clean all
+#Generated Source Files
+GENSOURCES	:= $(GENBISON_C) $(GENFLEX_C)
+GENOBJECTS	:= $(patsubst $(GENDIR)/%, $(BUILDDIR)/%, $(GENSOURCES:.c=.o) )
 
-all: bison flex $(TARGET) docs
+#Create all artifacts (except debug b/c unsure how...)
+all: $(TESTTARGET) $(TARGET) $(DOCUMENTS)
 
-#Parser
-bison: $(addprefix $(SRCDIR)/, $(BISON))
-	bison $(BISONFLAGS) -b $(BISON_C) --defines=$(BISON_H) $^
-
-#Lexer
-flex: $(addprefix $(SRCDIR)/, $(FLEX))
-	flex $(FLEXFLAGS) -o $(FLEX_C) $^
-
-#Remake
+#Remake all artifacts
 remake: cleaner all
 
-#Clean only Objecst
+#Clean Object Directory
 clean:
 	@$(RM) -rf $(BUILDDIR)
 
-#Full Clean, Objects, Docs and Binaries
+#Full Clean (Programs, Generated C Sources, Generated Documentation)
 cleaner: clean
 	@$(RM) -rf $(TARGETDIR)
+	@$(RM) -rf $(GENDIR)
 	@$(RM) -rf $(DOCDIR)/html
 	@$(RM) -rf $(DOCDIR)/latex
 
-#Pull in dependency info for *existing* .o files
--include $(OBJECTS:.$(OBJEXT)=.$(DEPEXT))
+#Generate Lexer .c file
+$(GENFLEX_C): $(addprefix $(APPDIR)/, $(FLEX_L))
+	@mkdir -p $(GENDIR)
+	flex $(FLEXFLAGS) -o $@ $?
 
-#Link
-$(TARGET): $(OBJECTS)
+#Generate Parser .c and .h files
+$(GENBISON_C): $(addprefix $(APPDIR)/, $(BISON_Y))
+	@mkdir -p $(GENDIR)
+	bison $(BISONFLAGS) -o $@ --defines=$(GENBISON_H) $?
+
+#Create main target program
+$(TARGET): $(GENOBJECTS) $(DATAOBJECTS) $(APPOBJECTS)
 	@mkdir -p $(TARGETDIR)
-	$(CC) -o $(TARGETDIR)/$(TARGET) $^ $(LIB)
+	$(CC) $(CFLAGS) -o $(TARGETDIR)/$@ $^ $(LIB)
 
-$(TESTMAIN): $(TEST_OBJECTS)
-	$(CC) $(CHECKFLAGS) -o $(TARGETDIR)/$(TESTMAIN) $^ $(LIB)
+#Create debug target program
+$(DEBUGTARGET): $(GENOBJECTS) $(DATAOBJECTS) $(APPOBJECTS)
+	@mkdir -p $(TARGETDIR)
+	$(CC) $(CFLAGS) -o $(TARGETDIR)/$@ $^ $(LIB)
 
-#Compile
-$(BUILDDIR)/%.$(OBJEXT): $(SRCDIR)/%.$(SRCEXT)
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
-	@$(CC) $(CFLAGS) $(INCDEP) -MM $(SRCDIR)/$*.$(SRCEXT) > $(BUILDDIR)/$*.$(DEPEXT)
-	@cp -f $(BUILDDIR)/$*.$(DEPEXT) $(BUILDDIR)/$*.$(DEPEXT).tmp
-	@sed -e 's|.*:|$(BUILDDIR)/$*.$(OBJEXT):|' < $(BUILDDIR)/$*.$(DEPEXT).tmp > $(BUILDDIR)/$*.$(DEPEXT)
-	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILDDIR)/$*.$(DEPEXT).tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILDDIR)/$*.$(DEPEXT)
-	@rm -f $(BUILDDIR)/$*.$(DEPEXT).tmp
+#Create test target program
+$(TESTTARGET): $(GENOBJECTS) $(DATAOBJECTS) $(TESTOBJECTS)
+	@mkdir -p $(TARGETDIR)
+	$(CC) $(CFLAGS) -o $(TARGETDIR)/$@ $^ $(LIB)
 
-#Documentation
-docs:
+#Create Documentation
+$(DOCUMENTS):
 	doxygen Doxyfile
 
-#Non-File Targets
-.PHONY: all remake clean cleaner tests debug docs
+#Compile Application files
+$(BUILDDIR)/%.o: $(APPDIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+
+#Compile Data files
+$(BUILDDIR)/%.o: $(DATADIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+
+#Compile Generated files
+$(BUILDDIR)/%.o: $(GENDIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+
+#Compile Test files
+$(BUILDDIR)/%.o: $(TESTDIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+
+#Non-File Targets - always fully execute
+.PHONY: all remake clean cleaner $(DOCUMENTS)

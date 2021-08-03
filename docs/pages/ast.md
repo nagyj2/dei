@@ -4,12 +4,12 @@
 
 During parsing, an AST is maintained for future evaluation. Each node can have a type and zero to
 two children. The node type will determine how many and what type of children the node will have.
-For more information, see @ref inc/ast.h "ash.h".
+For more information, see @ref inc/ast.h "ash.h" and @ref inc/symbols.h "symbols.h".
 
 #### Structure
 
 The possible AST node types are as follows:
-* `ast`: Contains up to 2 children, the left and right.
+* @ref AST "AST": Contains up to 2 children, the left and right.
 		* `+`: Add two integer children together and return the integer result.
 		* `-`: Subtract right integer child from left interg child and return the integer result.
 		* `*`: Multiply two integer children together and return the integer result.
@@ -34,15 +34,15 @@ The possible AST node types are as follows:
 		* `Z`: Remove information from a roll result, like die faces, when the information is no longer needed.
 * `astAsgn`: Contains up to 2 children, the symbol and ast.
 		* `A`: Assign the symbol child the value of the ast child.
-* `natdie`: Contains no children.
+* @ref NatDie "NatDie": Contains no children.
 		* `D`: A naturally defined die containing faces 1 to a maximum.
-* `setdie`: Contains no children.
+* @ref SetDie "SetDie": Contains no children.
 		* `d`: An artificial die containing faces which are explicitly given.
-* `natint`: Contains no children.
+* @ref NatInt "NatInt": Contains no children.
 		* `I`: An integer literal.
-* `fargs`: Contains no children.
+* @ref FuncArgs "FuncArgs": Contains no children.
 		* `C`: Function arguments. Describes how many times a function will occur and what elements to select and operate on.
-* `setres`: Contains no children.
+* @ref SetRoll "SetRoll": Contains no children.
 		* `Q`: An artificial roll result. Acts as if the contained elements were the roll of a die.
 * `symcall`: Contains 1 child, a symbol.
 		* `E`: A reference to a symbol stored in the symbol table.

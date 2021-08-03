@@ -4,8 +4,7 @@
 #include "parser.tab.h"
 
 #include "deimain.h"
-#include "struct.h"
-#include "ast.h"
+#include "symbols.h"
 
 %}
 
@@ -107,7 +106,7 @@
 <COMMENT>([^\\]|\n)+|.  { /* consume */ }
 
 [ \t]     { /* ignore whitespace */ }
-"\n"      { return EOL; }
+\n      	{ return EOL; }
 <<EOF>>		{ return 0; }
 
 .         { yyerror("unknown token: %c\n", *yytext); }

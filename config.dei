@@ -172,34 +172,34 @@
 @ \ 3d6 reroll unique if higher twice \
 @ \ 3d6 reroll 1s if lower \
 @ \ 3d6 reroll 1s if higher twice \
-@ \ 5d6 choose 3 random \
-@ \ 5d6 choose lowest \
-@ \ 5d6 choose 2 lowest \
-@ \ 5d6 choose highest \
-@ \ 5d6 choose 2 highest \
-@ \ 5d6 choose random \
-@ \ 5d6 choose 1 \
-@ \ 5d6 choose unique \
-@ \ 5d6 choose 1s \
-@ \ 5d6 choose 3 1 \
-@ \ 5d6 drop lowest \
-@ \ 5d6 drop 2 lowest \
-@ \ 5d6 drop highest \
-@ \ 5d6 drop 2 highest \
-@ \ 5d6 drop random \
-@ \ 5d6 drop 3 random \
-@ \ 5d6 drop 1 \
-@ \ 5d6 drop 3 1 \
-@ \ 5d6 drop unique \
-@ \ 5d6 drop 1s \
-@ \ 3d6 count two lowest \
-@ \ 3d6 choose 1 \
-@ \ 3d6 drop two 1 \
-@ \ 3d6 count unique \
-@ \ 3d6 choose 1s \
+@ 5d6 choose 3 random
+@ 5d6 choose lowest
+@ 5d6 choose 2 lowest
+@ 5d6 choose highest
+@ 5d6 choose 2 highest
+@ 5d6 choose random
+@ 5d6 choose 1
+@ 5d6 choose unique
+@ 5d6 choose 1s
+@ 5d6 choose 3 1
+@ 5d6 drop lowest
+@ 5d6 drop 2 lowest
+@ 5d6 drop highest
+@ 5d6 drop 2 highest
+@ 5d6 drop random
+@ 5d6 drop 3 random
+@ 5d6 drop 1
+@ 5d6 drop 3 1
+@ 5d6 drop unique
+@ 5d6 drop 1s
+@ 3d6 count two lowest
+@ 3d6 choose 1
+@ 3d6 drop two 1
+@ 3d6 count unique
+@ 3d6 choose 1s
 @ \ Assignments \
 @ a : 5
 @ b : 3d5
 @ b : 3d5 + str
 @ \ Special \
-@ \ stat : 4d6 reroll 1s once drop lowest \
+@ stat : 4d6 reroll 1s once drop lowest
