@@ -18,6 +18,7 @@
 #include "symbols.h"
 #include "result.h"
 #include "eval.h"
+#include "flags.h"
 
 
 int main(int argc, char **argv) {
@@ -42,6 +43,7 @@ int main(int argc, char **argv) {
 	printf("SymbolRef size: %lu\n", sizeof(SymbolRef));
 	printf("SymbolAssign size: %lu\n", sizeof(SymbolAssign));
 	printf("Result size: %lu\n", sizeof(Result));
+	printf("State size: %lu\n", sizeof(State));
 	printf("\n");
 	#endif
 

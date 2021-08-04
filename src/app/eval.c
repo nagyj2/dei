@@ -319,7 +319,6 @@ Result *r = malloc(sizeof(Result));
 		Result *rarg = eval(base->r);
 		ValueChain *t = NULL;
 
-		// r->out = dupValue(larg->out);
 		for (t = larg->out; t; t = t->next) {
 			if (!hasValue(t->i, r->out))
 				r->out = newValue(t->i, r->out);

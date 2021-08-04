@@ -10,15 +10,17 @@
 #include "symbols.h"
 #include "eval.h"
 #include "result.h"
+#include "flags.h"
 
 %}
 
 %union {
-	struct ast *a;		/* AST nodes */
-	struct symbol *s;	/* identifier names */
-	struct value *v;	/* value chain building */
-	int i;						/* straight number */
-	int fn;						/* enum function */
+	struct ast *a;					/* AST nodes */
+	struct symbol *s;				/* identifier names */
+	struct value *v;				/* value chain building */
+	struct stmt_result *r;	/* statement result */
+	int i;									/* straight number */
+	int fn;									/* enum function */
 }
 
 %token <i> NUM DNUM PNUM FQUANT SQUANT SSELECT PSELECT
@@ -27,8 +29,9 @@
 %token UNION INTER DIV RANGE IF XQUANT EXIT EOL
 
 %type <i> nnum fquant ssel
-%type <a> stmt math set func die a_args s_args m_args error
+%type <a> math set func die a_args s_args m_args error
 %type <v> list
+%type <r> stmt
 
 %start line
 
@@ -43,17 +46,52 @@
 
 line:																{  }
 	|			'@'													{  }
-	|			line stmt EOL								{ printAst_Symbol($2); Result *r = eval($2); printf(" = %d\n", r->integer); freeResult(&r); freeAst_Symbol(&$2); printf("\n> "); }
-	|			line '@' stmt EOL						{ Result *r = eval($3); freeResult(&r); freeAst_Symbol(&$3); }
+	|			line stmt EOL								{ 
+		Result *r = NULL;
+		switch ($2->type){
+			case O_math:
+				printAst_Symbol($2->ast);
+				r = eval($2->ast);
+				printf(" = %d", r->integer);
+				freeAst_Symbol(&$2->ast);
+				printf("\n> ");
+				break;
+			case O_assign:
+				printAst_Symbol($2->ast);
+				r = eval($2->ast);
+				printf("\n> ");
+				break;
+			case O_none:
+				break;
+		}
+		freeResult(&r);
+		freeState(&$2);
+	}
+	|			line '@' stmt EOL						{ 
+		Result *r = NULL;
+		switch ($3->type){
+			case O_math:
+				r = eval($3->ast);
+				freeAst_Symbol(&($3->ast));
+				break;
+			case O_assign:
+				r = eval($3->ast);
+				break;
+			case O_none:
+				break;
+		}
+		freeResult(&r);
+		freeState(&$3);
+	}
 	|			line EXIT EOL								{ exit(0); }
 	|			line '@' EXIT EOL						{ exit(0); /* Bison has no duplicate rules */ }
 	|			line error EOL							{ printf("!> "); }
 	|			line '@' error EOL					{ printf("!"); }
 	;
 
-stmt:		math												{ $$ = $1; }
-	|			IDENT ':' math							{ $$ = newAsgn($1, $3); }
-	|																	{ $$ = newNatint(0); }
+stmt:		math												{ $$ = newState(O_math, $1); }
+	|			IDENT ':' math							{ $$ = newState(O_assign, newAsgn($1, $3)); }
+	|																	{ $$ = newState(O_none, NULL); }
 	;
 
 math:		math '+' math 							{ $$ = newAst('+', $1, $3); }

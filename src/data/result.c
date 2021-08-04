@@ -26,7 +26,9 @@
  * Frees all pointers within @p res and sets their values to NULL.
  */
 void freeResult(Result **res) {
-	switch ((*res)->type){
+	if (*res == NULL) return;
+	
+	switch ((*res)->type) {
 	case R_roll:	freeValue(&(*res)->faces);
 	case R_set:		freeValue(&(*res)->out); break;
 	case R_die:		freeValue(&(*res)->faces); break;
