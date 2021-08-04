@@ -53,19 +53,20 @@ line:																{  }
 				printAst_Symbol($2->ast);
 				r = eval($2->ast);
 				printf(" = %d", r->integer);
-				freeAst_Symbol(&$2->ast);
+				freeAst_Symbol(&($2->ast));
 				printf("\n> ");
 				break;
 			case O_assign:
 				printAst_Symbol($2->ast);
 				r = eval($2->ast);
+				freeAst_Symbol(&($2->ast));
 				printf("\n> ");
 				break;
 			case O_none:
 				break;
 		}
 		freeResult(&r);
-		freeState(&$2);
+		freeState(&($2));
 	}
 	|			line '@' stmt EOL						{ 
 		Result *r = NULL;
@@ -76,12 +77,13 @@ line:																{  }
 				break;
 			case O_assign:
 				r = eval($3->ast);
+				freeAst_Symbol(&($3->ast));
 				break;
 			case O_none:
 				break;
 		}
 		freeResult(&r);
-		freeState(&$3);
+		freeState(&($3));
 	}
 	|			line EXIT EOL								{ exit(0); }
 	|			line '@' EXIT EOL						{ exit(0); /* Bison has no duplicate rules */ }
