@@ -59,6 +59,11 @@ typedef struct result Result;
  */
 void ensureType(Result *res);
 
+/** Print a representation of a input @ref Result to standard output.
+ * @param[in] res result structure to print.
+ * @sideeffect A text representation of @p res is sent to standard out.
+ */
+void printResult(Result *res);
 
 
 /* ===== MEMORY MANAGEMENT ===== */
