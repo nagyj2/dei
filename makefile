@@ -33,7 +33,7 @@ BISONOUT_H 	:= $(BISONOUT_C:c=h)
 #Flags, Libraries and Includes TODO : separate flags
 CFLAGS      := -Wall -g -std=c11
 FLEXFLAGS 	:=
-BISONFLAGS 	:= -t
+BISONFLAGS 	:= -t -v
 LIB         := 
 INC         := -I$(INCDIR)
 
@@ -61,7 +61,7 @@ GENBISON_H	:= $(addprefix $(INCDIR)/, $(BISONOUT_H))
 
 #Automatically find all sources within src directory and construct object dependancies
 #Main Application Specific Source Files
-APPSOURCES	:= $(shell find $(APPDIR) -type f ! \( -name "*.output" -o -name "*.l" -o -name "*.y" \) )
+APPSOURCES	:= $(shell find $(APPDIR) -type f ! \( -name "*.l" -o -name "*.y" \) )
 APPOBJECTS	:= $(patsubst $(APPDIR)/%, $(BUILDDIR)/%, $(APPSOURCES:.c=.o))
 
 #Support Data Source Files
