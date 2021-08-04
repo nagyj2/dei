@@ -503,6 +503,17 @@ Result *r = malloc(sizeof(Result));
 		free(r);
 		r = eval(((SymbolRef *)base)->sym->func);
 		break;
+	}	
+	case 'F': /* if else */ {
+		free(r);
+		Result *c = eval(((IfElse *) base)->cond);
+		if (c->integer == 0) {
+			r = eval(((IfElse *) base)->fals);
+		} else {
+			r = eval(((IfElse *) base)->tru);
+		}
+		freeResult(&c);
+		break;
 	}
 	case 'A': /* sym definition */ {
 		r->type = R_int;

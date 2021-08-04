@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
 	printf("SymbolAssign size: %lu\n", sizeof(SymbolAssign));
 	printf("Result size: %lu\n", sizeof(Result));
 	printf("State size: %lu\n", sizeof(State));
+	printf("IfElse size: %lu\n", sizeof(IfElse));
 	printf("\n");
 	#endif
 

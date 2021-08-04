@@ -206,6 +206,28 @@ AST *newSetres(ValueChain *out){
 	return (AST *)a;
 }
 
+/**
+ * Allocates new memory for the node and returns the pointer.
+ */
+AST *newIfelse(AST *cond, AST *tru, AST *fals) {
+	IfElse *a = malloc(sizeof(IfElse));
+	// printf("new ifast @%p\n", a);
+
+	if (!a){
+		printf("out of space\n");
+		exit(1);
+	}
+
+	a->nodetype = 'F';
+	a->cond = cond;
+	a->tru = tru;
+	a->fals = fals;
+	#ifdef DEBUG
+	assert(a);
+	#endif
+	return (AST *)a;
+}
+
 
 /* ===== MEMORY MANAGEMENT ===== */
 
@@ -239,6 +261,13 @@ void freeAst( AST **root ){
 		/* special - setres */
 	case 'Q':
 		freeValue( &((SetRoll *)*root)->out );
+		break;
+		
+		/* special - ifast */
+	case 'F':
+		freeAst( &((IfElse *)*root)->cond );
+		freeAst( &((IfElse *)*root)->tru );
+		freeAst( &((IfElse *)*root)->fals );
 		break;
 
 	default:
@@ -343,6 +372,17 @@ void printAst(AST *root){
 		printf("{");
 		printValue(((SetRoll *)root)->out);
 		printf("}");
+		break;
+
+		/* special -ifast */
+	case 'F':
+		printf("(");
+		printAst( ((IfElse *) root)->cond );
+		printf("?");
+		printAst( ((IfElse *) root)->tru );
+		printf(":");
+		printAst( ((IfElse *)root)->fals );
+		printf(")");
 		break;
 
 	default:

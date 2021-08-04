@@ -152,13 +152,29 @@ typedef struct fargs FuncArgs;
  */
 struct setres {
 	int nodetype;						/**< Q */
-	ValueChain *out;			/**< Output to set roll to */
+	ValueChain *out;				/**< Output to set roll to */
 };
 
 /** @typedef SetRoll
  * Shorthand for the setres structure.
  */
 typedef struct setres SetRoll;
+
+
+/** A conditionally evaluated statement.
+ * Used to test a condition and then evaluate an AST according to the result.
+ */
+struct ifast {
+	int nodetype;						/**< F */
+	AST *cond;							/**< Condition to determine which branch to execute. */
+	AST *tru;								/**< Branch to execute on a non-zero condition. */
+	AST *fals;							/**< Branch to execute on a zero condition. */
+};
+
+/** @typedef IfElse
+ * Shorthand for the ifast structure.
+ */
+typedef struct ifast IfElse;
 
 
 /* ===== FUNCTIONS ===== */
@@ -236,6 +252,16 @@ AST *newFargs(int fcount, int seltype, int scount, int cond);
  * @return     An AST node representing a fake roll. Cannot be NULL.
  */
 AST *newSetres(ValueChain *out);
+
+/** Create a conditional execution node.
+ * If memory cannot be allocated, the program displays an error and exits.
+ * Inputs must passed by reference.
+ * @param[in]  cond The condition to evaluate and determine what should be evaluated. Cannot be NULL.
+ * @param[in]  tru 	The AST to evaluate if @p cond is non-zero. Cannot be NULL.
+ * @param[in]  fals The AST to evaluate if @p cond is zero. Cannot be NULL.
+ * @return     An AST node representing a conditional execution. Cannot be NULL.
+ */
+AST *newIfelse(AST *cond, AST *tru, AST *fals);
 
 
 

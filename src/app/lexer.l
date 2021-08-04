@@ -21,23 +21,24 @@
 "if"			{ return IF; }
 
 	/* single char matches */
-"+"       |
-"-"       |
-"*"       |
-"%"       |
-"^"       |
-"&"       |
-"|"       |
-","       |
-"("       |
-")"       |
-"["       |
-"]"       |
-"{"       |
-"}"       |
-"d"       |
-"s"       |
-";"				|
+"+"       | /* addition */
+"-"       | /* subtraction / negation */
+"*"       | /* multiplication */
+"%"       | /* modulo */
+"^"       | /* exponentiation */
+"&"       | /* set intersection */
+"|"       | /* set union */
+"("       | /* math level precedence */
+")"       | /* math level precidence */
+"["       | /* range start brace / set level precidence */
+"]"       | /* range end brace / set level precidence */
+"{"       |	/* set start brace */
+"}"       | /* set end brace */
+","       | /* set separator */
+"d"       | /* die face indicator */
+"s"       | /* NUM pluralizer */
+"?"				| /* conditional */
+";"				| /* conditional separator */
 "@"				| /* mute */
 ":"       { return yytext[0]; }
 

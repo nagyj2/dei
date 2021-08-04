@@ -201,6 +201,13 @@ void freeAst_Symbol( AST **root ){
 	case 'A':
 		/* Just free yourself! */
 		break;
+	
+		/* special - ifast */
+	case 'F':
+		freeAst_Symbol( &((IfElse *)*root)->cond );
+		freeAst_Symbol( &((IfElse *)*root)->tru );
+		freeAst_Symbol( &((IfElse *)*root)->fals );
+		break;
 
 	default:
 		printf("unknown ast free, got %d\n", (*root)->nodetype);
@@ -314,6 +321,17 @@ void printAst_Symbol(AST *root){
 	case 'A':
 		printf("%s := ", ((SymbolAssign *)root)->s->name);
 		printAst_Symbol(((SymbolAssign *)root)->l);
+		break;
+		
+		/* special -ifast */
+	case 'F':
+		printf("(");
+		printAst_Symbol( ((IfElse *) root)->cond );
+		printf("?");
+		printAst_Symbol( ((IfElse *) root)->tru );
+		printf(":");
+		printAst_Symbol( ((IfElse *)root)->fals );
+		printf(")");
 		break;
 
 	default:

@@ -29,7 +29,7 @@
 %token UNION INTER DIV RANGE IF XQUANT EXIT EOL
 
 %type <i> nnum fquant ssel
-%type <a> math set func die a_args s_args m_args error
+%type <a> cond math set func die a_args s_args m_args error
 %type <v> list
 %type <r> stmt
 
@@ -91,9 +91,14 @@ line:																{  }
 	|			line '@' error EOL					{ printf("!"); }
 	;
 
-stmt:		math												{ $$ = newState(O_math, $1); }
-	|			IDENT ':' math							{ $$ = newState(O_assign, newAsgn($1, $3)); }
+stmt:		cond												{ $$ = newState(O_math, $1); }
+	|			IDENT ':' cond							{ $$ = newState(O_assign, newAsgn($1, $3)); }
 	|																	{ $$ = newState(O_none, NULL); }
+	;
+
+cond:		math '?' math ';' math			{ $$ = newIfelse($1, $3, $5); }
+	|			math '?' math								{ $$ = newIfelse($1, $3, newNatint(0)); }
+	|			math												{ $$ = $1; }
 	;
 
 math:		math '+' math 							{ $$ = newAst('+', $1, $3); }
