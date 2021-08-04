@@ -94,6 +94,22 @@
 "quit"    |
 "q"       { return EXIT;}
 
+		/* damage types */
+"check"				{ yylval.fn = D_check; 				return DAMAGE; }
+"slashing"		{ yylval.fn = D_slashing; 		return DAMAGE; }
+"piercing"		{ yylval.fn = D_piercing; 		return DAMAGE; }
+"bludgeoning"	{ yylval.fn = D_bludgeoning; 	return DAMAGE; }
+"poison"			{ yylval.fn = D_poison; 			return DAMAGE; }
+"acid"				{ yylval.fn = D_acid; 				return DAMAGE; }
+"fire"				{ yylval.fn = D_fire; 				return DAMAGE; }
+"cold"				{ yylval.fn = D_cold; 				return DAMAGE; }
+"radiant"			{ yylval.fn = D_radiant; 			return DAMAGE; }
+"necrotic"		{ yylval.fn = D_necrotic; 		return DAMAGE; }
+"lightining"	{ yylval.fn = D_lightning; 		return DAMAGE; }
+"thunder"			{ yylval.fn = D_thunder; 			return DAMAGE; }
+"force"				{ yylval.fn = D_force; 				return DAMAGE; }
+"psychic"			{ yylval.fn = D_psychic; 			return DAMAGE; }
+
 	/* symbol names */
 [a-zA-Z_][a-zA-Z_]*  { yylval.s = lookup(yytext); return IDENT; }
 

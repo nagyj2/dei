@@ -68,6 +68,32 @@ enum cifs {
 typedef enum cifs Conditionals;
 
 
+/** Enum representing the types of rolls.
+ * When evaluating, the results of different types will not be combined.
+ */
+enum difs {
+	D_none = -1,						/**< No type. */
+	D_check,								/**< Skill check. Not truely damage, but allows for separate accounting. */
+	D_slashing,							/**< Slashing Damage. */
+	D_piercing,							/**< Piercing Damage. */
+	D_bludgeoning,					/**< Bludgeoning Damage. */
+	D_poison,								/**< Poison Damage. */
+	D_acid,									/**< Acid Damage. */
+	D_fire,									/**< Fire Damage. */
+	D_cold,									/**< Cold Damage. */
+	D_radiant,							/**< Radiant Damage. */
+	D_necrotic,							/**< Necrotic Damage. */
+	D_lightning,						/**< Lightning Damage. */
+	D_thunder,							/**< Thunder Damage. */
+	D_force,								/**< Force Damage. */
+	D_psychic								/**< Psychic Damage. */
+};
+
+/** @typedef DamageType
+ * Shorthand for difs structure.
+ */
+typedef enum difs DamageType;
+
 
 /** Generic Binary AST Node.
  * A node which can have up to 2 children. Used for operations which only require operator and operand information.
