@@ -15,7 +15,7 @@ stmt:		cond															<< $$ = $1 >>
 
 	/* Allow conditionals */
 cond:		math															<< $$ = $1 >>
-	|			math '?' math	';' math						<< $$ = ($1) ? $3 : 0 >>
+	|			math '?' math	'~' math						<< $$ = ($1) ? $3 : 0 >>
 	|			math '?' math											<< $$ = ($1) ? $3 : 0 >>
 
 	/* performs math on integers */

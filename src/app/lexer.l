@@ -38,7 +38,7 @@
 "d"       | /* die face indicator */
 "s"       | /* NUM pluralizer */
 "?"				| /* conditional */
-";"				| /* conditional separator */
+"~"				| /* conditional separator */
 "="				| /* result assignment */
 "@"				| /* mute */
 ":"       { return yytext[0]; }

@@ -102,7 +102,7 @@ stmt:		cond												{ $$ = newState(O_math, $1); }
 	;
 
 cond:		math												{ $$ = $1; }
-	|			math '?' math ';' cond 			{ $$ = newIfelse($1, $3, $5); }
+	|			math '?' math '~' cond 			{ $$ = newIfelse($1, $3, $5); }
 	|			math '?' math								{ $$ = newIfelse($1, $3, newNatint(0)); }
 	;
 
