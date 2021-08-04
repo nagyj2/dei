@@ -24,7 +24,7 @@
 }
 
 %token <i> NUM DNUM PNUM FQUANT SQUANT SSELECT PSELECT
-%token <fn> COND F_ADD F_SUB F_MOD CMP
+%token <fn> COND F_ADD F_SUB F_MOD CMP DAMAGE
 %token <s> IDENT
 %token UNION INTER DIV RANGE IF XQUANT EXIT EOL
 
@@ -35,7 +35,6 @@
 
 %start line
 
-%right XIF
 %nonassoc CMP
 %left '+' '-'
 %left '*' DIV '%'
@@ -102,6 +101,8 @@ stmt:		cond												{ $$ = newState(O_math, $1); }
 	;
 
 cond:		math												{ $$ = $1; }
+	|			math '?' math ';' cond 			{ $$ = newIfelse($1, $3, $5); }
+	|			math '?' math								{ $$ = newIfelse($1, $3, newNatint(0)); }
 	;
 
 math:		math '+' math 							{ $$ = newAst('+', $1, $3); }
@@ -111,9 +112,7 @@ math:		math '+' math 							{ $$ = newAst('+', $1, $3); }
 	|			math '%' math								{ $$ = newAst('%', $1, $3); }
 	|			math '^' math								{ $$ = newAst('^', $1, $3); }
 	|			math CMP math								{ $$ = newCmp($2, $1, $3); }
-	|			'-' math								%prec UMINUS	{ $$ = newAst('M', $2, NULL); }
-	|			math '?' math ';' math 	%prec XIF			{ $$ = newIfelse($1, $3, $5); }
-	|			math '?' math						%prec XIF			{ $$ = newIfelse($1, $3, newNatint(0)); }
+	|			'-' math			%prec UMINUS	{ $$ = newAst('M', $2, NULL); }
 	|			'(' math ')'								{ $$ = $2; }
 	|			NUM													{ $$ = newNatint($1); }
 	|			IDENT												{ $$ = newSymcall($1); }

@@ -26,11 +26,6 @@ int main(int argc, char **argv) {
 	/* seed random number generator */
 	srand(time(NULL));
 
-	#ifdef TESTS
-	test_value();
-	return 0;
-	#endif
-
 	#ifdef DEBUG
 	printf("ValueChain size: %lu\n", sizeof(ValueChain));
 	printf("Symbol size: %lu\n", sizeof(Symbol));
