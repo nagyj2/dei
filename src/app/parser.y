@@ -94,6 +94,10 @@ line:																{  }
 
 stmt:		cond												{ $$ = newState(O_math, $1); }
 	|			IDENT ':' cond							{ $$ = newState(O_assign, newAsgn($1, $3)); }
+	|			IDENT '=' cond							{ Result *r = eval($3);
+																			$$ = newState(O_assign, newAsgn($1, newNatint(r->integer)));
+																			freeResult(&r);
+																			freeAst_Symbol(&($3)); }
 	|																	{ $$ = newState(O_none, NULL); }
 	;
 

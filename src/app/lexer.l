@@ -39,6 +39,7 @@
 "s"       | /* NUM pluralizer */
 "?"				| /* conditional */
 ";"				| /* conditional separator */
+"="				| /* result assignment */
 "@"				| /* mute */
 ":"       { return yytext[0]; }
 
