@@ -3,15 +3,21 @@ Grammar
 	/* performs top-level actions */
 line:		line stmt EOL											<<  >>
 	|   	line EOL													<<  >>
-	|			line '@ stmt EOL									<<  >>
-	|   	line '@ EOL												<<  >>
+	|   	line error EOL										<<  >>
 	|																				<<  >>
-	|			@																	<<  >>
+	|			line '@' stmt EOL									<<  >>
+	|   	line '@' EOL											<<  >>
+	|			line '@' error EOL								<<  >>
+	|			'@'																<<  >>
 
 	/* perform higher level operations */
-stmt:		cond															<< $$ = $1 >>
-	|			IDENT ':' cond										<< $$ = A($1, $3) >>
-	|			IDENT '=' cond										<< $$ = eval($3) >>
+stmt:		group															<< $$ = $1 >>
+	|			IDENT ':' group										<< $$ = A($1, $3) >>
+	|			IDENT '=' group										<< $$ = eval($3) >>
+
+group:	cond															<< $$ = newDamage(D_none, $1, NULL) >>
+	|			cond DAMAGE												<< $$ = newDamage(		$2,	$1, NULL) >>
+	|			cond DAMAGE group									<< $$ = newDamage(		$2,	$1,   $3) >>
 
 	/* Allow conditionals */
 cond:		math															<< $$ = $1 >>

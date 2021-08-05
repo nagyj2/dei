@@ -24,14 +24,14 @@
 }
 
 %token <i> NUM DNUM PNUM FQUANT SQUANT SSELECT PSELECT
-%token <fn> COND F_ADD F_SUB F_MOD CMP DAMAGE
+%token <fn> COND F_ADD F_SUB F_MOD CMP GROUP
 %token <s> IDENT
 %token UNION INTER DIV RANGE IF XQUANT EXIT EOL
 
 %type <i> nnum fquant ssel
-%type <a> cond math set func die a_args s_args m_args error
-%type <v> list
+%type <a> group cond math set func die a_args s_args m_args error
 %type <r> stmt
+%type <v> list
 
 %start line
 
@@ -92,17 +92,22 @@ line:																{  }
 	|			line '@' error EOL					{ printf("!"); }
 	;
 
-stmt:		cond												{ $$ = newState(O_math, $1); }
-	|			IDENT ':' cond							{ $$ = newState(O_assign, newAsgn($1, $3)); }
-	|			IDENT '=' cond							{ Result *r = eval($3);
-																			$$ = newState(O_assign, newAsgn($1, newNatint(r->integer)));
+stmt:		group												{ $$ = newState(O_math, $1); }
+	|			IDENT ':' group							{ $$ = newState(O_assign, newAsgn($1, $3)); }
+	|			IDENT '=' group							{ Result *r = eval($3);
+																			$$ = newState(O_assign, newAsgn($1, newGroup(r->type, newNatint(r->integer), NULL)));
 																			freeResult(&r);
 																			freeAst_Symbol(&($3)); }
 	|																	{ $$ = newState(O_none, NULL); }
 	;
 
+group:	cond												{ $$ = newGroup(D_none,  $1, NULL); }
+	|			cond GROUP									{ $$ = newGroup(		 $2, $1, NULL); }
+	|			cond GROUP group						{ $$ = newGroup(		 $2, $1,   $3); }
+	;
+
 cond:		math												{ $$ = $1; }
-	|			math '?' math '~' cond 			{ $$ = newIfelse($1, $3, $5); }
+	|			math '?' math ';' cond 			{ $$ = newIfelse($1, $3, $5); }
 	|			math '?' math								{ $$ = newIfelse($1, $3, newNatint(0)); }
 	;
 

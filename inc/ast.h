@@ -73,7 +73,7 @@ typedef enum cifs Conditionals;
  */
 enum difs {
 	D_none = -1,						/**< No type. */
-	D_check,								/**< Skill check. Not truely damage, but allows for separate accounting. */
+	D_check,								/**< Skill check. */
 	D_slashing,							/**< Slashing Damage. */
 	D_piercing,							/**< Piercing Damage. */
 	D_bludgeoning,					/**< Bludgeoning Damage. */
@@ -89,10 +89,10 @@ enum difs {
 	D_psychic								/**< Psychic Damage. */
 };
 
-/** @typedef DamageType
+/** @typedef GroupType
  * Shorthand for difs structure.
  */
-typedef enum difs DamageType;
+typedef enum difs GroupType;
 
 
 /** Generic Binary AST Node.
@@ -202,6 +202,21 @@ struct ifast {
  */
 typedef struct ifast IfElse;
 
+/** A group type for a roll.
+ * Used to separate output rolls.
+ */
+struct roll_group {
+	int nodetype;						/**< G */
+	int type;								/**< Group type being represented. */
+	AST *l;									/**< Group value for this tree. */
+	AST *r;									/**< Link to the next group (if any). */
+};
+
+/** @typedef Group
+ * Shorthand for roll_group structure.
+ */
+typedef struct roll_group Group;
+
 
 /* ===== FUNCTIONS ===== */
 
@@ -289,6 +304,14 @@ AST *newSetres(ValueChain *out);
  */
 AST *newIfelse(AST *cond, AST *tru, AST *fals);
 
+/** Create a new roll group.
+ * Used to separate input rolls and differentiate the current rolls occuring.
+ * @param[in] type 		The group type to be calculated. Must be from @ref GroupType.
+ * @param[in] tree 		The AST representing the group being saved.
+ * @param[in] next		The next group. Can be NULL.
+ * @return AST* 			An AST node representing a distinct group.
+ */
+AST *newGroup(int type, AST *tree, AST *next);
 
 
 /* ===== MEMORY MANAGEMENT ===== */
@@ -304,11 +327,19 @@ void freeAst( AST **root );
 
 /* ===== DEBUGGING ===== */
 
+/** Display a the string representation of the input group type to standard out.
+ * @param[in] group A valid @ref GroupType.
+ * @sideeffect The string version of @p group is displayed to standard out.
+ */
+void printGroup(int group);
+
 /** Recursively print the contents of an @ref AST tree.
  * @param[in] root The root node to print.
  * @sideeffect A string representation of root will be displayed to stdout.
  */
 void printAst(AST *root);
+
+
 
 
 

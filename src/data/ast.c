@@ -228,6 +228,24 @@ AST *newIfelse(AST *cond, AST *tru, AST *fals) {
 	return (AST *)a;
 }
 
+AST *newGroup(int type, AST *tree, AST *next) {
+	Group *a = malloc(sizeof(Group));
+
+	if (!a){
+		printf("out of space\n");
+		exit(1);
+	}
+
+	a->nodetype = 'G';
+	a->type = type;
+	a->l = tree;
+	a->r = next;
+	#ifdef DEBUG
+	assert(a);
+	#endif
+	return (AST *)a; 
+}
+
 
 /* ===== MEMORY MANAGEMENT ===== */
 
@@ -270,6 +288,14 @@ void freeAst( AST **root ){
 		freeAst( &((IfElse *)*root)->fals );
 		break;
 
+		/* special - grouped */
+	case 'G': {
+		freeAst(&(*root)->l);
+		if (((Group *) *root)->r) {
+			freeAst(&((Group *) *root)->r);
+		}
+	}
+
 	default:
 		printf("unknown ast free, got %d\n", (*root)->nodetype);
 		*root = NULL;
@@ -282,6 +308,27 @@ void freeAst( AST **root ){
 
 
 /* ===== DEBUGGING ===== */
+
+
+void printGroup(int type) {
+	switch (type) {
+	case D_check:				printf("check "); break;
+	case D_slashing:		printf("slashing "); break;
+	case D_piercing:		printf("piercing "); break;
+	case D_bludgeoning:	printf("bludgeoning "); break;
+	case D_poison:			printf("poison "); break;
+	case D_acid:				printf("acid "); break;
+	case D_fire:				printf("fire "); break;
+	case D_cold:				printf("cold "); break;
+	case D_radiant:			printf("radiant "); break;
+	case D_necrotic:		printf("necrotic "); break;
+	case D_lightning:		printf("lightning "); break;
+	case D_thunder:			printf("thunder "); break;
+	case D_force:				printf("force "); break;
+	case D_psychic:			printf("psychic "); break;
+	case D_none:				break;
+	}
+}
 
 /**
  * Prints an entire @ref AST to standard output.
@@ -383,6 +430,32 @@ void printAst(AST *root){
 		printf(":");
 		printAst( ((IfElse *)root)->fals );
 		printf(")");
+		break;
+
+	case 'G':
+		printAst(((Group *) root)->l);
+		switch (((Group *) root)->type) {
+		case D_check:				printf("check"); break;
+		case D_slashing:		printf("slashing"); break;
+		case D_piercing:		printf("piercing"); break;
+		case D_bludgeoning:	printf("bludgeoning"); break;
+		case D_poison:			printf("poison"); break;
+		case D_acid:				printf("acid"); break;
+		case D_fire:				printf("fire"); break;
+		case D_cold:				printf("cold"); break;
+		case D_radiant:			printf("radiant"); break;
+		case D_necrotic:		printf("necrotic"); break;
+		case D_lightning:		printf("lightning"); break;
+		case D_thunder:			printf("thunder"); break;
+		case D_force:				printf("force"); break;
+		case D_psychic:			printf("psychic"); break;
+		case D_none:				break;
+		}
+
+		for (root = ((Group *) root)->r; root; root = ((Group *) root)->r) {
+			printf(" ");
+			printAst(((Group *) root)->l);
+		}
 		break;
 
 	default:

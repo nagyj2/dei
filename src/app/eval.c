@@ -264,7 +264,8 @@ Result *r = malloc(sizeof(Result));
 	
 	r->faces = NULL;
 	r->out = NULL;	/* set unuseds to NULL */
-	r->integer = 0; /* unused ->keep? */
+	r->next = NULL;
+	r->integer = 0;
 
 	switch (base->nodetype){
 	case '+': case '-': case '*': case DIV: case '%': case '^':
@@ -339,7 +340,7 @@ Result *r = malloc(sizeof(Result));
 		break;
 	}
 
-	case 'e': /* append */ {
+	case 'e': { /* append */
 		r->type = R_roll;
 		Result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
@@ -357,7 +358,7 @@ Result *r = malloc(sizeof(Result));
 		break;
 	}
 
-	case 'f': /* drop */ {
+	case 'f': { /* drop */
 		r->type = R_roll;
 		Result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* duplicate entire chain */
@@ -377,7 +378,7 @@ Result *r = malloc(sizeof(Result));
 		}
 		break;
 	}
-	case 'g': /* count */ {
+	case 'g': { /* count */
 		r->type = R_roll;
 		Result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		SelectionChain *selected = select(inputs->out, (FuncArgs *)base->r);
@@ -388,7 +389,7 @@ Result *r = malloc(sizeof(Result));
 		freeResult(&inputs);
 		break;
 	}
-	case 'h': /* choose */ {
+	case 'h': { /* choose */
 		/* SIGNIFICANT MEMORY LEAK!! */
 		r->type = R_roll;
 		Result *inputs = eval( base->l ); /* find the outputs from the contained tree */
@@ -420,7 +421,7 @@ Result *r = malloc(sizeof(Result));
 		freeValue(&outputs);
 		break;
 	}
-	case 'i': /* reroll */ {
+	case 'i': { /* reroll */
 		r->type = R_roll;
 		Result *inputs = eval( base->l ); /* find the outputs from the contained tree */
 		r->out = dupValue(inputs->out); /* Duplicate start */
@@ -450,7 +451,7 @@ Result *r = malloc(sizeof(Result));
 		}
 		break;
 	}
-	case 'R': /* roll nat die */ case 'r': /* roll artificial die */ {
+	case 'R': /* roll nat die */ case 'r': { /* roll artificial die */
 		r->type = R_roll;
 		Result *die = eval(base->l);
 		r->faces = dupValue(die->faces);
@@ -458,53 +459,53 @@ Result *r = malloc(sizeof(Result));
 		freeResult( &die );
 		break;
 	}
-	case 'Z': /* strip faces */ {
+	case 'Z': { /* strip faces */
 		r->type = R_set;
 		Result *roll = eval(base->l);
 		r->out = dupValue(roll->out);
 		freeResult( &roll );
 		break;
 	}
-	case 'S': /* sum roll values */{
+	case 'S': { /* sum roll values */
 		r->type = R_int;
 		Result *set = eval(base->l);
 		r->integer = sumValue(set->out);
 		freeResult( &set );
 		break;
 	}
-	case 'D': /* natural die definition */ {
+	case 'D': { /* natural die definition */
 		r->type = R_die;
 		r->faces = newValueChain(((NatDie *)base)->min, ((NatDie *)base)->max);
 		r->integer = ((NatDie *)base)->count;
 		break;
 	}
-	case 'd': /* artificial die def. */ {
+	case 'd': { /* artificial die def. */
 		r->type = R_die;
 		r->faces = dupValue(((SetDie *)base)->faces);
 		r->integer = ((NatDie *)base)->count;
 		break;
 	}
-	case 'I': /* natural integer */ {
+	case 'I': { /* natural integer */
 		r->type = R_int;
 		r->integer = ((NatInt *)base)->integer;
 		break;
 	}
-	case 'Q': /* artificial roll */ {
+	case 'Q': { /* artificial roll */
 		r->type = R_roll;
 		r->out = dupValue(((SetRoll *)base)->out);
 		break;
 	}
-	case 'C': /* function arguments */ {
+	case 'C': { /* function arguments */
 		printf("parsed fargs! should never see this!\n");
 		exit(3);
 		break;
 	}
-	case 'E': /* sym call */ {
+	case 'E': { /* sym call */
 		free(r);
 		r = eval(((SymbolRef *)base)->sym->func);
 		break;
 	}	
-	case 'F': /* if else */ {
+	case 'F': { /* if else */
 		free(r);
 		Result *c = eval(((IfElse *) base)->cond);
 		if (c->integer == 0) {
@@ -515,11 +516,24 @@ Result *r = malloc(sizeof(Result));
 		freeResult(&c);
 		break;
 	}
-	case 'A': /* sym definition */ {
+	case 'A': { /* sym definition */
 		r->type = R_int;
 		setsym(((SymbolAssign *)base)->s, ((SymbolAssign *)base)->l);
 		r->integer = 0; /* signal success */
 		break;
+	}
+	case 'G': { /* group node */
+		r->type = R_group;
+		r->group = ((Group *) base)->type;
+		Result *larg = eval(((Group *) base)->l);
+		r->integer = larg->integer;
+		freeResult(&larg);
+		// printf("Got type:%d value:%d\n", r->group, r->integer);
+		if (((Group *) base)->r) {
+			r->next = eval(((Group *) base)->r);
+		}
+		break;
+
 	}
 	default: {
 		printf("unknown eval type, got %d",base->nodetype);

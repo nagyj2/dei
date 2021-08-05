@@ -209,8 +209,16 @@ void freeAst_Symbol( AST **root ){
 		freeAst_Symbol( &((IfElse *)*root)->fals );
 		break;
 
+		/* special - grouped */
+	case 'G':
+		freeAst_Symbol(&(*root)->l);
+		if (((Group *) *root)->r) {
+			freeAst_Symbol(&((Group *) *root)->r);
+		}
+		break;
+
 	default:
-		printf("unknown ast free, got %d\n", (*root)->nodetype);
+		printf("unknown symbol ast free, got %d\n", (*root)->nodetype);
 		*root = NULL;
 		return;
 
@@ -334,8 +342,18 @@ void printAst_Symbol(AST *root){
 		printf(")");
 		break;
 
+	case 'G':
+		printAst_Symbol(((Group *) root)->l);
+		printf(" ");
+		printGroup(((Group *) root)->type);
+		if (((Group *) root)->r) {
+			printAst_Symbol(((Group *) root)->r);
+		}
+		break;
+
 	default:
 		printf("\nunknown ast print, got %d\n", root->nodetype);
 
 	}
 }
+
