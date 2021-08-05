@@ -93,9 +93,9 @@ line:																{  }
 	;
 
 stmt:		group												{ $$ = newState(O_math, $1); }
-	|			IDENT ':' group							{ $$ = newState(O_assign, newAsgn($1, $3)); }
-	|			IDENT '=' group							{ Result *r = eval($3);
-																			$$ = newState(O_assign, newAsgn($1, newGroup(r->type, newNatint(r->integer), NULL)));
+	|			IDENT ':' cond							{ $$ = newState(O_assign, newAsgn($1, newGroup(D_none, $3, NULL))); }
+	|			IDENT '=' cond							{ Result *r = eval($3);
+																			$$ = newState(O_assign, newAsgn($1, newGroup(D_none, newNatint(r->integer), NULL)));
 																			freeResult(&r);
 																			freeAst_Symbol(&($3)); }
 	|																	{ $$ = newState(O_none, NULL); }
