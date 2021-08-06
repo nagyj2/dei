@@ -5,6 +5,7 @@
 @ 2-6
 @ 3-6
 @ 2*6
+@ 2^6
 @ 6//3
 @ 4%3
 @ 3==4
@@ -13,65 +14,95 @@
 @ 3<6
 @ 4>=3
 @ 8<=0
-@ -3+4
-@ -3+4
-@ -2-6
-@ -3-6
-@ -2*6
-@ -6//3
-@ -4%3
-@ -3==4
-@ -2!=6
-@ -3>4
-@ -3<6
-@ -4>=3
+@ - 3+	4
+@ -3		+   4
+@ 4		>=3
+@ 8<=		0
+@       -3   +       4      
+@ - 3 + 4
+@-2-6
+@		-3-6
+@ -3<(6==1)
+@ - - 3
+@ (-4>=3)*0
 @ -8<=0
+@ 3+4+4
+@ 3+4-4
+@ 2-6*2
+@ (3-6)*2
+@ 2*(6+2)
+@ (6//3*2)
+@ 4%3-(2)
+@ 3==4
+@ (2!=6)==1
+@ 3>4*2
+@ (3<6+2+2) + (2+2*3) 
+@ 4%3-(2) \ Back \
+@ 3==4 \ Back \
+@ (2!=6)==1 \ Back \
+@ 3>4*2 \ Back \
+@ (3<6+2+2) + (2+2*3)  \ Back \
+@ \ Front \ 4%3-(2)
+@ \ Front \ 3==4
+@ \ Front \ (2!=6)==1
+@ \ Front \ 3>4*2
+@ \ Front \ (3<6+2+2) + (2+2*3) 
+@ 4%3 \ Middle \ -(2)
+@ 3== \ Middle \ 4
+@ (2!= \ Middle \ 6)==1
+@ 3>4* \ Middle \ 2
+@ (3<6 \ Middle \ +2+2) + (2+2*3) 
 @ \ Simple dice \
 @ 4d6
 @ 4d[2..4]
 @ 4d{2,4}
 @ {2,4}
+@ 4d    6
+@ 4d	6
+@4d  16
+@   4d  [2  .. 	4]
+@4d{ 2 ,4}
 @ \ Dice sum math \
 @ 3+d4
-@ 3+d4
-@ 2-d6
-@ 3-d6
-@ 2*d6
-@ 6//d3
-@ 4%d3
-@ 3==d4
-@ 2!=d6
-@ 3>d4
+@ 3+d4-2d6
+@ 2-d6*2
+@ 3*(2-d6)
+@ ((1)+(2*d6))
+@ 6  //d3
+@ 4%	d 3
+@ 3==d	4
+@2		!=	d6
+@ (3+2)>d4
 @ 3<d6
-@ 4>=d3
-@ 8<=d1
-@ -3+d4
+@ 4>=d3 \ Last \
+@ \ First \ 8<=d1
+@ -3+ \ Middle \ d4
 @ -3+d4
 @ -2-d6
 @ -3-d6
 @ -2*d6
-@ -6//d3
-@ -4%d3
-@ -3==d4
-@ -2!=d6
+@ -6//{2,3}
+@ -4%{2,3}
+@ -3=={1}
+@ -2!={1}
 @ -3>d4
-@ -3<d6
-@ -4>=d3
-@ -8<=d3
+@ -3<d[1 .. 2]
+@ -4>=d[1 .. 2]
+@ -8<=d[1 .. 2]
+@ 3d2+d[1 .. 2]
 @ 3d2+d4
-@ 3d2+d4
-@ 2d2-d6
-@ 3d2-d6
-@ 2d2*d6
-@ 6d2//d3
-@ 4d2%d3
-@ 3d2==d4
-@ 2d2!=d6
-@ 3d2>d4
-@ 3d2<d6
-@ 4d2>=d3
-@ 8d2<=d1
-@ -3d3+d4
+@ 2d{2}-d6
+@ 3d{2}-d6
+@ 2d{2,1,3,2}*d6
+@ 6d{2,1,3,2}//d3
+@ 4d[2..3]%d3
+@ 3d[2..3]==d4
+@ 2d[2..2]!=d6
+@ 3d[2..2]>d4
+@ 3d2<d{2, \Middle\ 3}
+@ 4d2>=d{2, \Middle\ 3}
+@ 8d2<=d[1 \Front\ .. 3]
+@ -3d3+d[1 .. \End\ 3]
 @ -3d3+d4
 @ -2d3-d6
 @ -3d3-d6
@@ -105,17 +136,6 @@
 @ 3d[1..10]<d[1..1]
 @ 4d[5..5]>=d[-1..1]
 @ 8d2<=d[10..100]
-@ \ Identifiers \
-@ jeb
-@ JEB
-@ JEB_
-@ _JEB
-@ J_EB
-@ -3*att
-@ -att+d6
-@ att>=d3
-@ 3d2+jess
-@ jess+d4
 @ \ Dice Functions \
 @ 5d6 append lowest
 @ 5d6 append two lowest
@@ -159,19 +179,18 @@
 @ 3d6 reroll unique twice
 @ 3d6 reroll 1s
 @ 3d6 reroll 1s twice
-@
-@ \ 3d6 reroll lowest if lower \
-@ \ 3d6 reroll two lowest if higher \
-@ \ 3d6 reroll lowest if lower twice \
-@ \ 3d6 reroll two lowest if higher twice \
-@ \ 3d6 reroll 1 if lower \
-@ \ 3d6 reroll two 1 if higher \
-@ \ 3d6 reroll 1 if lower twice \
-@ \ 3d6 reroll two 1 if higher twice \
-@ \ 3d6 reroll unique if lower \
-@ \ 3d6 reroll unique if higher twice \
-@ \ 3d6 reroll 1s if lower \
-@ \ 3d6 reroll 1s if higher twice \
+@ 3d6 reroll lowest if lower
+@ 3d6 reroll two lowest if higher
+@ 3d6 reroll lowest if lower twice
+@ 3d6 reroll two lowest if higher twice
+@ 3d6 reroll 1 if lower
+@ 3d6 reroll two 1 if higher
+@ 3d6 reroll 1 if lower twice
+@ 3d6 reroll two 1 if higher twice
+@ 3d6 reroll unique if lower
+@ 3d6 reroll unique if higher twice
+@ 3d6 reroll 1s if lower
+@ 3d6 reroll 1s if higher twice
 @ 5d6 choose 3 random
 @ 5d6 choose lowest
 @ 5d6 choose 2 lowest
@@ -197,9 +216,49 @@
 @ 3d6 drop two 1
 @ 3d6 count unique
 @ 3d6 choose 1s
-@ \ Assignments \
-@ a : 5
-@ b : 3d5
-@ b : 3d5 + str
+@ \ Identifiers \
+@ a : 0
+@ b : a
+@ b : 2d4
+@ c : 1 + 1
+@ e : a + b
+@ f : (e + 2 * b) * b
+@ g : 2*6
+@ h : 6//3 \ End \ 
+@ i : 4% \Middle\ 3
+@ j : (3==4) + g
+@ k \Front\		: 		2		!=		6
+@ 		l : 3>4
+@ A = 0
+@ B = a
+@ B = 2d4
+@ D = 1 + 1
+@ E = a + b
+@ F = (e + 2 * b) * b
+@ G = 2*6
+@ H = 6//3 \ End \ 
+@ I = 4% \Middle\ 3
+@ J = (3==4) + g
+@ K \Front\		= 		2		!=		6
+@ 		L = 3>4
+@ \ Conditionals \
+@ 1?1;2
+@ 0?1;1?2;3
+@ 0?1;0?2;3
+@ a > 5?1;0?b;3
+@ a==3 ? a ; -a
+@ 			1?1
+@ 0?1;			1   ?2
+@ 0? \comment!\	1;	0 ?2
+@a > 5?1;			0?b \comment\
+@\comment\ a==3 ? a
+@ 0?1d6;0?2d5;0?3d4;0?4d3;5d2
+@ \ Group Types \
+@	2d3 thunder
+@ {2,3,1} force 2 thunder 4 +	4
+@	1 fire 1 cold 1 force 1 poison 1 acid 1 fire 1 piercing 1 bludgeoning 1 necrotic 1 radiant
+@ {2,3,1} force 2 thunder 4 +	4
+@ 2d20 choose highest check 8d6 fire
 @ \ Special \
 @ stat : 4d6 reroll 1s once drop lowest
+\I DUNNO?\@
