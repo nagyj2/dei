@@ -12,8 +12,8 @@ line:		line stmt EOL											<<  >>
 
 	/* perform higher level operations */
 stmt:		group															<< $$ = $1 >>
-	|			IDENT ':' group										<< $$ = A($1, $3) >>
-	|			IDENT '=' group										<< $$ = eval($3) >>
+	|			IDENT ':' cond										<< $$ = A($1, $3) >>
+	|			IDENT '=' cond										<< $$ = eval($3) >>
 
 group:	cond															<< $$ = newDamage(D_none, $1, NULL) >>
 	|			cond DAMAGE												<< $$ = newDamage(		$2,	$1, NULL) >>
@@ -160,3 +160,94 @@ PRECIDENCE:
 	hi	&, |
 
 comments:		block style with '\'
+
+
+https://pest.rs/
+ALPHA = { 'a'..'z' | 'A'..'Z' }
+DIGIT = { '0'..'9' }
+GROUP = { "slashing" | "fire" | "cold" | "thunder" }
+NUM = 	{ DIGIT+ }
+NNUM =	{ "-"? ~ NUM}
+F_ADD = { "append" }
+F_SUB = { "drop" | "count" | "choose" }
+F_MOD = { "reroll" }
+COND = 	{ "lower" | "higher" }
+SSELECT={ "highest" | "lowest" | "random" }
+PSELECT={ "unique" }
+FQUANT= { "once" | "twice" | "thrice" }
+SQUANT= { "one" | "two" | "three" }
+
+IDENT = { ALPHA ~ (ALPHA | DIGIT)+ }
+
+line = 	{ stmt 
+		| "@" ~ stmt 
+        }
+
+stmt = 	{ group
+		| IDENT ~ ":" ~ cond
+        | IDENT ~ "=" ~ cond
+        }
+        
+group = { cond
+		| cond ~ GROUP
+        | cond ~ GROUP ~ group
+        }
+        
+cond = 	{ math
+		| math ~ "?" ~ math ~ (";" ~ math)?
+		}
+        
+math =	{ mathsub ~ (mathop ~ mathsub)*
+		| "-" ~ math
+		| "(" ~ math ~ ")"
+        }
+       
+mathsub={ NUM ~ !"d"
+        | IDENT
+        | set 
+        }
+        
+mathop= { "+"
+		| "-"
+        | "*"
+        | "//"
+        | "%"
+        | "^"
+        | "=="
+        | "!="
+        | ">"
+        | "<"
+        | ">="
+        | "<="
+		}
+        
+set = 	{ func ~ (setop ~ set)*
+		}
+        
+setop = { "&"
+		| "|"
+        | "&&"
+        | "||"
+		}
+        
+func = 	{ die ~ funcall*
+		| "{" ~ list ~ "}" ~ funcall*
+		}
+        
+funcall={ func ~ F_ADD ~ a_args
+		| func ~ F_SUB ~ s_args
+        | func ~ F_MOD ~ m_args
+		}
+        
+a_args= { "" }
+s_args= { "" }
+m_args= { "" }
+
+die = 	{ NUM? ~ "d" ~ NUM
+		| NUM? ~ "d" ~ "[" ~ NUM ~ ".." ~ NUM ~ "]"
+		| NUM? ~ "d" ~ "{" ~ list ~ "}"
+        }
+        
+list = 	{ NNUM
+		| NNUM ~ "," ~ NNUM
+        }
