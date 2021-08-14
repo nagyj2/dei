@@ -11,6 +11,7 @@
 #include "eval.h"
 #include "result.h"
 #include "flags.h"
+#include "util.h"
 
 %}
 
@@ -18,7 +19,7 @@
 	struct ast *a;					/* AST nodes */
 	struct symbol *s;				/* identifier names */
 	struct value *v;				/* value chain building */
-	struct stmt_result *r;	/* statement result */
+	struct stmt_result *r;	/* result state */
 	int i;									/* straight number */
 	int fn;									/* enum function */
 }
@@ -26,7 +27,7 @@
 %token <i> NUM DNUM PNUM FQUANT SQUANT SSELECT PSELECT
 %token <fn> COND F_ADD F_SUB F_MOD CMP GROUP
 %token <s> IDENT
-%token UNION INTER DIV RANGE IF XQUANT EXIT EOL
+%token UNION "||" INTER "&&" DIV "//" RANGE ".." IF "if" XQUANT EXIT EOL
 
 %type <i> nnum fquant ssel
 %type <a> group cond math set func die a_args s_args m_args error
@@ -42,11 +43,19 @@
 %left '&' '|' UNION INTER
 %nonassoc UMINUS
 
+	// %destructor { freeAst_Symbol(&($$)); } /* a */  group cond math set func die a_args s_args m_args error
+	// %destructor { freeSymbol(&($$)); /* TODO: wipe symbol meaning */ } /* s */  IDENT
+	// %destructor { freeValue(&($$)); } /* v */  list
+	// %destructor { freeState(&($$)); } /* r */  stmt
+	// %destructor {  } /* i */  NUM DNUM PNUM FQUANT SQUANT SSELECT PSELECT nnum fquant ssel
+	// %destructor {  } /* fn */ COND F_ADD F_SUB F_MOD CMP GROUP
+
 %%
 
 line:																{  }
 	|			'@'													{  }
 	|			line stmt EOL								{ 
+		silent = 0;
 		Result *r = NULL;
 		switch ($2->type){
 			case O_math:
@@ -70,6 +79,7 @@ line:																{  }
 		freeState(&($2));
 	}
 	|			line '@' stmt EOL						{ 
+		silent = 1;
 		Result *r = NULL;
 		switch ($3->type){
 			case O_math:
@@ -114,7 +124,7 @@ cond:		math												{ $$ = $1; }
 math:		math '+' math 							{ $$ = newAst('+', $1, $3); }
 	|			math '-' math								{ $$ = newAst('-', $1, $3); }
 	|			math '*' math								{ $$ = newAst('*', $1, $3); }
-	|			math DIV math								{ $$ = newAst(DIV, $1, $3); }
+	|			math "//" math							{ $$ = newAst(DIV, $1, $3); }
 	|			math '%' math								{ $$ = newAst('%', $1, $3); }
 	|			math '^' math								{ $$ = newAst('^', $1, $3); }
 	|			math CMP math								{ $$ = newCmp($2, $1, $3); }
@@ -125,10 +135,10 @@ math:		math '+' math 							{ $$ = newAst('+', $1, $3); }
 	|			set													{ $$ = newAst('S', $1, NULL); }
 	;
 
-set:		set '&' set									{ $$ = newAst('&', $1, $3); }
-	|			set '|' set									{ $$ = newAst('|', $1, $3); }
-	|			set INTER set								{ $$ = newAst(INTER, $1, $3); }
-	|			set UNION set								{ $$ = newAst(UNION, $1, $3); }
+set:		set '&'  set								{ $$ = newAst( '&', $1, $3); }
+	|			set '|'  set								{ $$ = newAst( '|', $1, $3); }
+	|			set "&&" set								{ $$ = newAst(INTER, $1, $3); }
+	|			set "||" set								{ $$ = newAst(UNION, $1, $3); }
 	|			'[' set ']'									{ $$ = $2 }
 	|			func												{ $$ = newAst('Z', $1, NULL); }
 	;
@@ -158,13 +168,13 @@ s_args:		SQUANT ssel								{ $$ = newFargs( 1, $2, $1, C_none); }
 m_args:		SQUANT ssel fquant 					{ $$ = newFargs($3, $2, $1, C_none); }
 	|				NUM ssel fquant 						{ $$ = newFargs($3, $2, $1, C_none); }
 	|				ssel fquant 								{ $$ = newFargs($2, $1,  1, C_none); }
-	|				SQUANT ssel IF COND fquant	{ $$ = newFargs($5, $2, $1, $4); }
-	|				NUM ssel IF COND fquant			{ $$ = newFargs($5, $2, $1, $4); }
-	|				ssel IF COND fquant					{ $$ = newFargs($4, $1,  1, $3); }
+	|				SQUANT ssel "if" COND fquant{ $$ = newFargs($5, $2, $1, $4); }
+	|				NUM ssel "if" COND fquant		{ $$ = newFargs($5, $2, $1, $4); }
+	|				ssel "if" COND fquant				{ $$ = newFargs($4, $1,  1, $3); }
 	|				PSELECT fquant 							{ $$ = newFargs($2, $1, -1, C_none); }
 	|				PNUM 's' fquant 						{ $$ = newFargs($3, $1, -1, C_none); }
-	|				PSELECT IF COND fquant 			{ $$ = newFargs($4, $1, -1, $3); }
-	|				PNUM 's' IF COND fquant 		{ $$ = newFargs($5, $1, -1, $4); }
+	|				PSELECT "if" COND fquant 		{ $$ = newFargs($4, $1, -1, $3); }
+	|				PNUM 's' "if" COND fquant 	{ $$ = newFargs($5, $1, -1, $4); }
 	;
 
 ssel: 		SSELECT 									{ $$ = $1; }
@@ -177,9 +187,9 @@ fquant: 	FQUANT 										{ $$ = $1; }
 	;
 
 die:		DNUM 'd' NUM								{ $$ = newNatdie($1,  1, $3); }
-	|			DNUM 'd' '[' nnum RANGE nnum']'	{ $$ = newNatdie($1, $4, $6); }
+	|			DNUM 'd' '[' nnum ".." nnum']'	{ $$ = newNatdie($1, $4, $6); }
 	|			'd' NUM											{ $$ = newNatdie( 1,  1, $2); }
-	|			'd' '[' nnum RANGE nnum']'	{ $$ = newNatdie( 1, $3, $5); }
+	|			'd' '[' nnum ".." nnum']'	{ $$ = newNatdie( 1, $3, $5); }
 	|			DNUM 'd' '{' list '}'				{ $$ = newSetdie($1, $4); }
 	|			'd' '{' list '}'						{ $$ = newSetdie( 1, $3); }
 	;

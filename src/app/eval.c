@@ -27,34 +27,52 @@
 
 /* ===== FUNCTIONS ===== */
 
-/** Tests a result struct to ensure relevant fields are filled and others are not.
- * @param[in] res The result struct to be tested.
- */
-void ensureType(Result *res);
+int maxValue(ValueChain *faces) {
+	int max = faces->i;
+	for (faces = faces->next; faces; faces = faces->next) {
+		if (max < faces->i) {
+			max = faces->i;
+		}
+	}
+	return max;
+}
 
 
-/**
- * 
- * @param[] times 
- * @param[] faces 
- * @return ValueChain* 
+int minValue(ValueChain *faces) {
+	int min = faces->i;
+	for (faces = faces->next; faces; faces = faces->next) {
+		if (min > faces->i) {
+			min = faces->i;
+		}
+	}
+	return min;
+}
+
+/** Performs a series of rolls to create a new @ref ValueChain.
+ * New memory is allocated to the output.
+ * @sideeffect If @var gSilent is 1, notifications of "NatMin" or "NatMax" will be sent to standard output when rolling the highest or lowest numbers.
+ * @param[in] times 		The number of rolls to make.
+ * @param[in] faces 		The faces to roll from.
+ * @return ValueChain* 	
  */
 ValueChain *rollSet(int times, ValueChain *faces) {
 	ValueChain *r = NULL, *t = NULL;
-	int len = countValue(faces);
+	int len = countValue(faces), max = maxValue(faces), min = minValue(faces);
 	for (int i = 0; i < times; i++){
-		int j = randint(0, len-1); /* index by element */
+		int j = randint(0, len - 1); /* index by element */
 		for (t = faces; j > 0; t = t->next, j--) { /* skip */ }
+		if (!gSilent && t->i == max)				printf("NatMax");
+		else if (!gSilent && t->i == min)		printf("NatMin");
 		r = newValue(t->i, r); /* use the element */
 	}
 	return r;
 }
 
-/**
- * 
- * @param[] times 
- * @param[] faces 
- * @return int 
+/** Performs an individual dice rolls and returns the result.
+ * Returns a value directly from @p faces, so no new memory is allocated.
+ * @param[in] times @deprecated Has no effect.
+ * @param[in] faces The available die faces to roll.
+ * @return int 			The randomly rolled number.
  */
 int rollInt(int times, ValueChain *faces) {
 	int j = randint(0, countValue(faces)-1);
