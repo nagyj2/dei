@@ -7,9 +7,9 @@ uses Flex and Bison for parsing.
 
 ### Todo
 
-[X] Add conditionals (flag == 1 ? 1 ; 0 )
-[ ] Add notifications for Nat20 or Nat1 rolls
-[ ] Add variable supported damage types (pushed beyond 1.0 release)
+* [X] Add conditionals (flag == 1 ? 1 ; 0 )
+* [X] Add notifications for Nat20 or Nat1 rolls
+* [ ] Add variable supported damage types (pushed beyond 1.0 release)
 	* Restructure of Symbol (save structure for each group)
 	* Restructure of Result (store result for each group)
 	* Probable restructure of eval()
