@@ -199,11 +199,26 @@ void freeAst_Symbol( AST **root ){
 
 		/* special - astAsgn */
 	case 'A':
-		freeAst_Symbol( &((SymbolAssign *)*root)->l );
+		/* Just free yourself! */
+		break;
+	
+		/* special - ifast */
+	case 'F':
+		freeAst_Symbol( &((IfElse *)*root)->cond );
+		freeAst_Symbol( &((IfElse *)*root)->tru );
+		freeAst_Symbol( &((IfElse *)*root)->fals );
+		break;
+
+		/* special - grouped */
+	case 'G':
+		freeAst_Symbol(&(*root)->l);
+		if (((Group *) *root)->r) {
+			freeAst_Symbol(&((Group *) *root)->r);
+		}
 		break;
 
 	default:
-		printf("unknown ast free, got %d\n", (*root)->nodetype);
+		printf("unknown symbol ast free, got %d\n", (*root)->nodetype);
 		*root = NULL;
 		return;
 
@@ -315,9 +330,30 @@ void printAst_Symbol(AST *root){
 		printf("%s := ", ((SymbolAssign *)root)->s->name);
 		printAst_Symbol(((SymbolAssign *)root)->l);
 		break;
+		
+		/* special -ifast */
+	case 'F':
+		printf("(");
+		printAst_Symbol( ((IfElse *) root)->cond );
+		printf("?");
+		printAst_Symbol( ((IfElse *) root)->tru );
+		printf(":");
+		printAst_Symbol( ((IfElse *)root)->fals );
+		printf(")");
+		break;
+
+	case 'G':
+		printAst_Symbol(((Group *) root)->l);
+		printf(" ");
+		printGroup(((Group *) root)->type);
+		if (((Group *) root)->r) {
+			printAst_Symbol(((Group *) root)->r);
+		}
+		break;
 
 	default:
 		printf("\nunknown ast print, got %d\n", root->nodetype);
 
 	}
 }
+

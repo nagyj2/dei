@@ -13,6 +13,7 @@
 #define RESULT_H_INCLUDED
 
 #include "value.h"
+#include "ast.h"
 
 
 /* ===== DATA ===== */
@@ -24,7 +25,8 @@ enum rifs {
 	R_die = 1,						/**< Die definition. */
 	R_roll,								/**< Roll result with die face information. */
 	R_set,								/**< Roll result without die information. */
-	R_int									/**< Evaluated integer. */
+	R_int,								/**< Evaluated integer. */
+	R_group,							/**< Group separated rolls */
 };
 
 /** @typedef ResultType
@@ -41,7 +43,9 @@ struct result {
 	int type;							/**< The type of result. Determines which field will be populated. Depends on production being evaluated. Must be from @ref rifs */
 	ValueChain *faces;		/**< If type is R_die or R_roll, this represents the faces on the die. Can be NULL for R_roll. Otherwise it is NULL.  */
 	ValueChain *out;			/**< If type is R_roll or R_set, this represents the actual rolled numbers. Otherwise it is NULL. */
-	int integer;					/**< If type is R_int Otherwise it is NULL. */
+	struct result *next;	/**< If type is R_group, this represents a link to the next group. */
+	int integer;					/**< If type is R_int. Otherwise it is NULL. */
+	int group;						/**< If type is R_group, this represents the group. Otherwise it is NULL. */
 };
 
 /** @typedef Result
@@ -59,6 +63,13 @@ typedef struct result Result;
  */
 void ensureType(Result *res);
 
+int countResult(Result *res);
+
+/** Print a representation of a input @ref Result to standard output.
+ * @param[in] res result structure to print.
+ * @sideeffect A text representation of @p res is sent to standard out.
+ */
+void printResult(Result *res);
 
 
 /* ===== MEMORY MANAGEMENT ===== */

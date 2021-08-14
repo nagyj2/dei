@@ -161,7 +161,7 @@ void freeSelectionAliased(SelectionChain **sel);
 /** Frees memory allocated to @ref SelectionChain structures and any pointed to @ref ValueChain elements.
  * Only the pointed to @ref ValueChain is freed, not the entire chain they represent.
  * Freed pointers are set to NULL.
- * @warning Frees everything pointed to, but is silent about it, so when other pointers read the value, they may not see NULL.
+ * @warning Frees everything pointed to, but is gSilent about it, so when other pointers read the value, they may not see NULL.
  * Best practice is to remove and then free.
  * @param[in,out] sel The chain and its elements to free.
  * @sideeffect Input @p sel, all the aliased @ref SelectionChain elements and aliased @ref ValueChain elements to will be freed and the pointers silently set to NULL.

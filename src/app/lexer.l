@@ -21,23 +21,25 @@
 "if"			{ return IF; }
 
 	/* single char matches */
-"+"       |
-"-"       |
-"*"       |
-"%"       |
-"^"       |
-"&"       |
-"|"       |
-","       |
-"("       |
-")"       |
-"["       |
-"]"       |
-"{"       |
-"}"       |
-"d"       |
-"s"       |
-";"				|
+"+"       | /* addition */
+"-"       | /* subtraction / negation */
+"*"       | /* multiplication */
+"%"       | /* modulo */
+"^"       | /* exponentiation */
+"&"       | /* set intersection */
+"|"       | /* set union */
+"("       | /* math level precedence */
+")"       | /* math level precidence */
+"["       | /* range start brace / set level precidence */
+"]"       | /* range end brace / set level precidence */
+"{"       |	/* set start brace */
+"}"       | /* set end brace */
+","       | /* set separator */
+"d"       | /* die face indicator */
+"s"       | /* NUM pluralizer */
+"?"				| /* conditional */
+";"				| /* conditional separator */
+"="				| /* result assignment */
 "@"				| /* mute */
 ":"       { return yytext[0]; }
 
@@ -91,6 +93,22 @@
 
 "quit"    |
 "q"       { return EXIT;}
+
+		/* damage types */
+"check"				{ yylval.fn = D_check; 				return GROUP; }
+"slashing"		{ yylval.fn = D_slashing; 		return GROUP; }
+"piercing"		{ yylval.fn = D_piercing; 		return GROUP; }
+"bludgeoning"	{ yylval.fn = D_bludgeoning; 	return GROUP; }
+"poison"			{ yylval.fn = D_poison; 			return GROUP; }
+"acid"				{ yylval.fn = D_acid; 				return GROUP; }
+"fire"				{ yylval.fn = D_fire; 				return GROUP; }
+"cold"				{ yylval.fn = D_cold; 				return GROUP; }
+"radiant"			{ yylval.fn = D_radiant; 			return GROUP; }
+"necrotic"		{ yylval.fn = D_necrotic; 		return GROUP; }
+"lightining"	{ yylval.fn = D_lightning; 		return GROUP; }
+"thunder"			{ yylval.fn = D_thunder; 			return GROUP; }
+"force"				{ yylval.fn = D_force; 				return GROUP; }
+"psychic"			{ yylval.fn = D_psychic; 			return GROUP; }
 
 	/* symbol names */
 [a-zA-Z_][a-zA-Z_]*  { yylval.s = lookup(yytext); return IDENT; }

@@ -1,7 +1,7 @@
 @ \ This is a basic D&D 5e Character Sheet written in Dei \
 @ \ Feel free to edit, however make sure there is an empty line at the end!! \
 @ \ Prefix lines with '@' symbols to perform without output \
-@ \ Comments are delimited by backslashes, but they cannot go with a roll \
+@ \ Comments are delimited by backslashes \
 @
 @ \ Stats: These define attributes of the character \
 @ \ 0 is unproficient, -1 is half proficiency, 1 is proficient, 2 is expertise \
@@ -53,45 +53,45 @@
 @
 @ \ Calculations: Used to find oft-used values \
 @
-@ str_mod : (strength < 10) * (10 - strength) // 2 + (strength >= 10) * (strength - 10) // 2
-@ dex_mod : (dexterity < 10) * (10 - dexterity) // 2 + (dexterity >= 10) * (dexterity - 10) // 2
-@ con_mod : (constitution < 10) * (10 - constitution) // 2 + (constitution >= 10) * (constitution - 10) // 2
-@ int_mod : (intelligence < 10) * (10 - intelligence) // 2 + (intelligence >= 10) * (intelligence - 10) // 2
-@ wis_mod : (wisdom < 10) * (10 - wisdom) // 2 + (wisdom >= 10) * (wisdom - 10) // 2
-@ cha_mod : (charisma < 10) * (10 - charisma) // 2 + (charisma >= 10) * (charisma - 10) // 2
+@ str_mod : (strength < 10) ? (10 - strength) // 2 ; (strength - 10) // 2
+@ dex_mod : (dexterity < 10) ? (10 - dexterity) // 2 ; (dexterity - 10) // 2
+@ con_mod : (constitution < 10) ? (10 - constitution) // 2 ; (constitution - 10) // 2
+@ int_mod : (intelligence < 10) ? (10 - intelligence) // 2 ; (intelligence - 10) // 2
+@ wis_mod : (wisdom < 10) ? (10 - wisdom) // 2 ; (wisdom - 10) // 2
+@ cha_mod : (charisma < 10) ? (10 - charisma) // 2 ; (charisma - 10) // 2
 @
-@ str_save_mod : str_mod + (str_lvl == -1) * prof // 2 + (str_lvl != -1) * prof * str_lvl
-@ dex_save_mod : dex_mod + (dex_lvl == -1) * prof // 2 + (dex_lvl != -1) * prof * dex_lvl
-@ con_save_mod : con_mod + (con_lvl == -1) * prof // 2 + (con_lvl != -1) * prof * con_lvl
-@ int_save_mod : int_mod + (int_lvl == -1) * prof // 2 + (int_lvl != -1) * prof * int_lvl
-@ wis_save_mod : wis_mod + (wis_lvl == -1) * prof // 2 + (wis_lvl != -1) * prof * wis_lvl
-@ cha_save_mod : cha_mod + (cha_lvl == -1) * prof // 2 + (cha_lvl != -1) * prof * cha_lvl
+@ str_save_mod : str_mod + (str_lvl == -1) ? prof // 2 ; prof * str_lvl
+@ dex_save_mod : dex_mod + (dex_lvl == -1) ? prof // 2 ; prof * dex_lvl
+@ con_save_mod : con_mod + (con_lvl == -1) ? prof // 2 ; prof * con_lvl
+@ int_save_mod : int_mod + (int_lvl == -1) ? prof // 2 ; prof * int_lvl
+@ wis_save_mod : wis_mod + (wis_lvl == -1) ? prof // 2 ; prof * wis_lvl
+@ cha_save_mod : cha_mod + (cha_lvl == -1) ? prof // 2 ; prof * cha_lvl
 @
-@ acro_mod : dex_mod + (acro_lvl == -1) * prof // 2 + (acro_lvl != -1) * prof * acro_lvl
-@ anim_mod : wis_mod + (anim_lvl == -1) * prof // 2 + (anim_lvl != -1) * prof * anim_lvl
-@ arca_mod : int_mod + (arca_lvl == -1) * prof // 2 + (arca_lvl != -1) * prof * arca_lvl
-@ athl_mod : str_mod + (athl_lvl == -1) * prof // 2 + (athl_lvl != -1) * prof * athl_lvl
-@ dece_mod : cha_mod + (dece_lvl == -1) * prof // 2 + (dece_lvl != -1) * prof * dece_lvl
-@ hist_mod : int_mod + (hist_lvl == -1) * prof // 2 + (hist_lvl != -1) * prof * hist_lvl
-@ insi_mod : wis_mod + (insi_lvl == -1) * prof // 2 + (insi_lvl != -1) * prof * insi_lvl
-@ inti_mod : cha_mod + (inti_lvl == -1) * prof // 2 + (inti_lvl != -1) * prof * inti_lvl
-@ inve_mod : int_mod + (inve_lvl == -1) * prof // 2 + (inve_lvl != -1) * prof * inve_lvl
-@ medi_mod : wis_mod + (medi_lvl == -1) * prof // 2 + (medi_lvl != -1) * prof * medi_lvl
-@ natu_mod : int_mod + (natu_lvl == -1) * prof // 2 + (natu_lvl != -1) * prof * natu_lvl
-@ perc_mod : wis_mod + (perc_lvl == -1) * prof // 2 + (perc_lvl != -1) * prof * perc_lvl
-@ perf_mod : cha_mod + (perf_lvl == -1) * prof // 2 + (perf_lvl != -1) * prof * perf_lvl
-@ pers_mod : cha_mod + (pers_lvl == -1) * prof // 2 + (pers_lvl != -1) * prof * pers_lvl
-@ reli_mod : int_mod + (reli_lvl == -1) * prof // 2 + (reli_lvl != -1) * prof * reli_lvl
-@ slei_mod : dex_mod + (slei_lvl == -1) * prof // 2 + (slei_lvl != -1) * prof * slei_lvl
-@ stea_mod : dex_mod + (stea_lvl == -1) * prof // 2 + (stea_lvl != -1) * prof * stea_lvl
-@ surv_mod : wis_mod + (surv_lvl == -1) * prof // 2 + (surv_lvl != -1) * prof * surv_lvl
+@ acro_mod : dex_mod + (acro_lvl == -1) ? prof // 2 ; prof * acro_lvl
+@ anim_mod : wis_mod + (anim_lvl == -1) ? prof // 2 ; prof * anim_lvl
+@ arca_mod : int_mod + (arca_lvl == -1) ? prof // 2 ; prof * arca_lvl
+@ athl_mod : str_mod + (athl_lvl == -1) ? prof // 2 ; prof * athl_lvl
+@ dece_mod : cha_mod + (dece_lvl == -1) ? prof // 2 ; prof * dece_lvl
+@ hist_mod : int_mod + (hist_lvl == -1) ? prof // 2 ; prof * hist_lvl
+@ insi_mod : wis_mod + (insi_lvl == -1) ? prof // 2 ; prof * insi_lvl
+@ inti_mod : cha_mod + (inti_lvl == -1) ? prof // 2 ; prof * inti_lvl
+@ inve_mod : int_mod + (inve_lvl == -1) ? prof // 2 ; prof * inve_lvl
+@ medi_mod : wis_mod + (medi_lvl == -1) ? prof // 2 ; prof * medi_lvl
+@ natu_mod : int_mod + (natu_lvl == -1) ? prof // 2 ; prof * natu_lvl
+@ perc_mod : wis_mod + (perc_lvl == -1) ? prof // 2 ; prof * perc_lvl
+@ perf_mod : cha_mod + (perf_lvl == -1) ? prof // 2 ; prof * perf_lvl
+@ pers_mod : cha_mod + (pers_lvl == -1) ? prof // 2 ; prof * pers_lvl
+@ reli_mod : int_mod + (reli_lvl == -1) ? prof // 2 ; prof * reli_lvl
+@ slei_mod : dex_mod + (slei_lvl == -1) ? prof // 2 ; prof * slei_lvl
+@ stea_mod : dex_mod + (stea_lvl == -1) ? prof // 2 ; prof * stea_lvl
+@ surv_mod : wis_mod + (surv_lvl == -1) ? prof // 2 ; prof * surv_lvl
 @
 @ init_mod : dex_mod
 @ ac_base : 10
 @ ac_mod : dex_mod + con_mod 
-@ \ ac_mod : (dex_mod >= 2 ) * 2 + dex_mod < 2 * dex_mod \
+@ \ ac_mod : (dex_mod >= 2 ) ? 2 ; dex_mod \
 @
-@ spell_mod : (spell_stat == 1) * str_mod + (spell_stat == 2) * dex_mod + (spell_stat == 3) * con_mod + (spell_stat == 4) * int_mod + (spell_stat == 5) * wis_mod + (spell_stat == 6) * cha_mod
+@ spell_mod : (spell_stat == 1) ? str_mod ; (spell_stat == 2) ? dex_mod ; (spell_stat == 3) ? con_mod ; (spell_stat == 4) ? int_mod ; (spell_stat == 5) ? wis_mod ; (spell_stat == 6) ? cha_mod
 @ spell_hit : spell_mod + prof
 @ spell_dc : 8 + spell_mod + prof
 @
@@ -103,7 +103,7 @@
 @ pinsi : 10 + insi_mod
 @
 @		\ Difficulty Classes \
-@ ac : ac_base + (ac_mode == 0) * ac_mod
+@ ac : ac_base + (ac_mode == 0) ? ac_mod
 @
 @ dc : spell_dc
 @

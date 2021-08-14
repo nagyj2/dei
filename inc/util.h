@@ -11,6 +11,8 @@
 #ifndef UTIL_H_INCLUDED
 #define UTIL_H_INCLUDED
 
+extern int gSilent;
+
 /** Produce a random integer.
  * Number is between @p min and @p max, inclusive.
  * @param[in] min Minimum number to generate.

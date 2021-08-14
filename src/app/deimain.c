@@ -18,17 +18,13 @@
 #include "symbols.h"
 #include "result.h"
 #include "eval.h"
+#include "flags.h"
 
 
 int main(int argc, char **argv) {
 
 	/* seed random number generator */
 	srand(time(NULL));
-
-	#ifdef TESTS
-	test_value();
-	return 0;
-	#endif
 
 	#ifdef DEBUG
 	printf("ValueChain size: %lu\n", sizeof(ValueChain));
@@ -42,6 +38,8 @@ int main(int argc, char **argv) {
 	printf("SymbolRef size: %lu\n", sizeof(SymbolRef));
 	printf("SymbolAssign size: %lu\n", sizeof(SymbolAssign));
 	printf("Result size: %lu\n", sizeof(Result));
+	printf("State size: %lu\n", sizeof(State));
+	printf("IfElse size: %lu\n", sizeof(IfElse));
 	printf("\n");
 	#endif
 

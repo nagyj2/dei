@@ -13,6 +13,11 @@
 #include "util.h"
 
 /**
+ * Flag to gSilent all printing
+ */
+int gSilent = 0;
+
+/**
  * To use, the random number generator must be seeded.
  */
 int randint(int min, int max) {

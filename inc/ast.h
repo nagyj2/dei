@@ -68,6 +68,32 @@ enum cifs {
 typedef enum cifs Conditionals;
 
 
+/** Enum representing the types of rolls.
+ * When evaluating, the results of different types will not be combined.
+ */
+enum difs {
+	D_none = -1,						/**< No type. */
+	D_check,								/**< Skill check. */
+	D_slashing,							/**< Slashing Damage. */
+	D_piercing,							/**< Piercing Damage. */
+	D_bludgeoning,					/**< Bludgeoning Damage. */
+	D_poison,								/**< Poison Damage. */
+	D_acid,									/**< Acid Damage. */
+	D_fire,									/**< Fire Damage. */
+	D_cold,									/**< Cold Damage. */
+	D_radiant,							/**< Radiant Damage. */
+	D_necrotic,							/**< Necrotic Damage. */
+	D_lightning,						/**< Lightning Damage. */
+	D_thunder,							/**< Thunder Damage. */
+	D_force,								/**< Force Damage. */
+	D_psychic								/**< Psychic Damage. */
+};
+
+/** @typedef GroupType
+ * Shorthand for difs structure.
+ */
+typedef enum difs GroupType;
+
 
 /** Generic Binary AST Node.
  * A node which can have up to 2 children. Used for operations which only require operator and operand information.
@@ -152,13 +178,44 @@ typedef struct fargs FuncArgs;
  */
 struct setres {
 	int nodetype;						/**< Q */
-	ValueChain *out;			/**< Output to set roll to */
+	ValueChain *out;				/**< Output to set roll to */
 };
 
 /** @typedef SetRoll
  * Shorthand for the setres structure.
  */
 typedef struct setres SetRoll;
+
+
+/** A conditionally evaluated statement.
+ * Used to test a condition and then evaluate an AST according to the result.
+ */
+struct ifast {
+	int nodetype;						/**< F */
+	AST *cond;							/**< Condition to determine which branch to execute. */
+	AST *tru;								/**< Branch to execute on a non-zero condition. */
+	AST *fals;							/**< Branch to execute on a zero condition. */
+};
+
+/** @typedef IfElse
+ * Shorthand for the ifast structure.
+ */
+typedef struct ifast IfElse;
+
+/** A group type for a roll.
+ * Used to separate output rolls.
+ */
+struct roll_group {
+	int nodetype;						/**< G */
+	int type;								/**< Group type being represented. */
+	AST *l;									/**< Group value for this tree. */
+	AST *r;									/**< Link to the next group (if any). */
+};
+
+/** @typedef Group
+ * Shorthand for roll_group structure.
+ */
+typedef struct roll_group Group;
 
 
 /* ===== FUNCTIONS ===== */
@@ -237,6 +294,24 @@ AST *newFargs(int fcount, int seltype, int scount, int cond);
  */
 AST *newSetres(ValueChain *out);
 
+/** Create a conditional execution node.
+ * If memory cannot be allocated, the program displays an error and exits.
+ * Inputs must passed by reference.
+ * @param[in]  cond The condition to evaluate and determine what should be evaluated. Cannot be NULL.
+ * @param[in]  tru 	The AST to evaluate if @p cond is non-zero. Cannot be NULL.
+ * @param[in]  fals The AST to evaluate if @p cond is zero. Cannot be NULL.
+ * @return     An AST node representing a conditional execution. Cannot be NULL.
+ */
+AST *newIfelse(AST *cond, AST *tru, AST *fals);
+
+/** Create a new roll group.
+ * Used to separate input rolls and differentiate the current rolls occuring.
+ * @param[in] type 		The group type to be calculated. Must be from @ref GroupType.
+ * @param[in] tree 		The AST representing the group being saved.
+ * @param[in] next		The next group. Can be NULL.
+ * @return AST* 			An AST node representing a distinct group.
+ */
+AST *newGroup(int type, AST *tree, AST *next);
 
 
 /* ===== MEMORY MANAGEMENT ===== */
@@ -252,11 +327,19 @@ void freeAst( AST **root );
 
 /* ===== DEBUGGING ===== */
 
+/** Display a the string representation of the input group type to standard out.
+ * @param[in] group A valid @ref GroupType.
+ * @sideeffect The string version of @p group is displayed to standard out.
+ */
+void printGroup(int group);
+
 /** Recursively print the contents of an @ref AST tree.
  * @param[in] root The root node to print.
  * @sideeffect A string representation of root will be displayed to stdout.
  */
 void printAst(AST *root);
+
+
 
 
 
