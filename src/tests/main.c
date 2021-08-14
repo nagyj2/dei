@@ -1,7 +1,7 @@
 /** The primary unit test runner for Dei testing.
  * @file main.c
  * @author Jason Nagy (jaysun_n@hotmail.com)
- * @version 0.1
+ * @version 1.0
  * @date 2021-07-26
  * 
  * @copyright Copyright (c) 2021

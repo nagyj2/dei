@@ -1,7 +1,7 @@
 /** Implementation of the statement result structure functions.
  * @file flags.c
  * @author Jason Nagy (jaysun_n@hotmail.com)
- * @version 0.1
+ * @version 1.0
  * @date 2021-08-03
  * 
  * @copyright Copyright (c) 2021

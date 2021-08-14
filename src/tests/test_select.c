@@ -3,7 +3,7 @@
  * This file serves to provide a definition to the @p select_suite variable declared in tests.h.
  * @file test_value.c
  * @author Jason Nagy (jaysun_n@hotmail.com)
- * @version 0.1
+ * @version 1.0
  * @date 2021-07-26
  * 
  * @copyright Copyright (c) 2021
