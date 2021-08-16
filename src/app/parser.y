@@ -55,7 +55,7 @@
 line:																{  }
 	|			'@'													{  }
 	|			line stmt EOL								{ 
-		silent = 0;
+		gSilent = 0;
 		Result *r = NULL;
 		switch ($2->type){
 			case O_math:
@@ -79,7 +79,7 @@ line:																{  }
 		freeState(&($2));
 	}
 	|			line '@' stmt EOL						{ 
-		silent = 1;
+		gSilent = 1;
 		Result *r = NULL;
 		switch ($3->type){
 			case O_math:
@@ -186,12 +186,12 @@ fquant: 	FQUANT 										{ $$ = $1; }
 	| 																{ $$ =  1; }
 	;
 
-die:		DNUM 'd' NUM								{ $$ = newNatdie($1,  1, $3); }
+die:		DNUM 'd' NUM										{ $$ = newNatdie($1,  1, $3); }
 	|			DNUM 'd' '[' nnum ".." nnum']'	{ $$ = newNatdie($1, $4, $6); }
-	|			'd' NUM											{ $$ = newNatdie( 1,  1, $2); }
-	|			'd' '[' nnum ".." nnum']'	{ $$ = newNatdie( 1, $3, $5); }
-	|			DNUM 'd' '{' list '}'				{ $$ = newSetdie($1, $4); }
-	|			'd' '{' list '}'						{ $$ = newSetdie( 1, $3); }
+	|			'd' NUM													{ $$ = newNatdie( 1,  1, $2); }
+	|			'd' '[' nnum ".." nnum']'				{ $$ = newNatdie( 1, $3, $5); }
+	|			DNUM 'd' '{' list '}'						{ $$ = newSetdie($1, $4); }
+	|			'd' '{' list '}'								{ $$ = newSetdie( 1, $3); }
 	;
 
 list:		nnum												{ $$ = newValue($1, NULL); }
