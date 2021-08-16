@@ -2,7 +2,7 @@
 
 ### Description
 
-Dei uses a grammar which is as close to natural language as possible to create natural sounding expressions. The starting symbol is `line`. Comments can be embedded anywhere and are delimited by `\`.
+Dei uses a grammar which is as close to natural language as possible to create natural sounding expressions. The starting symbol is `line`. Comments can be embedded anywhere and are delimited by `\`. There are no string or float support within Dei.
 
 ```
 line:		
