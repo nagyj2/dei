@@ -27,6 +27,10 @@
 
 /* ===== FUNCTIONS ===== */
 
+/** Find the maximum value within the input @ref ValueChain.
+ * @param[in] faces The die faces to check.
+ * @return int 			The largest integer in @p faces.
+ */
 int maxValue(ValueChain *faces) {
 	int max = faces->i;
 	for (faces = faces->next; faces; faces = faces->next) {
@@ -37,7 +41,10 @@ int maxValue(ValueChain *faces) {
 	return max;
 }
 
-
+/** Find the minimum value within the input @ref ValueChain.
+ * @param[in] faces The die faces to check.
+ * @return int 			The smallest integer in @p faces.
+ */
 int minValue(ValueChain *faces) {
 	int min = faces->i;
 	for (faces = faces->next; faces; faces = faces->next) {
@@ -276,8 +283,8 @@ SelectionChain *generate(ValueChain *rolled, FuncArgs *opts){
 }
 
 
-/**
- *
+/** Evaluate the input AST recursively.
+ * Execution will not modify the input AST in any way.
  */
 Result *eval(AST *base){
 Result *r = malloc(sizeof(Result));
