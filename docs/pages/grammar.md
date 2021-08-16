@@ -2,134 +2,177 @@
 
 ### Description
 
-Dei uses a grammar which is as close to natural language as possible to create natural sounding expressions.
+Dei uses a grammar which is as close to natural language as possible to create natural sounding expressions. The starting symbol is `line`. Comments can be embedded anywhere and are delimited by `\`.
 
 ```
+line:		
+	|  
+	| line stmt EOL
+	| line EXIT EOL
+	| line error EOL
+	| '@'
+	| line '@' stmt EOL
+	| line '@' EXIT EOL
+	| line '@' error EOL
+
+stmt:
+	| group
+	| IDENT ':' cond
+	| IDENT '=' cond
+
+group:
+	| cond
+	| cond GROUP
+	| cond GROUP group
+
+cond:
+	| math
+	| math '?' math ';' math
+	| math '?' math
+
 math:
-	|  math '+' math
-	|  math '-' math
-	|  math '*' math
-	|  math '//' mat
-	|  math '%' math
-	|  math '^' math
-	|  math '==' mat
-	|  math '!=' mat
-	|  math '>' math
-	|  math '<' math
-	|  math '>=' mat
-	|  math '<=' mat
-	|  '-' math
-	|  '(' math ')'
-	|  NUM
-	|  IDENT
-	|  set
+	| math '+' math
+	| math '-' math
+	| math '*' math
+	| math '//' math
+	| math '%' math
+	| math '^' math
+	| math '==' math
+	| math '!=' math
+	| math '>' math
+	| math '<' math
+	| math '>=' math
+	| math '<=' math
+	| '-' math
+	| '(' math ')'
+	| NUM
+	| IDENT
+	| set
 
 set:  	
-	|  set '&' set
-	|  set '|' set
-	|  set '&&' set
-	|  set '||' set
-	|  '[' set ']'
-	|  func
+	| set '&' set
+	| set '|' set
+	| set '&&' set
+	| set '||' set
+	| '[' set ']'
+	| func
 
 func: 	
-	|  die
-	|  '{' list '}'
-	|  func F_ADD a_args
-	|  func F_SUB s_args
-	|  func F_MOD m_args
+	| die
+	| '{' list '}'
+	| func F_ADD a_args
+	| func F_SUB s_args
+	| func F_MOD m_args
 
 a_args:
-	|  squant ssel fquant
-	|  psel fquant
+	| squant ssel fquant
+	| ssel fquant
+	| psel fquant
 
 s_args:
-	|  squant ssel
-	|  psel
+	| squant ssel
+	| psel
 
 m_args:
-	|  squant ssel fquant
-	|  squant ssel 'if' COND fquant
-	|  psel fquant
-	|  psel 'if' COND fquant
+	| squant ssel fquant
+	| squant ssel 'if' COND fquant
+	| psel fquant
+	| psel 'if' COND fquant
 
 ssel:		
-	|  SSELECT
-	|  NUM
+	| SSELECT
+	| NUM
 
 psel:
-	|  PSELECT
-	|  NUM 's'
+	| PSELECT
+	| NUM 's'
 
 squant:
-	|  NUM
-	|  SQUANT
-	|  ''
+	| NUM
+	| SQUANT
+	|	''
 
 fquant:
-	|  NUM 'times'
-	|  FQUANT
-	|  ''
+	| NUM 'times'
+	| NUM 'time'
+	| FQUANT
+	| ''
 
 die: 		
-	|  DNUM 'd' NUM
-	|  DNUM 'd' '{' nnum RANGE nnum '}'
-	|  'd' NUM
-	|  'd' '{' nnum RANGE nnum '}'
-	|  DNUM 'd' '{' list '}'
-	|  'd' '{' list '}'
+	| DNUM 'd' NUM
+	| DNUM 'd' '[' nnum '..' nnum ']'
+	| 'd' NUM
+	| 'd' '[' nnum '..' nnum ']'
+	| DNUM 'd' '{' list '}'
+	| 'd' '{' list '}'
 
 list: 	
-	|  nnum
-	|  nnum ',' list
+	| nnum
+	| nnum ',' list
 
 nnum:		
-	|  NUM
-	|  '-' NUM
-
-stmt:		
-	|  stmt math EOL
-	|  stmt IDENT ':' math EOL
-	|  stmt error EOL
-	|  stmt EOL
-	|  '@' stmt math EOL
-	|  '@' stmt IDENT ':' math EOL
-	|  '@' stmt error EOL
-	|  '@' stmt EOL
-	|  ''
+	| NUM
+	| '-' NUM
 
 F_ADD:		
-	|  'append'
+	| 'append'
 
 F_SUB:		
-	|  'drop'
-	|  'count'
-	|  'choose'
+	| 'drop'
+	| 'count'
+	| 'choose'
 
 F_MOD:		
-	|  'reroll'
+	| 'reroll'
 
 COND:			
-	|  'lower'
-	|  'higher'
+	| 'lower'
+	| 'higher'
 
 SSELECT:
-	|  'highest'
-	|  'lowest'
-	|  'random'
+	| 'highest'
+	| 'lowest'
+	| 'random'
 
 PSELECT:
-	|  'unique'
+	| 'unique'
+	| NUM 's'
 
 FQUANT:		
-	|  'once'
-	|  'twice'
-	|  'thrice'
+	| 'once'
+	| 'twice'
+	| 'thrice'
 
 SQUANT:		
-	|  'one'
-	|  'two'
-	|  'three'
-	|  'four'
-	|  'five'
+	| 'one'
+	| 'two'
+	| 'three'
+	| 'four'
+	| 'five'
+
+EXIT:
+	| 'q'
+	| 'quit'
+
+GROUP:
+	| 'check'
+	| 'slashing'
+	| 'piercing'
+	| 'bludgeoning'
+	| 'poison'
+	| 'acid'
+	| 'fire'
+	| 'cold'
+	| 'radiant'
+	| 'necrotic'
+	| 'lightining'
+	| 'thunder'
+	| 'force'
+	| 'psychic'
+
+IDENT:
+	| [a-zA-Z_][a-zA-Z_]*
+
+NUM:
+	| [0-9]+
 ```
