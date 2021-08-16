@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 		// printf("\n");
   }
 
-	printf("\n> ");
+	printf("> ");
 	yyin = stdin;
 	yylineno = 1;
 	yyrestart(yyin);
