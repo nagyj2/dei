@@ -61,7 +61,7 @@ line:																{  }
 			case O_math:
 				printAst_Symbol($2->ast);
 				r = eval($2->ast);
-				printf(" = ");
+				printf("= ");
 				printResult(r);
 				freeAst_Symbol(&($2->ast));
 				printf("\n> ");

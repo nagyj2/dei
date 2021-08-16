@@ -55,43 +55,40 @@ int minValue(ValueChain *faces) {
 	return min;
 }
 
+
+/** Performs an individual dice rolls and returns the result.
+ * Returns a value directly from @p faces, so no new memory is allocated.
+ * @param[in] faces The available die faces to roll.
+ * @return int 			A single randomly rolled number.
+ */
+int rollInt(ValueChain *faces) {
+	int j = randint(0, countValue(faces) - 1);
+	ValueChain *t = NULL;
+	for (t = faces; j > 0; t = t->next, j--) { /* skip */ }
+	return t->i; /* return result from the face */
+}
+
 /** Performs a series of rolls to create a new @ref ValueChain.
  * New memory is allocated to the output.
  * @sideeffect If @var gSilent is 1, notifications of "Nat#" will be sent to standard output when rolling the highest or lowest numbers.
  * @param[in] times 		The number of rolls to make.
  * @param[in] faces 		The faces to roll from.
- * @return ValueChain* 	
+ * @return ValueChain* 	The set of rolled numbers.
  */
 ValueChain *rollSet(int times, ValueChain *faces) {
-	ValueChain *r = NULL, *t = NULL;
-	int len = countValue(faces), max = maxValue(faces), min = minValue(faces), printed = 0;
-	for (int i = 0; i < times; i++){
-		int j = randint(0, len - 1); /* index by element */
-		for (t = faces; j > 0; t = t->next, j--) { /* skip */ }
-		if (!gSilent && (t->i == max || t->i == min)) {
-			printf("Nat%d", t->i);
+	ValueChain *r = NULL;
+	int max = maxValue(faces), min = minValue(faces), printed = 0;
+	for (int i = 0; i < times; i++) {
+		int roll = rollInt(faces);
+		if (!gSilent && (roll == max || roll == min)) {
+			printf("Nat%d", roll);
 			printed = 1;
 		}
-		r = newValue(t->i, r); /* use the element */
+		r = newValue(roll, r); /* use the element */
 	}
 	if (printed == 1)
 		printf(". ");
 	return r;
-}
-
-/** Performs an individual dice rolls and returns the result.
- * Returns a value directly from @p faces, so no new memory is allocated.
- * @param[in] times @deprecated Has no effect.
- * @param[in] faces The available die faces to roll.
- * @return int 			The randomly rolled number.
- */
-int rollInt(int times, ValueChain *faces) {
-	int j = randint(0, countValue(faces) - 1), max = maxValue(faces), min = minValue(faces);
-	ValueChain *t = NULL;
-	for (t = faces; j > 0; t = t->next, j--) { /* skip */ }
-	if (!gSilent && (t->i == max || t->i == min))
-			printf("Nat%d. ", t->i);
-	return t->i; /* return result from the face */
 }
 
 
@@ -287,7 +284,7 @@ SelectionChain *generate(ValueChain *rolled, FuncArgs *opts){
  * Execution will not modify the input AST in any way.
  */
 Result *eval(AST *base){
-Result *r = malloc(sizeof(Result));
+	Result *r = malloc(sizeof(Result));
 	if (!r){
 		printf("out of space\n");
 		exit(1);
@@ -467,10 +464,15 @@ Result *r = malloc(sizeof(Result));
 		SelectionChain *selected = NULL, *t = NULL;
 		selected = (countValue(r->out) > 1) ? select(r->out, (FuncArgs *) base->r) : newSelection(r->out, NULL); /* For some reason, select() has problems with single r->out */
 
-		if(selected){
-			for(t = selected; t; t = t->next){
+		if (selected) {
+			int max = maxValue(r->faces), min = minValue(r->faces), printed = 0;
+			for (t = selected; t; t = t->next) {
 				/* try to reroll each selected once */
-				int roll = rollInt(1, r->faces);
+				int roll = rollInt(r->faces);
+				if (!gSilent && (roll == max || roll == min)) {
+					printf("Nat%d", roll);
+					printed = 1;
+				}
 				// printf("%d cmp %d (%d) : Hi:%d, Lo:%d, No:%d\n", t->val->i, roll, ((FuncArgs *) base->r)->cond, C_high, C_low, C_none);
 				switch (((FuncArgs *) base->r)->cond) {
 				case C_high: 	if (t->val->i < roll) t->val->i = roll; break;
@@ -478,6 +480,8 @@ Result *r = malloc(sizeof(Result));
 				case C_none: 	t->val->i = roll; break;
 				}
 			}
+			if (printed == 1)
+				printf(". ");
 			freeSelectionAliased( &selected );
 		}
 		break;
