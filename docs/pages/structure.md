@@ -6,7 +6,7 @@ This page explains the internal structure and operations of the Dei program, inc
 
 #### Literals and Keywords
 
-There are two main classifications of literals, integers and dice. Integers follow the form `/[0-9]+/` and dice follow the form `/<INT>*d(<INT>|\[-?<INT>..-?<INT>\]|\{-?<INT>(,-?<INT>)*\})/`. The three types of dice are standard `1` to `n` faces, `m` to `n` faces and specifically chosen die faces. Dei also has dozens of keywords which are mainly used within the function system. These keywords must be used in accordance to the grammar of Dei.
+There are two main classifications of literals, integers and dice. Integers follow the form `/[0-9]+/` and dice follow the form `/<INT>*d(<INT>|\[-?<INT>\.\.-?<INT>\]|\{-?<INT>(,-?<INT>)*\})/`. The three types of dice represent standard faces from `1` to `n`, faces from `m` to `n` and explicitly chosen die faces. Dei also has dozens of keywords which are mainly used within the function system. These keywords must be used in accordance to the grammar of Dei.
 
 #### Mathematics
 
