@@ -1,6 +1,6 @@
 @page Abstract Syntax Tree
 
-### Description
+### Overview
 
 During parsing, an AST is maintained for future evaluation. Each node can have a type and zero to
 two children. The node type will determine how many and what type of children the node will have.

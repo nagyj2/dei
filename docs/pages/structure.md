@@ -1,6 +1,6 @@
 @page Internal Structure
 
-### Description
+### Overview
 
 This page explains the internal structure and operations of the Dei program, including data types, process of evaluation, and methods.
 
