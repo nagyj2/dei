@@ -96,8 +96,8 @@ line:																{  }
 		freeResult(&r);
 		freeState(&($3));
 	}
-	|			line EXIT EOL								{ exit(0); }
-	|			line '@' EXIT EOL						{ exit(0); /* Bison has no duplicate rules */ }
+	|			line EXIT EOL								{ YYACCEPT; }
+	|			line '@' EXIT EOL						{ YYACCEPT; /* Bison has no duplicate rules */ }
 	|			line error EOL							{ printf("!> "); }
 	|			line '@' error EOL					{ printf("!"); }
 	;
