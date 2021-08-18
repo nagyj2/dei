@@ -288,7 +288,7 @@ void printAst_Symbol(AST *root){
 		break;
 
 		/* 1 subtree */
-	case 'M': case 'R': case 'S': case 'Z':
+	case 'M': case 'R': case 'r': case 'S': case 'Z':
 		printf("%c(",root->nodetype);
 		printAst_Symbol(root->l);
 		printf(")");
